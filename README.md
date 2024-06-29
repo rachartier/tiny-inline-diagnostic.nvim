@@ -48,7 +48,7 @@ require('tiny-inline-diagnostic').setup({
 })
 ```
 
-## Highlights
+## 💡 Highlights
 
 - TinyInlineDiagnosticVirtualTextError
 - TinyInlineDiagnosticVirtualTextWarn
