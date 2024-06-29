@@ -2,10 +2,11 @@
 
 A Neovim plugin that display prettier diagnostic messages. Display one line diagnostic messages where the cursor is, with icons and colors.
 
-## Images
+## 🖼️ Images
 
+![tinyinlinediagnostic](https://github.com/rachartier/tiny-inline-diagnostic.nvim/assets/2057541/9e9b756b-aee8-4153-9c1e-856c3167c140)
 
-## Installation
+## 📥 Installation
 
 With Lazy.nvim:
 
@@ -19,7 +20,7 @@ With Lazy.nvim:
 }
 ```
 
-## Options
+## ⚙️ Options
 
 ```lua
 -- Default configuration
@@ -47,7 +48,7 @@ require('tiny-inline-diagnostic').setup({
 })
 ```
 
-## API
+## 📚 API
 
 - `require("tiny-inline-diagnostic").change(background, factor)`: change the background color and the blend factor, useful if you want to change the colorscheme on the fly.
 
