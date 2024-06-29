@@ -6,6 +6,11 @@ A Neovim plugin that display prettier diagnostic messages. Display one line diag
 
 ![tinyinlinediagnostic](https://github.com/rachartier/tiny-inline-diagnostic.nvim/assets/2057541/6a6eb093-f473-4e61-b344-08317c6b78e9)
 
+## 🛠️ Setup
+
+- You need to set `vim.opt.updatetime` to trigger `CursorEvent` faster (ex: `vim.opt.updatetime = 100`)
+- You also need to set `vim.diagnostic.config({ virtual_text = false })`, to not have all diagnostics in the buffer displayed.
+
 ## 📥 Installation
 
 With Lazy.nvim:
@@ -15,6 +20,7 @@ With Lazy.nvim:
     "rachartier/tiny-inline-diagnostic.nvim",
     event = "VeryLazy",
     config = function()
+        vim.opt.updatetime = 100
         require('tiny-inline-diagnostic').setup()
     end
 }
@@ -71,4 +77,4 @@ require('tiny-inline-diagnostic').setup({
 - **Q**: It takes a long time for the diagnostic to appear:
     - You need to set `vim.opt.updatetime = 100` (or any number in ms). It will trigger the `CursorHold` event faster.
 - **Q**: All diagnostics are still displayed
-    - You need to set `vimvim.diagnostic.config({ virtual_text = false })` to remove all the others diagnostics.
+    - You need to set `vim.diagnostic.config({ virtual_text = false })` to remove all the others diagnostics.
