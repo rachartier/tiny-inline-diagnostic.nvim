@@ -37,7 +37,7 @@ require('tiny-inline-diagnostic').setup({
             info = "DiagnosticInfo",
             hint = "DiagnosticHint",
             arrow = "NonText",
-            background = "None",
+            background = "None", -- Should be "None" or a hexadecimal color (#RRGGBB)
         },
         blend = {
             factor = 0.27,
