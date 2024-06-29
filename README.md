@@ -4,7 +4,7 @@ A Neovim plugin that display prettier diagnostic messages. Display one line diag
 
 ## 🖼️ Images
 
-![tinyinlinediagnostic-ezgif com-crop](https://github.com/rachartier/tiny-inline-diagnostic.nvim/assets/2057541/23744f2b-5e92-4fad-8a1c-1df9afa6a42b)
+![tinyinlinediagnostic](https://github.com/rachartier/tiny-inline-diagnostic.nvim/assets/2057541/6a6eb093-f473-4e61-b344-08317c6b78e9)
 
 ## 📥 Installation
 
