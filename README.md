@@ -71,7 +71,7 @@ require('tiny-inline-diagnostic').setup({
 ## 📚 API
 
 - `require("tiny-inline-diagnostic").change(background, factor)`: change the background color and the blend factor, useful if you want to change the colorscheme on the fly.
-- `require("tiny-inline-diagnostic").get_diagnostic_under_cursor api(bufnr)`: get the diagnostic under the cursor, useful if you want to display the diagnostic in a statusline.
+- `require("tiny-inline-diagnostic").get_diagnostic_under_cursor(bufnr)`: get the diagnostic under the cursor, useful if you want to display the diagnostic in a statusline.
 
 ## ❓ FAQ:
 
