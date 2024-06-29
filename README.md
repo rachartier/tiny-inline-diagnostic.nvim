@@ -66,4 +66,9 @@ require('tiny-inline-diagnostic').setup({
 
 - `require("tiny-inline-diagnostic").change(background, factor)`: change the background color and the blend factor, useful if you want to change the colorscheme on the fly.
 
+## ❓ FAQ:
 
+- **Q**: It takes a long time for the diagnostic to appear:
+    - You need to set `vim.opt.updatetime = 100` (or any number in ms). It will trigger the `CursorHold` event faster.
+- **Q**: All diagnostics are still displayed
+    - You need to set `vimvim.diagnostic.config({ virtual_text = false })` to remove all the others diagnostics.
