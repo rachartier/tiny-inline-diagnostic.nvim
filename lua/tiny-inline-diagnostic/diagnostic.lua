@@ -40,6 +40,19 @@ local function get_virt_texts_from_diag(opts, diag)
     return virt_texts
 end
 
+function M.get_diagnostic_under_cursor(buf)
+    local cursor_pos = vim.api.nvim_win_get_cursor(0)
+    local curline = cursor_pos[1] - 1
+    local curcol = cursor_pos[2]
+
+    local diagnostics = vim.diagnostic.get(buf, { lnum = curline })
+
+    if #diagnostics == 0 then
+        return
+    end
+
+    return get_current_pos_diags(diagnostics, curline, curcol), curline
+end
 
 function M.set_diagnostic_autocmds(opts)
     vim.api.nvim_create_autocmd("LspAttach", {
@@ -59,18 +72,13 @@ function M.set_diagnostic_autocmds(opts)
                 callback = function()
                     pcall(vim.api.nvim_buf_clear_namespace, event.buf, diagnostic_ns, 0, -1)
 
-                    local cursor_pos = vim.api.nvim_win_get_cursor(0)
-                    local curline = cursor_pos[1] - 1
-                    local curcol = cursor_pos[2]
+                    local diag, curline = M.get_diagnostic_under_cursor(event.buf)
 
-                    local diagnostics = vim.diagnostic.get(event.buf, { lnum = curline })
-
-                    if #diagnostics == 0 then
+                    if diag == nil or curline == nil then
                         return
                     end
 
-                    local current_pos_diags = get_current_pos_diags(diagnostics, curline, curcol)
-                    local virt_texts = get_virt_texts_from_diag(opts, current_pos_diags[1])
+                    local virt_texts = get_virt_texts_from_diag(opts, diag[1])
 
                     vim.api.nvim_buf_set_extmark(event.buf, diagnostic_ns, curline, 0, {
                         virt_text = virt_texts,
