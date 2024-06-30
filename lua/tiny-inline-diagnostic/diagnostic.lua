@@ -152,7 +152,7 @@ function M.set_diagnostic_autocmds(opts)
                 })
             end
 
-            vim.api.nvim_create_autocmd({ "CursorHold", "VimResized" }, {
+            vim.api.nvim_create_autocmd({ "CursorHold", "VimResized", "CursorMovedI" }, {
                 buffer = event.buf,
                 callback = function()
                     pcall(vim.api.nvim_buf_clear_namespace, event.buf, diagnostic_ns, 0, -1)
