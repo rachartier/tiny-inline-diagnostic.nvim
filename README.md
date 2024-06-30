@@ -18,8 +18,7 @@ A Neovim plugin that display prettier diagnostic messages. Display one line diag
 
 ## 🛠️ Setup
 
-- You need to set `vim.opt.updatetime` to trigger `CursorEvent` faster (ex: `vim.opt.updatetime = 100`)
-- You also need to set `vim.diagnostic.config({ virtual_text = false })`, to not have all diagnostics in the buffer displayed.
+- You need to set `vim.diagnostic.config({ virtual_text = false })`, to not have all diagnostics in the buffer displayed.
 
 ## 📥 Installation
 
@@ -55,7 +54,7 @@ require('tiny-inline-diagnostic').setup({
             info = "DiagnosticInfo",
             hint = "DiagnosticHint",
             arrow = "NonText",
-            background = "None", -- Should be "None" or a hexadecimal color (#RRGGBB)
+            background = "CursorLine", -- Can be a highlight or a hexadecimal color (#RRGGBB)
         },
         blend = {
             factor = 0.27,
@@ -94,7 +93,5 @@ require('tiny-inline-diagnostic').setup({
 
 ## ❓ FAQ:
 
-- **Q**: It takes a long time for the diagnostic to appear:
-    - You need to set `vim.opt.updatetime = 100` (or any number in ms). It will trigger the `CursorHold` event faster.
 - **Q**: All diagnostics are still displayed
     - You need to set `vim.diagnostic.config({ virtual_text = false })` to remove all the others diagnostics.
