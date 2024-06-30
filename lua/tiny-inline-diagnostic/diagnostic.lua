@@ -37,38 +37,69 @@ local function forge_virt_texts_from_diagnostic(opts, diag)
     local diag_type = { "Error", "Warn", "Info", "Hint" }
 
     local hi = diag_type[diag.severity]
-    local virt_texts = { opts.signs.arrow, "TinyInlineDiagnosticVirtualTextArrow" }
 
     local diag_hi = "TinyInlineDiagnosticVirtualText" .. hi
     local diag_inv_hi = "TinyInlineInvDiagnosticVirtualText" .. hi
 
     local all_virtual_texts = {}
 
-    local diag_sign = opts.signs.diag
+    local diag_sign = " " .. opts.signs.diag
     local text_after_message = ""
 
     local message_chunk = {
         diag.message
     }
     local max_chunk_line_length = 0
+    local win_width = vim.api.nvim_win_get_width(0)
+    local line_length = #vim.api.nvim_get_current_line()
+    local offset = 0
+    local need_to_be_under = false
+    local win_option_wrap_enabled = vim.api.nvim_get_option_value("wrap", { win = 0 })
 
+    if win_option_wrap_enabled then
+        if line_length > win_width - opts.options.softwrap then
+            need_to_be_under = true
+        end
+    end
     if opts.options.break_line.enabled == true then
-        diag_sign = " " .. diag_sign
         text_after_message = "   "
 
         message_chunk = {}
         message_chunk = utis.wrap_text(diag.message, opts.options.break_line.after)
     elseif opts.options.overflow == "wrap" then
-        diag_sign = " " .. diag_sign
         text_after_message = "   "
+        if need_to_be_under then
+            offset = 0
+        else
+            offset = line_length
+        end
 
-        local win_width = vim.api.nvim_win_get_width(0)
-        local offset = #vim.api.nvim_get_current_line()
-        local distance = win_width - offset - #opts.signs.arrow - #opts.signs.right - #opts.signs.left - #diag_sign - 3
+        local distance = win_width - offset - #opts.signs.arrow - #opts.signs.right - #opts.signs.left - #diag_sign - 4
+
+        if distance < opts.options.softwrap then
+            need_to_be_under = true
+            distance = win_width - #opts.signs.arrow - #opts.signs.right - #opts.signs.left - #diag_sign - 4
+        end
 
         message_chunk = {}
         message_chunk = utis.wrap_text(diag.message, distance)
     end
+
+    local offset_space = ""
+
+    if need_to_be_under then
+        offset = 0
+    else
+        offset_space = string.rep(" ", offset + 1)
+    end
+
+
+    local virt_texts = { opts.signs.arrow, "TinyInlineDiagnosticVirtualTextArrow" }
+    if need_to_be_under then
+        virt_texts = { opts.signs.up_arrow, "TinyInlineDiagnosticVirtualTextArrow" }
+    end
+
+
 
     for i = 1, #message_chunk do
         if #message_chunk[i] > max_chunk_line_length then
@@ -76,8 +107,7 @@ local function forge_virt_texts_from_diagnostic(opts, diag)
         end
     end
 
-    local offset = #vim.api.nvim_get_current_line()
-    local offset_space = string.rep(" ", offset + 1)
+
 
     for i = 1, #message_chunk do
         local message = message_chunk[i]
@@ -99,7 +129,6 @@ local function forge_virt_texts_from_diagnostic(opts, diag)
                 })
             else
                 vim.list_extend(chunk_virtual_texts, {
-
                     { message .. text_after_message,      diag_hi },
                     { string.rep(" ", #opts.signs.right), diag_inv_hi },
                 })
@@ -130,7 +159,13 @@ local function forge_virt_texts_from_diagnostic(opts, diag)
         end
     end
 
-    return all_virtual_texts
+    if need_to_be_under then
+        table.insert(all_virtual_texts, 1, {
+            { " ", "None" }
+        })
+    end
+
+    return all_virtual_texts, need_to_be_under
 end
 
 --- Function to get the diagnostic under the cursor.
@@ -191,8 +226,7 @@ function M.set_diagnostic_autocmds(opts)
                     end
 
                     previous_line_number = curline
-                    local virt_texts = forge_virt_texts_from_diagnostic(opts, diag[1])
-
+                    local virt_texts, need_to_be_under = forge_virt_texts_from_diagnostic(opts, diag[1])
                     local virt_lines = {}
 
                     if #virt_texts > 1 then
@@ -201,7 +235,9 @@ function M.set_diagnostic_autocmds(opts)
                         end
                     end
 
+
                     vim.api.nvim_buf_set_extmark(event.buf, diagnostic_ns, curline, 0, {
+                        id = curline,
                         virt_text = virt_texts[1],
                         virt_lines = virt_lines
                     })

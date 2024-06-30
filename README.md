@@ -45,6 +45,7 @@ require('tiny-inline-diagnostic').setup({
             right = "",
             diag = "●",
             arrow = "    ",
+            up_arrow = "    ",
             vertical = " │",
             vertical_end = " └"
         },
@@ -61,6 +62,9 @@ require('tiny-inline-diagnostic').setup({
             factor = 0.27,
         },
         options = {
+            -- The minimum length of the message, otherwise it will be on a new line.
+            softwrap = 15,
+
             --- When overflow="wrap", when the message is too long, it is then displayed on multiple lines.
             overflow = "wrap",
 

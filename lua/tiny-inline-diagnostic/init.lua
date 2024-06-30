@@ -8,6 +8,7 @@ local default_config = {
         right = "",
         diag = "●",
         arrow = "    ",
+        up_arrow = "    ",
         vertical = " │",
         vertical_end = " └"
     },
@@ -26,6 +27,7 @@ local default_config = {
     options = {
         -- clear_on_insert = false,
         overflow = "wrap",
+        softwrap = 15,
         break_line = {
             enabled = false,
             after = 10,
