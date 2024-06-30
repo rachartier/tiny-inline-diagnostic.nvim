@@ -26,7 +26,7 @@ local default_config = {
         clear_on_insert = false,
         overflow = "wrap",
         break_line = {
-            enabled = true,
+            enabled = false,
             after = 10,
         }
     }
