@@ -14,6 +14,9 @@ local function get_hi(name)
     }
 end
 
+--- Function to setup highlights for diagnostics.
+-- @param blend table - The table of blend options, which includes the blend factor.
+-- @param default_hi table - The table of default highlights, which includes the colors for each diagnostic type, the arrow, and the background.
 function M.setup_highlights(blend, default_hi)
     local colors = {
         error = get_hi(default_hi.error),

@@ -8,6 +8,7 @@ local default_config = {
         right = "",
         diag = "●",
         arrow = "    ",
+        vertical = " │"
     },
     hi = {
         error = "DiagnosticError",
@@ -22,6 +23,11 @@ local default_config = {
     },
     options = {
         clear_on_insert = false,
+        overflow = "wrap",
+        break_line = {
+            enabled = false,
+            after = 30,
+        }
     }
 }
 
