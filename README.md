@@ -6,6 +6,18 @@ A Neovim plugin that display prettier diagnostic messages. Display one line diag
 
 ![tinyinlinediagnostic](https://github.com/rachartier/tiny-inline-diagnostic.nvim/assets/2057541/6a6eb093-f473-4e61-b344-08317c6b78e9)
 
+
+### Overflow handling enabled
+
+
+![tinyinlinediagnostic_wrap](https://github.com/rachartier/tiny-inline-diagnostic.nvim/assets/2057541/6cc4e622-a4a0-4894-b5c8-76141d4ecd52)
+
+
+### Break line enabled
+
+![image](https://github.com/rachartier/tiny-inline-diagnostic.nvim/assets/2057541/b91625be-ddce-4bb9-979b-f640417a8ed9)
+
+
 ## 🛠️ Setup
 
 - You need to set `vim.opt.updatetime` to trigger `CursorEvent` faster (ex: `vim.opt.updatetime = 100`)
@@ -50,6 +62,14 @@ require('tiny-inline-diagnostic').setup({
         },
         options = {
             clear_on_insert = false,
+            --- When overflow="wrap", when the message is too long, it is then displayed on multiple lines.
+            overflow = "wrap",
+
+            --- Enable it if you want to always have message with `after` characters length.
+            break_line = {
+                enabled = false,
+                after = 30,
+            }
         }
 })
 ```
