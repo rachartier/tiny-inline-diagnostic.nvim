@@ -52,13 +52,13 @@ local function forge_virt_texts_from_diagnostic(opts, diag)
 
     if opts.options.break_line.enabled == true then
         diag_sign = " " .. diag_sign
-        text_after_message = "  "
+        text_after_message = "   "
 
         message_chunk = {}
         message_chunk = utis.wrap_text(diag.message, opts.options.break_line.after)
     elseif opts.options.overflow == "wrap" then
         diag_sign = " " .. diag_sign
-        text_after_message = "  "
+        text_after_message = "   "
 
         local win_width = vim.api.nvim_win_get_width(0)
         local offset = #vim.api.nvim_get_current_line()
@@ -86,9 +86,9 @@ local function forge_virt_texts_from_diagnostic(opts, diag)
         if i == 1 then
             local chunk_virtual_texts = {
                 virt_texts,
-                { opts.signs.left,                      diag_inv_hi },
-                { diag_sign,                            diag_hi },
-                { " " .. message .. text_after_message, diag_hi },
+                { opts.signs.left,               diag_inv_hi },
+                { diag_sign,                     diag_hi },
+                { message .. text_after_message, diag_hi },
             }
 
             if #message_chunk == 1 then
