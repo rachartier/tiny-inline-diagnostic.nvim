@@ -6,10 +6,10 @@ local utis = require("tiny-inline-diagnostic.utils")
 local previous_line_number = 0
 
 --- Function to get diagnostics for the current position in the code.
--- @param diagnostics table - The table of diagnostics to check.
--- @param curline number - The current line number.
--- @param curcol number - The current column number.
--- @return table - A table of diagnostics for the current position.
+--- @param diagnostics table - The table of diagnostics to check.
+--- @param curline number - The current line number.
+--- @param curcol number - The current column number.
+--- @return table - A table of diagnostics for the current position.
 local function get_current_pos_diags(diagnostics, curline, curcol)
     local current_pos_diags = {}
 
@@ -29,22 +29,124 @@ local function get_current_pos_diags(diagnostics, curline, curcol)
     return current_pos_diags
 end
 
+--- Function to splits a diagnostic message into chunks for overflow handling.
+--- @param message string: The diagnostic message.
+--- @param offset number: The offset from the start of the line to the diagnostic position.
+--- @param need_to_be_under boolean: A flag indicating whether the diagnostic message needs to be displayed under the line.
+--- @param line_length number: The length of the line where the diagnostic message is.
+--- @param win_width number: The width of the window where the diagnostic message is displayed.
+--- @param opts table: The options table, which includes signs for the diagnostic message and the softwrap option.
+--- @return table, boolean: A table representing the chunks of the diagnostic message, and a boolean indicating whether the message needs to be displayed under the line.
+local function get_message_chunks_for_overflow(message, offset, need_to_be_under, line_length, win_width, opts)
+    local signs_total_text_len = #opts.signs.arrow + #opts.signs.right + #opts.signs.left + #opts.signs.diag + 4
+
+    local distance = win_width - offset - signs_total_text_len
+
+    if distance < opts.options.softwrap then
+        need_to_be_under = true
+        distance = win_width - signs_total_text_len
+    end
+
+    local message_chunk = {}
+    message_chunk = utis.wrap_text(message, distance)
+
+    return message_chunk, need_to_be_under
+end
+
+--- Function to generates a header for a diagnostic message chunk.
+--- @param message string: The diagnostic message.
+--- @param num_chunks number: The total number of chunks the message is split into.
+--- @param opts table: The options table, which includes signs for the diagnostic message.
+--- @param need_to_be_under boolean: A flag indicating whether the arrow needs to point upwards.
+--- @param diag_hi string: The highlight group for the diagnostic message.
+--- @param diag_inv_hi string: The highlight group for the diagnostic signs.
+--- @return table: A table representing the virtual text array for the diagnostic message header.
+local function get_header_from_chunk(message, num_chunks, opts, need_to_be_under, diag_hi, diag_inv_hi)
+    local arrow = { opts.signs.arrow, "TinyInlineDiagnosticVirtualTextArrow" }
+    if need_to_be_under then
+        arrow = { opts.signs.up_arrow, "TinyInlineDiagnosticVirtualTextArrow" }
+    end
+    local text_after_message = "   "
+    local virt_texts = {
+        arrow,
+        { opts.signs.left, diag_inv_hi },
+        { opts.signs.diag, diag_hi },
+    }
+
+    if num_chunks == 1 then
+        vim.list_extend(virt_texts, {
+            { message .. " ",   diag_hi },
+            { opts.signs.right, diag_inv_hi },
+        })
+    else
+        vim.list_extend(virt_texts, {
+            { message .. text_after_message,      diag_hi },
+            { string.rep(" ", #opts.signs.right), diag_inv_hi },
+        })
+    end
+
+    return virt_texts
+end
+
+--- Function to generates the body for a diagnostic message chunk.
+--- @param chunk string: The chunk of the diagnostic message.
+--- @param opts table: The options table, which includes signs for the diagnostic message.
+--- @param diag_hi string: The highlight group for the diagnostic message.
+--- @param diag_inv_hi string: The highlight group for the diagnostic signs.
+--- @param offset_space string: The offset space for aligning the chunk message.
+--- @param is_last boolean: A flag indicating whether the chunk is the last one.
+--- @return table: A table representing the virtual text array for the diagnostic message body.
+local function get_body_from_chunk(chunk, opts, diag_hi, diag_inv_hi, offset_space, is_last)
+    local vertical_sign = opts.signs.vertical
+
+    if is_last then
+        vertical_sign = opts.signs.vertical_end
+    end
+
+    local chunk_virtual_texts = {
+        { offset_space .. string.rep(" ", #opts.signs.arrow - 1), diag_inv_hi },
+        { vertical_sign,                                          diag_hi },
+        { " " .. chunk .. " ",                                    diag_hi },
+        { " ",                                                    diag_hi },
+    }
+
+    if is_last then
+        vim.list_extend(chunk_virtual_texts, {
+            { opts.signs.right, diag_inv_hi },
+        })
+    end
+
+    return chunk_virtual_texts
+end
+
+--- Function to calculates the maximum width from a list of chunks.
+--- @param chunks table: A table representing the chunks of a diagnostic message.
+--- @return number: The maximum width among all chunks.
+local function get_max_width_from_chunks(chunks)
+    local max_chunk_line_length = 0
+
+    for i = 1, #chunks do
+        if #chunks[i] > max_chunk_line_length then
+            max_chunk_line_length = #chunks[i]
+        end
+    end
+
+    return max_chunk_line_length
+end
+
 --- Function to forge the virtual texts from a diagnostic.
--- @param opts table - The table of options, which includes the signs to use for the virtual texts.
--- @param diag table - The diagnostic to get the virtual texts for.
--- @return table - A table of virtual texts for the given diagnostic.
+--- @param opts table - The table of options, which includes the signs to use for the virtual texts.
+--- @param diag table - The diagnostic to get the virtual texts for.
+--- @return table - A table of virtual texts for the given diagnostic.
 local function forge_virt_texts_from_diagnostic(opts, diag)
     local diag_type = { "Error", "Warn", "Info", "Hint" }
 
     local hi = diag_type[diag.severity]
     local diag_hi = "TinyInlineDiagnosticVirtualText" .. hi
     local diag_inv_hi = "TinyInlineInvDiagnosticVirtualText" .. hi
-    local diag_sign = " " .. opts.signs.diag
 
     local all_virtual_texts = {}
-    local text_after_message = ""
-    local message_chunk = { diag.message }
-    local max_chunk_line_length = 0
+    local chunks = { diag.message }
 
     local win_width = vim.api.nvim_win_get_width(0)
     local line_length = #vim.api.nvim_get_current_line()
@@ -57,28 +159,24 @@ local function forge_virt_texts_from_diagnostic(opts, diag)
             need_to_be_under = true
         end
     end
-    if opts.options.break_line.enabled == true then
-        text_after_message = "   "
 
-        message_chunk = {}
-        message_chunk = utis.wrap_text(diag.message, opts.options.break_line.after)
+    if opts.options.break_line.enabled == true then
+        chunks = {}
+        chunks = utis.wrap_text(diag.message, opts.options.break_line.after)
     elseif opts.options.overflow == "wrap" then
-        text_after_message = "   "
         if need_to_be_under then
             offset = 0
         else
             offset = line_length
         end
 
-        local distance = win_width - offset - #opts.signs.arrow - #opts.signs.right - #opts.signs.left - #diag_sign - 4
-
-        if distance < opts.options.softwrap then
-            need_to_be_under = true
-            distance = win_width - #opts.signs.arrow - #opts.signs.right - #opts.signs.left - #diag_sign - 4
-        end
-
-        message_chunk = {}
-        message_chunk = utis.wrap_text(diag.message, distance)
+        chunks, need_to_be_under = get_message_chunks_for_overflow(
+            diag.message,
+            offset,
+            need_to_be_under,
+            line_length,
+            win_width, opts
+        )
     end
 
     local offset_space = ""
@@ -89,64 +187,36 @@ local function forge_virt_texts_from_diagnostic(opts, diag)
         offset_space = string.rep(" ", offset + 1)
     end
 
-    local virt_texts = { opts.signs.arrow, "TinyInlineDiagnosticVirtualTextArrow" }
-    if need_to_be_under then
-        virt_texts = { opts.signs.up_arrow, "TinyInlineDiagnosticVirtualTextArrow" }
-    end
+    local max_chunk_line_length = get_max_width_from_chunks(chunks)
 
-    for i = 1, #message_chunk do
-        if #message_chunk[i] > max_chunk_line_length then
-            max_chunk_line_length = #message_chunk[i]
-        end
-    end
-
-    for i = 1, #message_chunk do
-        local message = message_chunk[i]
+    for i = 1, #chunks do
+        local message = chunks[i]
 
         local to_add = max_chunk_line_length - #message
         message = message .. string.rep(" ", to_add)
 
         if i == 1 then
-            local chunk_virtual_texts = {
-                virt_texts,
-                { opts.signs.left, diag_inv_hi },
-                { diag_sign,       diag_hi },
-            }
+            local chunk_header = get_header_from_chunk(
+                message,
+                #chunks,
+                opts,
+                need_to_be_under,
+                diag_hi,
+                diag_inv_hi
+            )
 
-            if #message_chunk == 1 then
-                vim.list_extend(chunk_virtual_texts, {
-                    { message .. " ",   diag_hi },
-                    { opts.signs.right, diag_inv_hi },
-                })
-            else
-                vim.list_extend(chunk_virtual_texts, {
-                    { message .. text_after_message,      diag_hi },
-                    { string.rep(" ", #opts.signs.right), diag_inv_hi },
-                })
-            end
-
-            table.insert(all_virtual_texts, chunk_virtual_texts)
+            table.insert(all_virtual_texts, chunk_header)
         else
-            local vertical_sign = opts.signs.vertical
+            local chunk_body = get_body_from_chunk(
+                message,
+                opts,
+                diag_hi,
+                diag_inv_hi,
+                offset_space,
+                i == #chunks
+            )
 
-            if i == #message_chunk then
-                vertical_sign = opts.signs.vertical_end
-            end
-
-            local chunk_virtual_texts = {
-                { offset_space .. string.rep(" ", #opts.signs.arrow - 1), diag_inv_hi },
-                { vertical_sign,                                          diag_hi },
-                { " " .. message .. " ",                                  diag_hi },
-                { " ",                                                    diag_hi },
-            }
-
-            if i == #message_chunk then
-                vim.list_extend(chunk_virtual_texts, {
-                    { opts.signs.right, diag_inv_hi },
-                })
-            end
-
-            table.insert(all_virtual_texts, chunk_virtual_texts)
+            table.insert(all_virtual_texts, chunk_body)
         end
     end
 
@@ -160,8 +230,8 @@ local function forge_virt_texts_from_diagnostic(opts, diag)
 end
 
 --- Function to get the diagnostic under the cursor.
--- @param buf number - The buffer number to get the diagnostics for.
--- @return table, number - A table of diagnostics for the current position and the current line number, or nil if there are no diagnostics.
+--- @param buf number - The buffer number to get the diagnostics for.
+--- @return table, number - A table of diagnostics for the current position and the current line number, or nil if there are no diagnostics.
 function M.get_diagnostic_under_cursor(buf)
     local cursor_pos = vim.api.nvim_win_get_cursor(0)
     local curline = cursor_pos[1] - 1
@@ -177,8 +247,8 @@ function M.get_diagnostic_under_cursor(buf)
 end
 
 --- Function to set diagnostic autocmds.
--- This function creates an autocmd for the `LspAttach` event.
--- @param opts table - The table of options, which includes the `clear_on_insert` option and the signs to use for the virtual texts.
+--- This function creates an autocmd for the `LspAttach` event.
+--- @param opts table - The table of options, which includes the `clear_on_insert` option and the signs to use for the virtual texts.
 function M.set_diagnostic_autocmds(opts)
     vim.api.nvim_create_autocmd("LspAttach", {
         callback = function(event)
@@ -226,12 +296,12 @@ function M.set_diagnostic_autocmds(opts)
                         end
                     end
 
-
                     vim.api.nvim_buf_set_extmark(event.buf, diagnostic_ns, curline, 0, {
                         id = curline + 1,
                         line_hl_group = "CursorLine",
                         virt_text = virt_texts[1],
                         virt_lines = virt_lines,
+                        priority = 1,
                     })
                 end,
                 desc = "Show diagnostics on cursor hold",
