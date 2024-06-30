@@ -37,19 +37,15 @@ local function forge_virt_texts_from_diagnostic(opts, diag)
     local diag_type = { "Error", "Warn", "Info", "Hint" }
 
     local hi = diag_type[diag.severity]
-
     local diag_hi = "TinyInlineDiagnosticVirtualText" .. hi
     local diag_inv_hi = "TinyInlineInvDiagnosticVirtualText" .. hi
+    local diag_sign = " " .. opts.signs.diag
 
     local all_virtual_texts = {}
-
-    local diag_sign = " " .. opts.signs.diag
     local text_after_message = ""
-
-    local message_chunk = {
-        diag.message
-    }
+    local message_chunk = { diag.message }
     local max_chunk_line_length = 0
+
     local win_width = vim.api.nvim_win_get_width(0)
     local line_length = #vim.api.nvim_get_current_line()
     local offset = 0
@@ -93,21 +89,16 @@ local function forge_virt_texts_from_diagnostic(opts, diag)
         offset_space = string.rep(" ", offset + 1)
     end
 
-
     local virt_texts = { opts.signs.arrow, "TinyInlineDiagnosticVirtualTextArrow" }
     if need_to_be_under then
         virt_texts = { opts.signs.up_arrow, "TinyInlineDiagnosticVirtualTextArrow" }
     end
-
-
 
     for i = 1, #message_chunk do
         if #message_chunk[i] > max_chunk_line_length then
             max_chunk_line_length = #message_chunk[i]
         end
     end
-
-
 
     for i = 1, #message_chunk do
         local message = message_chunk[i]
@@ -165,7 +156,7 @@ local function forge_virt_texts_from_diagnostic(opts, diag)
         })
     end
 
-    return all_virtual_texts, need_to_be_under
+    return all_virtual_texts
 end
 
 --- Function to get the diagnostic under the cursor.
@@ -226,7 +217,7 @@ function M.set_diagnostic_autocmds(opts)
                     end
 
                     previous_line_number = curline
-                    local virt_texts, need_to_be_under = forge_virt_texts_from_diagnostic(opts, diag[1])
+                    local virt_texts = forge_virt_texts_from_diagnostic(opts, diag[1])
                     local virt_lines = {}
 
                     if #virt_texts > 1 then
@@ -237,9 +228,10 @@ function M.set_diagnostic_autocmds(opts)
 
 
                     vim.api.nvim_buf_set_extmark(event.buf, diagnostic_ns, curline, 0, {
-                        id = curline,
+                        id = curline + 1,
+                        line_hl_group = "CursorLine",
                         virt_text = virt_texts[1],
-                        virt_lines = virt_lines
+                        virt_lines = virt_lines,
                     })
                 end,
                 desc = "Show diagnostics on cursor hold",
