@@ -24,8 +24,13 @@ function M.setup_highlights(blend, default_hi)
         info = get_hi(default_hi.info),
         hint = get_hi(default_hi.hint),
         arrow = get_hi(default_hi.arrow),
-        background = default_hi.background,
     }
+
+    if default_hi.background:sub(1, 1) == "#" then
+        colors.background = default_hi.background
+    else
+        colors.background = get_hi(default_hi.background).bg
+    end
 
     local factor = blend.factor
     local c = colors.background
@@ -42,12 +47,12 @@ function M.setup_highlights(blend, default_hi)
         TinyInlineDiagnosticVirtualTextWarn = { bg = blends.warn, fg = colors.warn.fg },
         TinyInlineDiagnosticVirtualTextInfo = { bg = blends.info, fg = colors.info.fg },
         TinyInlineDiagnosticVirtualTextHint = { bg = blends.hint, fg = colors.hint.fg },
-        TinyInlineDiagnosticVirtualTextArrow = colors.arrow,
+        TinyInlineDiagnosticVirtualTextArrow = { bg = colors.background, colors.arrow },
 
-        TinyInlineInvDiagnosticVirtualTextError = { fg = blends.error, bg = "None" },
-        TinyInlineInvDiagnosticVirtualTextWarn = { fg = blends.warn, bg = "None" },
-        TinyInlineInvDiagnosticVirtualTextInfo = { fg = blends.info, bg = "None" },
-        TinyInlineInvDiagnosticVirtualTextHint = { fg = blends.hint, bg = "None" },
+        TinyInlineInvDiagnosticVirtualTextError = { fg = blends.error, bg = colors.background },
+        TinyInlineInvDiagnosticVirtualTextWarn = { fg = blends.warn, bg = colors.background },
+        TinyInlineInvDiagnosticVirtualTextInfo = { fg = blends.info, bg = colors.background },
+        TinyInlineInvDiagnosticVirtualTextHint = { fg = blends.hint, bg = colors.background },
     }
 
     for name, opts in pairs(hi) do

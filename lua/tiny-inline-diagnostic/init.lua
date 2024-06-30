@@ -17,13 +17,13 @@ local default_config = {
         info = "DiagnosticInfo",
         hint = "DiagnosticHint",
         arrow = "NonText",
-        background = "None",
+        background = "CursorLine",
     },
     blend = {
         factor = 0.27,
     },
     options = {
-        clear_on_insert = false,
+        -- clear_on_insert = false,
         overflow = "wrap",
         break_line = {
             enabled = false,

@@ -3,6 +3,8 @@ local M = {}
 local diagnostic_ns = vim.api.nvim_create_namespace("CursorDiagnostics")
 local utis = require("tiny-inline-diagnostic.utils")
 
+local previous_line_number = 0
+
 --- Function to get diagnostics for the current position in the code.
 -- @param diagnostics table - The table of diagnostics to check.
 -- @param curline number - The current line number.
@@ -154,17 +156,30 @@ end
 function M.set_diagnostic_autocmds(opts)
     vim.api.nvim_create_autocmd("LspAttach", {
         callback = function(event)
-            if opts.options.clear_on_insert then
-                vim.api.nvim_create_autocmd("InsertEnter", {
-                    buffer = event.buf,
-                    callback = function()
-                        vim.api.nvim_buf_clear_namespace(event.buf, diagnostic_ns, 0, -1)
-                    end,
-                    desc = "Clear diagnostics on insert enter",
-                })
-            end
+            -- if opts.options.clear_on_insert then
+            --     vim.api.nvim_create_autocmd("InsertEnter", {
+            --         buffer = event.buf,
+            --         callback = function()
+            --             pcall(vim.api.nvim_buf_clear_namespace, event.buf, diagnostic_ns, 0, -1)
+            --         end,
+            --         desc = "Clear diagnostics on insert enter",
+            --     })
+            -- end
+            --
+            vim.api.nvim_create_autocmd({ "CursorMoved" }, {
+                buffer = event.buf,
+                callback = function()
+                    local cursor_pos = vim.api.nvim_win_get_cursor(0)
+                    local curline = cursor_pos[1] - 1
 
-            vim.api.nvim_create_autocmd({ "CursorHold", "VimResized", "CursorMovedI" }, {
+                    if curline == previous_line_number then
+                        return
+                    end
+                    pcall(vim.api.nvim_buf_clear_namespace, event.buf, diagnostic_ns, 0, -1)
+                end
+            })
+
+            vim.api.nvim_create_autocmd({ "CursorMoved", "CursorMovedI", "VimResized" }, {
                 buffer = event.buf,
                 callback = function()
                     pcall(vim.api.nvim_buf_clear_namespace, event.buf, diagnostic_ns, 0, -1)
@@ -175,6 +190,7 @@ function M.set_diagnostic_autocmds(opts)
                         return
                     end
 
+                    previous_line_number = curline
                     local virt_texts = forge_virt_texts_from_diagnostic(opts, diag[1])
 
                     local virt_lines = {}

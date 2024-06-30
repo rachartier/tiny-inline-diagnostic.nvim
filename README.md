@@ -61,7 +61,6 @@ require('tiny-inline-diagnostic').setup({
             factor = 0.27,
         },
         options = {
-            clear_on_insert = false,
             --- When overflow="wrap", when the message is too long, it is then displayed on multiple lines.
             overflow = "wrap",
 
