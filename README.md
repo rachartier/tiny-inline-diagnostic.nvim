@@ -55,6 +55,7 @@ require('tiny-inline-diagnostic').setup({
             hint = "DiagnosticHint",
             arrow = "NonText",
             background = "CursorLine", -- Can be a highlight or a hexadecimal color (#RRGGBB)
+            mixing_color = "None",  -- Can be None or a hexadecimal color (#RRGGBB). Used to blend the background color with the diagnostic background color with another color.
         },
         blend = {
             factor = 0.27,
@@ -93,5 +94,9 @@ require('tiny-inline-diagnostic').setup({
 
 ## ❓ FAQ:
 
+
+- **Q**: My colors are bad
+    - You can change the colors with the `hi` option.
+    - If you have no background color, you should try to set `blend.mixing_color` to a color that will blend with the background color.
 - **Q**: All diagnostics are still displayed
     - You need to set `vim.diagnostic.config({ virtual_text = false })` to remove all the others diagnostics.

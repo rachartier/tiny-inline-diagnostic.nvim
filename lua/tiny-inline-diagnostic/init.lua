@@ -18,6 +18,7 @@ local default_config = {
         hint = "DiagnosticHint",
         arrow = "NonText",
         background = "CursorLine",
+        mixing_color = "None"
     },
     blend = {
         factor = 0.27,

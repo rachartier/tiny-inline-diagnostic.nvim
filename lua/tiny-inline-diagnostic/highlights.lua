@@ -32,8 +32,14 @@ function M.setup_highlights(blend, default_hi)
         colors.background = get_hi(default_hi.background).bg
     end
 
+    if default_hi.mixing_colors == "None" then
+        colors.mixing_color = "#000000"
+    else
+        colors.mixing_color = default_hi.mixing_color
+    end
+
     local factor = blend.factor
-    local c = colors.background
+    local c = colors.mixing_color
 
     local blends = {
         error = utils.blend(colors.error.fg, c, factor),
