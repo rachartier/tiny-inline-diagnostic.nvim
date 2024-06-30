@@ -48,6 +48,8 @@ require('tiny-inline-diagnostic').setup({
             right = "",
             diag = "●",
             arrow = "    ",
+            vertical = " │",
+            vertical_end = " └"
         },
         hi = {
             error = "DiagnosticError",

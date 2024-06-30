@@ -8,7 +8,8 @@ local default_config = {
         right = "",
         diag = "●",
         arrow = "    ",
-        vertical = " │"
+        vertical = " │",
+        vertical_end = " └"
     },
     hi = {
         error = "DiagnosticError",

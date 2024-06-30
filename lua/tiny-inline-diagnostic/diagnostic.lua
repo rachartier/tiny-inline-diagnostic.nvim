@@ -99,9 +99,15 @@ local function forge_virt_texts_from_diagnostic(opts, diag)
 
             table.insert(all_virtual_texts, chunk_virtual_texts)
         else
+            local vertical_sign = opts.signs.vertical
+
+            if i == #message_chunk then
+                vertical_sign = opts.signs.vertical_end
+            end
+
             local chunk_virtual_texts = {
                 { offset_space .. string.rep(" ", #opts.signs.arrow - 1), diag_inv_hi },
-                { opts.signs.vertical,                                    diag_hi },
+                { vertical_sign,                                          diag_hi },
                 { " " .. message .. " ",                                  diag_hi },
                 { " ",                                                    diag_hi },
             }
