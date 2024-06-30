@@ -86,14 +86,20 @@ local function forge_virt_texts_from_diagnostic(opts, diag)
         if i == 1 then
             local chunk_virtual_texts = {
                 virt_texts,
-                { opts.signs.left,               diag_inv_hi },
-                { diag_sign,                     diag_hi },
-                { message .. text_after_message, diag_hi },
+                { opts.signs.left, diag_inv_hi },
+                { diag_sign,       diag_hi },
             }
 
             if #message_chunk == 1 then
                 vim.list_extend(chunk_virtual_texts, {
+                    { message .. " ",   diag_hi },
                     { opts.signs.right, diag_inv_hi },
+                })
+            else
+                vim.list_extend(chunk_virtual_texts, {
+
+                    { message .. text_after_message,      diag_hi },
+                    { string.rep(" ", #opts.signs.right), diag_inv_hi },
                 })
             end
 
