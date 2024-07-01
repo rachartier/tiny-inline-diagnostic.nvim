@@ -41,8 +41,12 @@ function M.setup(opts)
     end
 
     local config = vim.tbl_deep_extend("force", default_config, opts)
-
-    hi.setup_highlights(config.blend, config.hi)
+    vim.api.nvim_create_autocmd("ColorScheme", {
+        pattern = "*",
+        callback = function()
+            hi.setup_highlights(config.blend, config.hi)
+        end
+    })
     diag.set_diagnostic_autocmds(config)
 end
 
