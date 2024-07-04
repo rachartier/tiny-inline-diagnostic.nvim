@@ -2,6 +2,7 @@ local M = {}
 local hi = require("tiny-inline-diagnostic.highlights")
 local diag = require("tiny-inline-diagnostic.diagnostic")
 
+
 local default_config = {
     signs = {
         left = "",
@@ -73,6 +74,14 @@ function M.get_diagnostic_under_cursor(buf)
     end
 
     return diags, curline + 1
+end
+
+function M.enable()
+    diag.enable()
+end
+
+function M.disable()
+    diag.disable()
 end
 
 return M

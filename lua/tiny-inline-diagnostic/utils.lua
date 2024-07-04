@@ -41,20 +41,51 @@ function M.int_to_hex(int)
     return string.format("#%06X", int)
 end
 
+-- function M.split_lines(s)
+--     if string.find(s, "\n") then
+--         local lines = {}
+--         for line in string.gmatch(s, "(.-)\n") do
+--             line = line:gsub("\n", "")
+--             table.insert(lines, line)
+--         end
+--         print(vim.inspect(lines))
+--         return lines
+--     else
+--         return { s }
+--     end
+-- end
+--
+function M.split_lines(s)
+    local lines = {}
+    for line in s:gmatch("([^\n]*)\n?") do
+        table.insert(lines, line)
+    end
+    table.remove(lines, #lines)
+    return lines
+end
+
 function M.wrap_text(text, max_length)
     local lines = {}
-    local line = ''
 
-    for word in text:gmatch("%S+") do
-        if #line + #word <= max_length then
-            line = line .. ' ' .. word
-        else
-            table.insert(lines, line)
-            line = word
+    local splited_lines = M.split_lines(text)
+
+    for i, splited_line in ipairs(splited_lines) do
+        local line = ''
+
+        for word in splited_line:gmatch("%S+") do
+            if #line + #word <= max_length then
+                if #line == 0 and i > 1 then
+                    line = word
+                else
+                    line = line .. ' ' .. word
+                end
+            else
+                table.insert(lines, line)
+                line = word
+            end
         end
+        table.insert(lines, line)
     end
-
-    table.insert(lines, line)
 
     return lines
 end
