@@ -94,6 +94,10 @@ require('tiny-inline-diagnostic').setup({
 
 - `require("tiny-inline-diagnostic").change(background, factor)`: change the background color and the blend factor, useful if you want to change the colorscheme on the fly.
 - `require("tiny-inline-diagnostic").get_diagnostic_under_cursor(bufnr)`: get the diagnostic under the cursor, useful if you want to display the diagnostic in a statusline.
+- `require("tiny-inline-diagnostic").enable()`: enable the diagnostic.
+- `require("tiny-inline-diagnostic").disable()`: disable the diagnostic.
+- `require("tiny-inline-diagnostic").toggle()`: toggle the diagnostic, on/off.
+
 
 ## ❓ FAQ:
 

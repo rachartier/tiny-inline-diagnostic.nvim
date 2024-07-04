@@ -84,4 +84,8 @@ function M.disable()
     diag.disable()
 end
 
+function M.toggle()
+    diag.toggle()
+end
+
 return M

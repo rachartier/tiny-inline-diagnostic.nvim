@@ -250,10 +250,13 @@ end
 --- This function creates an autocmd for the `LspAttach` event.
 --- @param opts table - The table of options, which includes the `clear_on_insert` option and the signs to use for the virtual texts.
 function M.set_diagnostic_autocmds(opts)
+    vim.api.nvim_create_user_command("TinyDiagnosticEvent", function()
+    end, {})
+
     vim.api.nvim_create_autocmd("LspAttach", {
         callback = function(event)
-            vim.api.nvim_create_autocmd({ "CursorMoved", "CursorMovedI", "VimResized" }, {
-                buffer = event.buf,
+            vim.api.nvim_create_autocmd("User", {
+                pattern = "TinyDiagnosticEvent",
                 callback = function()
                     pcall(vim.api.nvim_buf_clear_namespace, event.buf, diagnostic_ns, 0, -1)
                     if not M.enabled then
@@ -283,11 +286,32 @@ function M.set_diagnostic_autocmds(opts)
                         priority = 1,
                     })
                 end,
+            })
+            vim.api.nvim_create_autocmd({ "CursorMoved", "CursorMovedI", "VimResized" }, {
+                buffer = event.buf,
+                callback = function()
+                    vim.api.nvim_exec_autocmds("User", { pattern = "TinyDiagnosticEvent" })
+                end,
                 desc = "Show diagnostics on cursor hold",
             })
         end,
         desc = "Show diagnostics on cursor hold",
     })
+end
+
+function M.enable()
+    M.enabled = true
+    vim.api.nvim_exec_autocmds("User", { pattern = "TinyDiagnosticEvent" })
+end
+
+function M.disable()
+    M.enabled = false
+    vim.api.nvim_exec_autocmds("User", { pattern = "TinyDiagnosticEvent" })
+end
+
+function M.toggle()
+    M.enabled = not M.enabled
+    vim.api.nvim_exec_autocmds("User", { pattern = "TinyDiagnosticEvent" })
 end
 
 return M
