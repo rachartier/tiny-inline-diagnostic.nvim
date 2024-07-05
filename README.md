@@ -61,9 +61,6 @@ require('tiny-inline-diagnostic').setup({
             factor = 0.27,
         },
         options = {
-            -- Throttle the diagnostic update, in milliseconds.
-            throttle = 100,
-
             -- The minimum length of the message, otherwise it will be on a new line.
             softwrap = 15,
 
