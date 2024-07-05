@@ -255,42 +255,51 @@ function M.set_diagnostic_autocmds(opts)
 
     vim.api.nvim_create_autocmd("LspAttach", {
         callback = function(event)
+            local throttled_diag = require("tiny-inline-diagnostic.utils").throttle(function()
+                if not vim.api.nvim_buf_is_valid(event.buf) then
+                    return
+                end
+
+                pcall(vim.api.nvim_buf_clear_namespace, event.buf, diagnostic_ns, 0, -1)
+                if not M.enabled then
+                    return
+                end
+
+                local diag, curline = M.get_diagnostic_under_cursor(event.buf)
+
+                if diag == nil or curline == nil then
+                    return
+                end
+
+                local virt_texts = forge_virt_texts_from_diagnostic(opts, diag[1])
+                local virt_lines = {}
+
+                if #virt_texts > 1 then
+                    for i = 2, #virt_texts do
+                        table.insert(virt_lines, virt_texts[i])
+                    end
+                end
+
+                vim.api.nvim_buf_set_extmark(event.buf, diagnostic_ns, curline, 0, {
+                    id = curline + 1,
+                    line_hl_group = "CursorLine",
+                    virt_text = virt_texts[1],
+                    virt_lines = virt_lines,
+                    priority = 2048,
+                })
+            end, opts.options.throttle)
+
+
             vim.api.nvim_create_autocmd("User", {
                 pattern = "TinyDiagnosticEvent",
-                callback = function()
-                    pcall(vim.api.nvim_buf_clear_namespace, event.buf, diagnostic_ns, 0, -1)
-                    if not M.enabled then
-                        return
-                    end
-
-                    local diag, curline = M.get_diagnostic_under_cursor(event.buf)
-
-                    if diag == nil or curline == nil then
-                        return
-                    end
-
-                    local virt_texts = forge_virt_texts_from_diagnostic(opts, diag[1])
-                    local virt_lines = {}
-
-                    if #virt_texts > 1 then
-                        for i = 2, #virt_texts do
-                            table.insert(virt_lines, virt_texts[i])
-                        end
-                    end
-
-                    vim.api.nvim_buf_set_extmark(event.buf, diagnostic_ns, curline, 0, {
-                        id = curline + 1,
-                        line_hl_group = "CursorLine",
-                        virt_text = virt_texts[1],
-                        virt_lines = virt_lines,
-                        priority = 2048,
-                    })
-                end,
+                callback = throttled_diag,
             })
             vim.api.nvim_create_autocmd({ "CursorMoved", "CursorMovedI", "VimResized" }, {
                 buffer = event.buf,
                 callback = function()
-                    vim.api.nvim_exec_autocmds("User", { pattern = "TinyDiagnosticEvent" })
+                    if vim.api.nvim_buf_is_valid(event.buf) then
+                        vim.api.nvim_exec_autocmds("User", { pattern = "TinyDiagnosticEvent" })
+                    end
                 end,
                 desc = "Show diagnostics on cursor hold",
             })

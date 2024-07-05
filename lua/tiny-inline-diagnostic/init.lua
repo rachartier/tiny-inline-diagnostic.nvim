@@ -26,12 +26,12 @@ local default_config = {
         factor = 0.27,
     },
     options = {
-        -- clear_on_insert = false,
+        throttle = 100,
         overflow = "wrap",
-        softwrap = 10,
+        softwrap = 15,
         break_line = {
             enabled = false,
-            after = 10,
+            after = 30,
         }
     }
 }
