@@ -283,7 +283,7 @@ function M.set_diagnostic_autocmds(opts)
                         line_hl_group = "CursorLine",
                         virt_text = virt_texts[1],
                         virt_lines = virt_lines,
-                        priority = 1,
+                        priority = 2048,
                     })
                 end,
             })
