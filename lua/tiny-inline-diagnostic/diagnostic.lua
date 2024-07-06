@@ -268,6 +268,7 @@ function M.set_diagnostic_autocmds(opts)
                 local diag, curline, curcol = M.get_diagnostic_under_cursor(event.buf)
 
                 if diag == nil or curline == nil then
+                    pcall(vim.api.nvim_buf_clear_namespace, event.buf, diagnostic_ns, 0, -1)
                     return
                 end
 
@@ -276,7 +277,6 @@ function M.set_diagnostic_autocmds(opts)
                         return
                     end
                 end
-
                 pcall(vim.api.nvim_buf_clear_namespace, event.buf, diagnostic_ns, 0, -1)
 
                 last_line = curline

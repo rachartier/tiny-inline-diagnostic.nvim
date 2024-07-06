@@ -62,7 +62,9 @@ require('tiny-inline-diagnostic').setup({
         },
         options = {
             -- Throttle the update of the diagnostic when moving cursor, in milliseconds.
-            throttle = 100,
+            -- You can increase it if you have performance issues.
+            -- Or set it to 0 to have better visuals.
+            throttle = 40,
 
             -- The minimum length of the message, otherwise it will be on a new line.
             softwrap = 15,
