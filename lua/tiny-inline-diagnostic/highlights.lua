@@ -32,8 +32,12 @@ function M.setup_highlights(blend, default_hi)
         colors.background = get_hi(default_hi.background).bg
     end
 
-    if default_hi.mixing_colors == "None" then
-        colors.mixing_color = "#000000"
+    if default_hi.mixing_color == "None" then
+        if vim.g.background == "light" then
+            colors.mixing_color = "#ffffff"
+        else
+            colors.mixing_color = "#000000"
+        end
     else
         colors.mixing_color = default_hi.mixing_color
     end
