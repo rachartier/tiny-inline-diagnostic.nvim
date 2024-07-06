@@ -350,17 +350,27 @@ function M.set_diagnostic_autocmds(opts)
                 desc = "Show diagnostics on cursor hold",
             })
 
-            vim.api.nvim_create_autocmd({ "CursorMoved", "CursorMovedI", "VimResized" }, {
+            vim.api.nvim_create_autocmd({ "VimResized" }, {
+                buffer = event.buf,
+                callback = function()
+                    if vim.api.nvim_buf_is_valid(event.buf) then
+                        vim.api.nvim_exec_autocmds("User", { pattern = "TinyDiagnosticEventForce" })
+                    end
+                end,
+                desc = "Handle window resize event, force diagnostics update to fit new window width.",
+            })
+
+            vim.api.nvim_create_autocmd({ "CursorMoved", "CursorMovedI" }, {
                 buffer = event.buf,
                 callback = function()
                     if vim.api.nvim_buf_is_valid(event.buf) then
                         vim.api.nvim_exec_autocmds("User", { pattern = "TinyDiagnosticEventThrottled" })
                     end
                 end,
-                desc = "Show diagnostics on cursor hold",
+                desc = "Show diagnostics on cursor move, throttled.",
             })
         end,
-        desc = "Show diagnostics on cursor hold",
+        desc = "Apply autocmds for diagnostics on cursor move and window resize events.",
     })
 end
 

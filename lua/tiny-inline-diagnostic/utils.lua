@@ -90,12 +90,9 @@ function M.wrap_text(text, max_length)
     return lines
 end
 
---- Throttles a function on the leading edge. Automatically `schedule_wrap()`s.
----
---@param fn (function) Function to throttle
---@param timeout (number) Timeout in ms
---@returns (function, timer) throttled function and timer. Remember to call
----`timer:close()` at the end or you will leak memory!
+--- @param fn function Function to throttle
+--- @param ms number Timeout in ms
+--- @returns function, timer throttled function and timer. Remember to call
 function M.throttle(fn, ms)
     local timer = vim.loop.new_timer()
     local running = false
