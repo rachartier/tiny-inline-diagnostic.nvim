@@ -26,7 +26,7 @@ local default_config = {
         factor = 0.27,
     },
     options = {
-        throttle = 1000,
+        throttle = 100,
         overflow = "wrap",
         softwrap = 15,
         break_line = {

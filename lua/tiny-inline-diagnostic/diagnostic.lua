@@ -1,9 +1,10 @@
 local M = {}
+local timers_by_buffer = {}
 
 M.enabled = true
 
 local diagnostic_ns = vim.api.nvim_create_namespace("CursorDiagnostics")
-local utis = require("tiny-inline-diagnostic.utils")
+local utils = require("tiny-inline-diagnostic.utils")
 
 --- Function to get diagnostics for the current position in the code.
 --- @param diagnostics table - The table of diagnostics to check.
@@ -48,7 +49,7 @@ local function get_message_chunks_for_overflow(message, offset, need_to_be_under
     end
 
     local message_chunk = {}
-    message_chunk = utis.wrap_text(message, distance)
+    message_chunk = utils.wrap_text(message, distance)
 
     return message_chunk, need_to_be_under
 end
@@ -162,7 +163,7 @@ local function forge_virt_texts_from_diagnostic(opts, diag)
 
     if opts.options.break_line.enabled == true then
         chunks = {}
-        chunks = utis.wrap_text(diag.message, opts.options.break_line.after)
+        chunks = utils.wrap_text(diag.message, opts.options.break_line.after)
     elseif opts.options.overflow == "wrap" then
         if need_to_be_under then
             offset = 0
@@ -231,7 +232,7 @@ end
 
 --- Function to get the diagnostic under the cursor.
 --- @param buf number - The buffer number to get the diagnostics for.
---- @return table, number - A table of diagnostics for the current position and the current line number, or nil if there are no diagnostics.
+--- @return table, number, number - A table of diagnostics for the current position, the current line number, the current col, or nil if there are no diagnostics.
 function M.get_diagnostic_under_cursor(buf)
     local cursor_pos = vim.api.nvim_win_get_cursor(0)
     local curline = cursor_pos[1] - 1
@@ -243,7 +244,7 @@ function M.get_diagnostic_under_cursor(buf)
         return
     end
 
-    return get_current_pos_diags(diagnostics, curline, curcol), curline
+    return get_current_pos_diags(diagnostics, curline, curcol), curline, curcol
 end
 
 --- Function to set diagnostic autocmds.
@@ -255,47 +256,105 @@ function M.set_diagnostic_autocmds(opts)
 
     vim.api.nvim_create_autocmd("LspAttach", {
         callback = function(event)
+            local last_col = 0
+            local last_line = 0
+
+            local function apply_diagnostics_virtual_texts(params)
+                if not M.enabled then
+                    pcall(vim.api.nvim_buf_clear_namespace, event.buf, diagnostic_ns, 0, -1)
+                    return
+                end
+
+                local diag, curline, curcol = M.get_diagnostic_under_cursor(event.buf)
+
+                if diag == nil or curline == nil then
+                    return
+                end
+
+                if not (params and params.force) then
+                    if curline == last_line and curcol == last_col then
+                        return
+                    end
+                end
+
+                pcall(vim.api.nvim_buf_clear_namespace, event.buf, diagnostic_ns, 0, -1)
+
+                last_line = curline
+                last_col = curcol
+
+                local virt_texts = forge_virt_texts_from_diagnostic(opts, diag[1])
+                local virt_lines = {}
+
+                if #virt_texts > 1 then
+                    for i = 2, #virt_texts do
+                        table.insert(virt_lines, virt_texts[i])
+                    end
+                end
+
+                vim.api.nvim_buf_set_extmark(event.buf, diagnostic_ns, curline, 0, {
+                    id = curline + 1,
+                    line_hl_group = "CursorLine",
+                    virt_text = virt_texts[1],
+                    virt_lines = virt_lines,
+                    priority = 2048,
+                })
+            end
+
+            local throttled_apply_diagnostics_virtual_texts, timer = utils.throttle(
+                apply_diagnostics_virtual_texts,
+                opts.options.throttle
+            )
+
+            if not timers_by_buffer[event.buf] then
+                timers_by_buffer[event.buf] = timer
+            end
+
             vim.api.nvim_create_autocmd("User", {
                 pattern = "TinyDiagnosticEvent",
                 callback = function()
-                    if not vim.api.nvim_buf_is_valid(event.buf) then
-                        return
-                    end
-
-                    pcall(vim.api.nvim_buf_clear_namespace, event.buf, diagnostic_ns, 0, -1)
-                    if not M.enabled then
-                        return
-                    end
-
-                    local diag, curline = M.get_diagnostic_under_cursor(event.buf)
-
-                    if diag == nil or curline == nil then
-                        return
-                    end
-
-                    local virt_texts = forge_virt_texts_from_diagnostic(opts, diag[1])
-                    local virt_lines = {}
-
-                    if #virt_texts > 1 then
-                        for i = 2, #virt_texts do
-                            table.insert(virt_lines, virt_texts[i])
-                        end
-                    end
-
-                    vim.api.nvim_buf_set_extmark(event.buf, diagnostic_ns, curline, 0, {
-                        id = curline + 1,
-                        line_hl_group = "CursorLine",
-                        virt_text = virt_texts[1],
-                        virt_lines = virt_lines,
-                        priority = 2048,
-                    })
-                end,
+                    apply_diagnostics_virtual_texts()
+                end
             })
-            vim.api.nvim_create_autocmd({ "CursorMoved", "CursorMovedI", "VimResized" }, {
+
+            vim.api.nvim_create_autocmd({ "LspDetach" }, {
+                buffer = event.buf,
+                callback = function()
+                    if timers_by_buffer[event.buf] then
+                        timers_by_buffer[event.buf]:close()
+                        timers_by_buffer[event.buf] = nil
+                    end
+                end
+            })
+
+            vim.api.nvim_create_autocmd("User", {
+                pattern = "TinyDiagnosticEventThrottled",
+                callback = function()
+                    throttled_apply_diagnostics_virtual_texts()
+                end
+            })
+
+            vim.api.nvim_create_autocmd("User", {
+                pattern = "TinyDiagnosticEventForce",
+                callback = function()
+                    apply_diagnostics_virtual_texts({ force = true })
+                end
+            })
+
+            vim.api.nvim_create_autocmd({ "CursorHold", "CursorHoldI" }, {
                 buffer = event.buf,
                 callback = function()
                     if vim.api.nvim_buf_is_valid(event.buf) then
                         vim.api.nvim_exec_autocmds("User", { pattern = "TinyDiagnosticEvent" })
+                    end
+                end,
+                desc = "Show diagnostics on cursor hold",
+            })
+
+            vim.api.nvim_create_autocmd({ "CursorMoved", "CursorMovedI", "VimResized" }, {
+                buffer = event.buf,
+                callback = function()
+                    if vim.api.nvim_buf_is_valid(event.buf) then
+                        vim.api.nvim_exec_autocmds("User", { pattern = "TinyDiagnosticEventThrottled" })
                     end
                 end,
                 desc = "Show diagnostics on cursor hold",
@@ -307,17 +366,17 @@ end
 
 function M.enable()
     M.enabled = true
-    vim.api.nvim_exec_autocmds("User", { pattern = "TinyDiagnosticEvent" })
+    vim.api.nvim_exec_autocmds("User", { pattern = "TinyDiagnosticEventForce" })
 end
 
 function M.disable()
     M.enabled = false
-    vim.api.nvim_exec_autocmds("User", { pattern = "TinyDiagnosticEvent" })
+    vim.api.nvim_exec_autocmds("User", { pattern = "TinyDiagnosticEventForce" })
 end
 
 function M.toggle()
     M.enabled = not M.enabled
-    vim.api.nvim_exec_autocmds("User", { pattern = "TinyDiagnosticEvent" })
+    vim.api.nvim_exec_autocmds("User", { pattern = "TinyDiagnosticEventForce" })
 end
 
 return M
