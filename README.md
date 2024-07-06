@@ -108,4 +108,4 @@ require('tiny-inline-diagnostic').setup({
 - **Q**: All diagnostics are still displayed
     - You need to set `vim.diagnostic.config({ virtual_text = false })` to remove all the others diagnostics.
 - **Q**: Diagnostics are not readable on a light background
-    - You can either set `vim.g.background = "light"` to use white diagnostics background. Will not work if `blend.mixing_color` is set
+    - You can either set `vim.g.background = "light"` to use white diagnostics background. Will not work if `hi.mixing_color` is set
