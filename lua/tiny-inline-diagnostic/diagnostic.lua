@@ -272,11 +272,11 @@ function M.set_diagnostic_autocmds(opts)
                     return
                 end
 
-                if not (params and params.force) then
-                    if curline == last_line and curcol == last_col then
-                        return
-                    end
-                end
+                -- if not (params and params.force) then
+                --     if curline == last_line and curcol == last_col then
+                --         return
+                --     end
+                -- end
                 pcall(vim.api.nvim_buf_clear_namespace, event.buf, diagnostic_ns, 0, -1)
 
                 last_line = curline
