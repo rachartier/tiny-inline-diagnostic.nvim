@@ -178,6 +178,8 @@ local function forge_virt_texts_from_diagnostic(opts, diag)
             line_length,
             win_width, opts
         )
+    elseif opts.options.overflow:lower() == "none" then
+        chunks = { " " .. diag.message }
     end
 
     local offset_space = ""
