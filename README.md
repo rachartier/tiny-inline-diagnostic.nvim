@@ -79,7 +79,7 @@ require('tiny-inline-diagnostic').setup({
                 --	    - overlay: The message is displayed on top of the line. Do not move lines forward, it writes over the text.
                 --      - eol: The message is displayed at the end of the line. Will move lines forward.
                 position = "overlay",
-            }
+            },
 
             --- Enable it if you want to always have message with `after` characters length.
             break_line = {
