@@ -259,7 +259,7 @@ local function forge_virt_texts_from_diagnostic(opts, diag, curline, buf)
         })
     end
 
-    return all_virtual_texts, offset, diag_overflow_last_line
+    return all_virtual_texts, offset, diag_overflow_last_line, need_to_be_under
 end
 
 --- Function to get the diagnostic under the cursor.
@@ -314,7 +314,8 @@ function M.set_diagnostic_autocmds(opts)
                 last_line = curline
                 last_col = curcol
 
-                local virt_texts, offset, diag_overflow_last_line = forge_virt_texts_from_diagnostic(opts, diag[1],
+                local virt_texts, offset, diag_overflow_last_line, need_to_be_under = forge_virt_texts_from_diagnostic(
+                    opts, diag[1],
                     curline, event.buf)
                 local virt_lines = {}
 
@@ -329,8 +330,13 @@ function M.set_diagnostic_autocmds(opts)
 
                     for i, virt_text in ipairs(virt_texts) do
                         local win_col = win_endline
-                        if i > 1 then
-                            win_col = win_endline + #opts.signs.arrow
+
+                        if need_to_be_under then
+                            win_col = 0
+                        else
+                            if i > 1 then
+                                win_col = win_endline + #opts.signs.arrow
+                            end
                         end
 
                         vim.api.nvim_buf_set_extmark(event.buf, diagnostic_ns, curline + i - 1, 0, {
