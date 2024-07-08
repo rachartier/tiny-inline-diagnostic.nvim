@@ -69,8 +69,17 @@ require('tiny-inline-diagnostic').setup({
             -- The minimum length of the message, otherwise it will be on a new line.
             softwrap = 15,
 
-            --- When overflow="wrap", when the message is too long, it is then displayed on multiple lines.
-            overflow = "wrap",
+            overflow = {
+                -- Manage the overflow of the message.
+                -- 		- wrap: when the message is too long, it is then displayed on multiple lines.
+                -- 		- none: the message will not be truncated, and will be displayed on a single line.
+                mode = "wrap",
+
+                -- The position of the overflow message.
+                --	    - overlay: The message is displayed on top of the line. Do not move lines forward, it writes over the text.
+                --      - eol: The message is displayed at the end of the line. Will move lines forward.
+                position = "overlay",
+            }
 
             --- Enable it if you want to always have message with `after` characters length.
             break_line = {

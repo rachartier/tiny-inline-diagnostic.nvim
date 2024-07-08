@@ -59,14 +59,23 @@ end
 --- @param num_chunks number: The total number of chunks the message is split into.
 --- @param opts table: The options table, which includes signs for the diagnostic message.
 --- @param need_to_be_under boolean: A flag indicating whether the arrow needs to point upwards.
+--- @param diag_overflow_last_line boolean: A flag indicating whether the diagnostic message is the last line of the buffer.
 --- @param diag_hi string: The highlight group for the diagnostic message.
 --- @param diag_inv_hi string: The highlight group for the diagnostic signs.
+--- @param offset_space string: The offset space for aligning the chunk message.
 --- @return table: A table representing the virtual text array for the diagnostic message header.
-local function get_header_from_chunk(message, num_chunks, opts, need_to_be_under, diag_hi, diag_inv_hi)
+local function get_header_from_chunk(message, num_chunks, opts, need_to_be_under, diag_overflow_last_line, diag_hi,
+                                     diag_inv_hi, offset_space)
     local arrow = { opts.signs.arrow, "TinyInlineDiagnosticVirtualTextArrow" }
+
     if need_to_be_under then
         arrow = { opts.signs.up_arrow, "TinyInlineDiagnosticVirtualTextArrow" }
     end
+    --
+    if opts.options.overflow.position == "overlay" and not diag_overflow_last_line then
+        arrow[1] = " " .. arrow[1]
+    end
+
     local text_after_message = "   "
     local virt_texts = {
         arrow,
@@ -92,12 +101,15 @@ end
 --- Function to generates the body for a diagnostic message chunk.
 --- @param chunk string: The chunk of the diagnostic message.
 --- @param opts table: The options table, which includes signs for the diagnostic message.
+--- @param need_to_be_under boolean: A flag indicating whether the arrow needs to point upwards.
+--- @param diag_overflow_last_line boolean: A flag indicating whether the diagnostic message is the last line of the buffer.
 --- @param diag_hi string: The highlight group for the diagnostic message.
 --- @param diag_inv_hi string: The highlight group for the diagnostic signs.
 --- @param offset_space string: The offset space for aligning the chunk message.
 --- @param is_last boolean: A flag indicating whether the chunk is the last one.
 --- @return table: A table representing the virtual text array for the diagnostic message body.
-local function get_body_from_chunk(chunk, opts, diag_hi, diag_inv_hi, offset_space, is_last)
+local function get_body_from_chunk(chunk, opts, need_to_be_under, diag_overflow_last_line, diag_hi, diag_inv_hi,
+                                   offset_space, is_last)
     local vertical_sign = opts.signs.vertical
 
     if is_last then
@@ -110,6 +122,14 @@ local function get_body_from_chunk(chunk, opts, diag_hi, diag_inv_hi, offset_spa
         { " " .. chunk .. " ",                                    diag_hi },
         { " ",                                                    diag_hi },
     }
+
+    if opts.options.overflow.position == "overlay" and not diag_overflow_last_line then
+        if need_to_be_under then
+            chunk_virtual_texts[1] = { offset_space .. string.rep(" ", #opts.signs.up_arrow), diag_inv_hi }
+        else
+            chunk_virtual_texts[1] = { "", diag_inv_hi }
+        end
+    end
 
     if is_last then
         vim.list_extend(chunk_virtual_texts, {
@@ -138,8 +158,8 @@ end
 --- Function to forge the virtual texts from a diagnostic.
 --- @param opts table - The table of options, which includes the signs to use for the virtual texts.
 --- @param diag table - The diagnostic to get the virtual texts for.
---- @return table - A table of virtual texts for the given diagnostic.
-local function forge_virt_texts_from_diagnostic(opts, diag)
+--- @return table, number, boolean - A table of virtual texts, the offset for the virtual texts, and a boolean indicating whether the diagnostic message is the last line of the buffer.
+local function forge_virt_texts_from_diagnostic(opts, diag, curline, buf)
     local diag_type = { "Error", "Warn", "Info", "Hint" }
 
     local hi = diag_type[diag.severity]
@@ -161,10 +181,12 @@ local function forge_virt_texts_from_diagnostic(opts, diag)
         end
     end
 
+
+
     if opts.options.break_line.enabled == true then
         chunks = {}
         chunks = utils.wrap_text(diag.message, opts.options.break_line.after)
-    elseif opts.options.overflow == "wrap" then
+    elseif opts.options.overflow.mode == "wrap" then
         if need_to_be_under then
             offset = 0
         else
@@ -178,7 +200,7 @@ local function forge_virt_texts_from_diagnostic(opts, diag)
             line_length,
             win_width, opts
         )
-    elseif opts.options.overflow:lower() == "none" then
+    elseif opts.options.overflow.mode == "none" then
         chunks = { " " .. diag.message }
     end
 
@@ -192,10 +214,14 @@ local function forge_virt_texts_from_diagnostic(opts, diag)
 
     local max_chunk_line_length = get_max_width_from_chunks(chunks)
 
+    local line_count = vim.api.nvim_buf_line_count(buf)
+    local diag_overflow_last_line = curline + #chunks > line_count - 1
+
+
     for i = 1, #chunks do
         local message = chunks[i]
 
-        local to_add = max_chunk_line_length - #message
+        local to_add = max_chunk_line_length - #message - 2
         message = message .. string.rep(" ", to_add)
 
         if i == 1 then
@@ -204,8 +230,10 @@ local function forge_virt_texts_from_diagnostic(opts, diag)
                 #chunks,
                 opts,
                 need_to_be_under,
+                diag_overflow_last_line,
                 diag_hi,
-                diag_inv_hi
+                diag_inv_hi,
+                offset_space
             )
 
             table.insert(all_virtual_texts, chunk_header)
@@ -213,6 +241,8 @@ local function forge_virt_texts_from_diagnostic(opts, diag)
             local chunk_body = get_body_from_chunk(
                 message,
                 opts,
+                need_to_be_under,
+                diag_overflow_last_line,
                 diag_hi,
                 diag_inv_hi,
                 offset_space,
@@ -229,7 +259,7 @@ local function forge_virt_texts_from_diagnostic(opts, diag)
         })
     end
 
-    return all_virtual_texts
+    return all_virtual_texts, offset, diag_overflow_last_line
 end
 
 --- Function to get the diagnostic under the cursor.
@@ -284,7 +314,8 @@ function M.set_diagnostic_autocmds(opts)
                 last_line = curline
                 last_col = curcol
 
-                local virt_texts = forge_virt_texts_from_diagnostic(opts, diag[1])
+                local virt_texts, offset, diag_overflow_last_line = forge_virt_texts_from_diagnostic(opts, diag[1],
+                    curline, event.buf)
                 local virt_lines = {}
 
                 if #virt_texts > 1 then
@@ -293,13 +324,35 @@ function M.set_diagnostic_autocmds(opts)
                     end
                 end
 
-                vim.api.nvim_buf_set_extmark(event.buf, diagnostic_ns, curline, 0, {
-                    id = curline + 1,
-                    line_hl_group = "CursorLine",
-                    virt_text = virt_texts[1],
-                    virt_lines = virt_lines,
-                    priority = 2048,
-                })
+                if opts.options.overflow.position == "overlay" and not diag_overflow_last_line then
+                    local win_endline = vim.fn.virtcol("$")
+
+                    for i, virt_text in ipairs(virt_texts) do
+                        local win_col = win_endline
+                        if i > 1 then
+                            win_col = win_endline + #opts.signs.arrow
+                        end
+
+                        vim.api.nvim_buf_set_extmark(event.buf, diagnostic_ns, curline + i - 1, 0, {
+                            id = curline + 1 + i,
+                            line_hl_group = "CursorLine",
+                            virt_text_pos = "overlay",
+                            virt_text = virt_text,
+                            virt_text_win_col = win_col,
+                            priority = 2048,
+                            strict = false,
+                        })
+                    end
+                else
+                    vim.api.nvim_buf_set_extmark(event.buf, diagnostic_ns, curline, 0, {
+                        id = curline + 1,
+                        line_hl_group = "CursorLine",
+                        virt_text_pos = "eol",
+                        virt_text = virt_texts[1],
+                        virt_lines = virt_lines,
+                        priority = 2048,
+                    })
+                end
             end
 
             local throttled_apply_diagnostics_virtual_texts, timer = utils.throttle(

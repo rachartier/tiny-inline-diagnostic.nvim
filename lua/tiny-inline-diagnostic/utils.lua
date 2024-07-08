@@ -55,10 +55,15 @@ end
 --     end
 -- end
 --
+
+function M.trim(s)
+    return s:match("^%s*(.-)%s*$")
+end
+
 function M.split_lines(s)
     local lines = {}
     for line in s:gmatch("([^\n]*)\n?") do
-        table.insert(lines, line)
+        table.insert(lines, M.trim(line))
     end
     table.remove(lines, #lines)
     return lines

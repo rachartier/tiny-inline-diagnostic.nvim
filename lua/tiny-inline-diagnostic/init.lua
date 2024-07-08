@@ -26,9 +26,12 @@ local default_config = {
         factor = 0.27,
     },
     options = {
-        throttle = 20,
-        overflow = "wrap",
-        softwrap = 15,
+        throttle   = 20,
+        overflow   = {
+            mode = "wrap",
+            position = "overlay"
+        },
+        softwrap   = 15,
         break_line = {
             enabled = false,
             after = 30,
@@ -42,6 +45,10 @@ function M.setup(opts)
     end
 
     local config = vim.tbl_deep_extend("force", default_config, opts)
+
+    config.options.overflow.position = config.options.overflow.position:lower()
+    config.options.overflow.mode = config.options.overflow.mode:lower()
+
     hi.setup_highlights(config.blend, config.hi)
     vim.api.nvim_create_autocmd("ColorScheme", {
         pattern = "*",
