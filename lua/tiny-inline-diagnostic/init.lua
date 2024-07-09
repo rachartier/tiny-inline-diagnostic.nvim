@@ -50,12 +50,14 @@ function M.setup(opts)
     config.options.overflow.mode = config.options.overflow.mode:lower()
 
     hi.setup_highlights(config.blend, config.hi)
+
     vim.api.nvim_create_autocmd("ColorScheme", {
         pattern = "*",
         callback = function()
             hi.setup_highlights(config.blend, config.hi)
         end
     })
+
     diag.set_diagnostic_autocmds(config)
 end
 

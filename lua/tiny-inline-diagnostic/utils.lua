@@ -69,28 +69,50 @@ function M.split_lines(s)
     return lines
 end
 
-function M.wrap_text(text, max_length)
-    local lines = {}
-
-    local splited_lines = M.split_lines(text)
-
-    for i, splited_line in ipairs(splited_lines) do
-        local line = ''
-
-        for word in splited_line:gmatch("%S+") do
-            if #line + #word <= max_length then
-                if #line == 0 and i > 1 then
-                    line = word
-                else
-                    line = line .. ' ' .. word
-                end
-            else
-                table.insert(lines, line)
-                line = word
-            end
-        end
-        table.insert(lines, line)
+-- function M.wrap_text(text, max_length)
+--     local lines = {}
+--
+--     local splited_lines = M.split_lines(text)
+--
+--     for i, splited_line in ipairs(splited_lines) do
+--         local line = ''
+--
+--         for word in splited_line:gmatch("%S+") do
+--             if #line + #word < max_length then
+--                 if #line == 0 and i > 1 then
+--                     line = word
+--                 else
+--                     line = line .. ' ' .. word
+--                 end
+--             else
+--                 table.insert(lines, line)
+--                 line = word
+--             end
+--         end
+--
+--         table.insert(lines, line)
+--     end
+--
+--     return lines
+-- end
+--
+function M.wrap_text(input_string, max_length)
+    local words = {}
+    for word in input_string:gmatch("%S+") do
+        table.insert(words, word)
     end
+
+    local lines = {}
+    local current_line = words[1]
+    for i = 2, #words do
+        if #current_line + 1 + #words[i] > max_length then
+            table.insert(lines, current_line)
+            current_line = words[i]
+        else
+            current_line = current_line .. " " .. words[i]
+        end
+    end
+    table.insert(lines, current_line)
 
     return lines
 end

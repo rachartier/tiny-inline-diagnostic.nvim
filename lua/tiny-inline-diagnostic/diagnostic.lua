@@ -42,8 +42,16 @@ end
 --- @param diag_inv_hi string: The highlight group for the diagnostic signs.
 --- @param offset_space string: The offset space for aligning the chunk message.
 --- @return table: A table representing the virtual text array for the diagnostic message header.
-local function get_header_from_chunk(message, num_chunks, opts, need_to_be_under, diag_overflow_last_line, diag_hi,
-                                     diag_inv_hi, offset_space)
+local function get_header_from_chunk(
+    message,
+    num_chunks,
+    opts,
+    need_to_be_under,
+    diag_overflow_last_line,
+    diag_hi,
+    diag_inv_hi,
+    offset_space
+)
     local arrow = { opts.signs.arrow, "TinyInlineDiagnosticVirtualTextArrow" }
 
     if need_to_be_under then
@@ -54,7 +62,7 @@ local function get_header_from_chunk(message, num_chunks, opts, need_to_be_under
         arrow[1] = " " .. arrow[1]
     end
 
-    local text_after_message = "   "
+    local text_after_message = " "
     local virt_texts = {
         arrow,
         { opts.signs.left, diag_inv_hi },
@@ -63,13 +71,13 @@ local function get_header_from_chunk(message, num_chunks, opts, need_to_be_under
 
     if num_chunks == 1 then
         vim.list_extend(virt_texts, {
-            { message .. " ",   diag_hi },
-            { opts.signs.right, diag_inv_hi },
+            { " " .. message .. " ", diag_hi },
+            { opts.signs.right,      diag_inv_hi },
         })
     else
         vim.list_extend(virt_texts, {
-            { message .. text_after_message,      diag_hi },
-            { string.rep(" ", #opts.signs.right), diag_inv_hi },
+            { " " .. message .. text_after_message, diag_hi },
+            { string.rep(" ", #opts.signs.right),   diag_inv_hi },
         })
     end
 
@@ -105,13 +113,13 @@ local function get_body_from_chunk(
     local chunk_virtual_texts = {
         { offset_space .. string.rep(" ", #opts.signs.arrow - 1), diag_inv_hi },
         { vertical_sign,                                          diag_hi },
-        { " " .. chunk .. " ",                                    diag_hi },
+        { " " .. chunk,                                           diag_hi },
         { " ",                                                    diag_hi },
     }
 
     if opts.options.overflow.position == "overlay" and not diag_overflow_last_line then
         if need_to_be_under then
-            chunk_virtual_texts[1] = { offset_space .. string.rep(" ", #opts.signs.up_arrow), diag_inv_hi }
+            chunk_virtual_texts[1] = { offset_space .. string.rep(" ", #opts.signs.up_arrow - 1), diag_inv_hi }
         else
             chunk_virtual_texts[1] = { "", diag_inv_hi }
         end
@@ -157,7 +165,7 @@ local function forge_virt_texts_from_diagnostic(opts, diag, curline, buf)
     if need_to_be_under then
         offset = 0
     else
-        offset_space = string.rep(" ", offset + 1)
+        offset_space = string.rep(" ", offset)
     end
 
     local max_chunk_line_length = get_max_width_from_chunks(chunks)
@@ -169,7 +177,7 @@ local function forge_virt_texts_from_diagnostic(opts, diag, curline, buf)
     for i = 1, #chunks do
         local message = chunks[i]
 
-        local to_add = max_chunk_line_length - #message - 2
+        local to_add = max_chunk_line_length - #message
         message = message .. string.rep(" ", to_add)
 
         if i == 1 then
@@ -231,9 +239,6 @@ end
 --- This function creates an autocmd for the `LspAttach` event.
 --- @param opts table - The table of options, which includes the `clear_on_insert` option and the signs to use for the virtual texts.
 function M.set_diagnostic_autocmds(opts)
-    vim.api.nvim_create_user_command("TinyDiagnosticEvent", function()
-    end, {})
-
     vim.api.nvim_create_autocmd("LspAttach", {
         callback = function(event)
             local function apply_diagnostics_virtual_texts(params)
@@ -256,8 +261,12 @@ function M.set_diagnostic_autocmds(opts)
                 -- end
 
                 local virt_texts, offset, diag_overflow_last_line, need_to_be_under = forge_virt_texts_from_diagnostic(
-                    opts, diag[1],
-                    curline, event.buf)
+                    opts,
+                    diag[1],
+                    curline,
+                    event.buf
+                )
+
                 local virt_lines = {}
 
                 if #virt_texts > 1 then
