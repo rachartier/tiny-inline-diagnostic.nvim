@@ -1,4 +1,5 @@
 local M = {}
+local extmarks = require('tiny-inline-diagnostic.extmarks')
 
 local utils = require('tiny-inline-diagnostic.utils')
 
@@ -10,7 +11,13 @@ local utils = require('tiny-inline-diagnostic.utils')
 --- @param win_width number: The width of the window where the diagnostic message is displayed.
 --- @param opts table: The options table, which includes signs for the diagnostic message and the softwrap option.
 --- @return table, boolean: A table representing the chunks of the diagnostic message, and a boolean indicating whether the message needs to be displayed under the line.
-local function get_message_chunks_for_overflow(message, offset, need_to_be_under, line_length, win_width, opts)
+local function get_message_chunks_for_overflow(
+    message,
+    offset,
+    need_to_be_under,
+    win_width,
+    opts
+)
     local signs_total_text_len = #opts.signs.arrow + #opts.signs.right + #opts.signs.left + #opts.signs.diag + 4
 
     local distance = win_width - offset - signs_total_text_len
@@ -27,7 +34,7 @@ local function get_message_chunks_for_overflow(message, offset, need_to_be_under
 end
 
 
-function M.get_chunks(opts, diag)
+function M.get_chunks(opts, diag, curline, buf)
     local win_width = vim.api.nvim_win_get_width(0)
     local line_length = #vim.api.nvim_get_current_line()
     local offset = 0
@@ -35,6 +42,12 @@ function M.get_chunks(opts, diag)
     local win_option_wrap_enabled = vim.api.nvim_get_option_value("wrap", { win = 0 })
 
     local chunks = { diag.message }
+
+    local other_extmarks_offset = extmarks.handle_other_extmarks(
+        buf,
+        curline,
+        line_length
+    )
 
     if win_option_wrap_enabled then
         if line_length > win_width - opts.options.softwrap then
@@ -49,19 +62,19 @@ function M.get_chunks(opts, diag)
         if need_to_be_under then
             offset = 0
         else
-            offset = line_length
+            offset = line_length + other_extmarks_offset
         end
 
         chunks, need_to_be_under = get_message_chunks_for_overflow(
             diag.message,
             offset,
             need_to_be_under,
-            line_length,
             win_width, opts
         )
     elseif opts.options.overflow.position == "none" then
         chunks = { " " .. diag.message }
     end
+
 
     return chunks, {
         offset = offset,

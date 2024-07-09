@@ -158,11 +158,11 @@ local function forge_virt_texts_from_diagnostic(opts, diag, curline, buf)
 
     local all_virtual_texts = {}
 
-    local chunks, ret = resize.get_chunks(opts, diag)
+
+    local chunks, ret = resize.get_chunks(opts, diag, curline, buf)
     local need_to_be_under = ret.need_to_be_under
     local offset = ret.offset
     local offset_space = ""
-
 
     if need_to_be_under then
         offset = 0
@@ -262,55 +262,31 @@ function M.set_diagnostic_autocmds(opts)
                 --     end
                 -- end
 
-                local virt_texts, offset, diag_overflow_last_line, need_to_be_under = forge_virt_texts_from_diagnostic(
+                local virt_lines, offset, diag_overflow_last_line, need_to_be_under = forge_virt_texts_from_diagnostic(
                     opts,
                     diag[1],
                     curline,
                     event.buf
                 )
 
-                local virt_lines = {}
-
-                if #virt_texts > 1 then
-                    for i = 2, #virt_texts do
-                        table.insert(virt_lines, virt_texts[i])
-                    end
-                end
-
-                if opts.options.overflow.position == "overlay" and not diag_overflow_last_line then
+                if opts.options.overflow.position == "overlay" then
                     local win_endline = vim.fn.virtcol("$")
 
-                    for i, virt_text in ipairs(virt_texts) do
-                        local win_col = win_endline
+                    local win_col = win_endline
 
-                        if need_to_be_under then
-                            win_col = 0
-                        else
-                            if i > 1 then
-                                win_col = win_endline + #opts.signs.arrow
-                            end
-                        end
-
-                        local other_extmarks_offset = extmarks.handle_other_extmarks(event.buf, curline + i - 1)
-
-                        vim.api.nvim_buf_set_extmark(event.buf, diagnostic_ns, curline + i - 1, 0, {
-                            id = curline + 1 + i,
-                            line_hl_group = "CursorLine",
-                            virt_text_pos = "overlay",
-                            virt_text = virt_text,
-                            virt_text_win_col = win_col + other_extmarks_offset,
-                            priority = 2048,
-                            strict = false,
-                        })
+                    if need_to_be_under then
+                        win_col = 0
                     end
-                else
+
                     vim.api.nvim_buf_set_extmark(event.buf, diagnostic_ns, curline, 0, {
                         id = curline + 1,
                         line_hl_group = "CursorLine",
-                        virt_text_pos = "eol",
-                        virt_text = virt_texts[1],
-                        virt_lines = virt_lines,
+                        virt_text_pos = "overlay",
+                        virt_text = virt_lines[1],
+                        virt_lines = virt_lines[2 .. #virt_lines],
+                        virt_text_win_col = win_col + offset,
                         priority = 2048,
+                        strict = false,
                     })
                 end
             end
@@ -360,6 +336,11 @@ function M.set_diagnostic_autocmds(opts)
                 callback = function()
                     if vim.api.nvim_buf_is_valid(event.buf) then
                         vim.api.nvim_exec_autocmds("User", { pattern = "TinyDiagnosticEvent" })
+
+                        vim.defer_fn(function()
+                            print("ok")
+                            vim.api.nvim_exec_autocmds("User", { pattern = "TinyDiagnosticEvent" })
+                        end, 5000)
                     end
                 end,
                 desc = "Show diagnostics on cursor hold",
