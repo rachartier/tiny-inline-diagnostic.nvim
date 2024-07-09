@@ -7,6 +7,7 @@ local diagnostic_ns = vim.api.nvim_create_namespace("TinyInlineDiagnostic")
 local utils = require("tiny-inline-diagnostic.utils")
 local highlights = require("tiny-inline-diagnostic.highlights")
 local resize = require("tiny-inline-diagnostic.resize_win")
+local extmarks = require("tiny-inline-diagnostic.extmarks")
 
 --- Function to get diagnostics for the current position in the code.
 --- @param diagnostics table - The table of diagnostics to check.
@@ -162,6 +163,7 @@ local function forge_virt_texts_from_diagnostic(opts, diag, curline, buf)
     local offset = ret.offset
     local offset_space = ""
 
+
     if need_to_be_under then
         offset = 0
     else
@@ -289,12 +291,14 @@ function M.set_diagnostic_autocmds(opts)
                             end
                         end
 
+                        local other_extmarks_offset = extmarks.handle_other_extmarks(event.buf, curline + i - 1)
+
                         vim.api.nvim_buf_set_extmark(event.buf, diagnostic_ns, curline + i - 1, 0, {
                             id = curline + 1 + i,
                             line_hl_group = "CursorLine",
                             virt_text_pos = "overlay",
                             virt_text = virt_text,
-                            virt_text_win_col = win_col,
+                            virt_text_win_col = win_col + other_extmarks_offset,
                             priority = 2048,
                             strict = false,
                         })
