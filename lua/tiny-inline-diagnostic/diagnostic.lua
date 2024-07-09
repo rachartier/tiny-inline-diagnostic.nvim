@@ -3,8 +3,10 @@ local timers_by_buffer = {}
 
 M.enabled = true
 
-local diagnostic_ns = vim.api.nvim_create_namespace("CursorDiagnostics")
+local diagnostic_ns = vim.api.nvim_create_namespace("TinyInlineDiagnostic")
 local utils = require("tiny-inline-diagnostic.utils")
+local highlights = require("tiny-inline-diagnostic.highlights")
+local resize = require("tiny-inline-diagnostic.resize_win")
 
 --- Function to get diagnostics for the current position in the code.
 --- @param diagnostics table - The table of diagnostics to check.
@@ -28,30 +30,6 @@ local function get_current_pos_diags(diagnostics, curline, curcol)
     end
 
     return current_pos_diags
-end
-
---- Function to splits a diagnostic message into chunks for overflow handling.
---- @param message string: The diagnostic message.
---- @param offset number: The offset from the start of the line to the diagnostic position.
---- @param need_to_be_under boolean: A flag indicating whether the diagnostic message needs to be displayed under the line.
---- @param line_length number: The length of the line where the diagnostic message is.
---- @param win_width number: The width of the window where the diagnostic message is displayed.
---- @param opts table: The options table, which includes signs for the diagnostic message and the softwrap option.
---- @return table, boolean: A table representing the chunks of the diagnostic message, and a boolean indicating whether the message needs to be displayed under the line.
-local function get_message_chunks_for_overflow(message, offset, need_to_be_under, line_length, win_width, opts)
-    local signs_total_text_len = #opts.signs.arrow + #opts.signs.right + #opts.signs.left + #opts.signs.diag + 4
-
-    local distance = win_width - offset - signs_total_text_len
-
-    if distance < opts.options.softwrap then
-        need_to_be_under = true
-        distance = win_width - signs_total_text_len
-    end
-
-    local message_chunk = {}
-    message_chunk = utils.wrap_text(message, distance)
-
-    return message_chunk, need_to_be_under
 end
 
 --- Function to generates a header for a diagnostic message chunk.
@@ -108,8 +86,16 @@ end
 --- @param offset_space string: The offset space for aligning the chunk message.
 --- @param is_last boolean: A flag indicating whether the chunk is the last one.
 --- @return table: A table representing the virtual text array for the diagnostic message body.
-local function get_body_from_chunk(chunk, opts, need_to_be_under, diag_overflow_last_line, diag_hi, diag_inv_hi,
-                                   offset_space, is_last)
+local function get_body_from_chunk(
+    chunk,
+    opts,
+    need_to_be_under,
+    diag_overflow_last_line,
+    diag_hi,
+    diag_inv_hi,
+    offset_space,
+    is_last
+)
     local vertical_sign = opts.signs.vertical
 
     if is_last then
@@ -158,52 +144,14 @@ end
 --- Function to forge the virtual texts from a diagnostic.
 --- @param opts table - The table of options, which includes the signs to use for the virtual texts.
 --- @param diag table - The diagnostic to get the virtual texts for.
---- @return table, number, boolean - A table of virtual texts, the offset for the virtual texts, and a boolean indicating whether the diagnostic message is the last line of the buffer.
 local function forge_virt_texts_from_diagnostic(opts, diag, curline, buf)
-    local diag_type = { "Error", "Warn", "Info", "Hint" }
-
-    local hi = diag_type[diag.severity]
-    local diag_hi = "TinyInlineDiagnosticVirtualText" .. hi
-    local diag_inv_hi = "TinyInlineInvDiagnosticVirtualText" .. hi
+    local diag_hi, diag_inv_hi = highlights.get_diagnostic_highlights(diag.severity)
 
     local all_virtual_texts = {}
-    local chunks = { diag.message }
 
-    local win_width = vim.api.nvim_win_get_width(0)
-    local line_length = #vim.api.nvim_get_current_line()
-    local offset = 0
-    local need_to_be_under = false
-    local win_option_wrap_enabled = vim.api.nvim_get_option_value("wrap", { win = 0 })
-
-    if win_option_wrap_enabled then
-        if line_length > win_width - opts.options.softwrap then
-            need_to_be_under = true
-        end
-    end
-
-
-
-    if opts.options.break_line.enabled == true then
-        chunks = {}
-        chunks = utils.wrap_text(diag.message, opts.options.break_line.after)
-    elseif opts.options.overflow.mode == "wrap" then
-        if need_to_be_under then
-            offset = 0
-        else
-            offset = line_length
-        end
-
-        chunks, need_to_be_under = get_message_chunks_for_overflow(
-            diag.message,
-            offset,
-            need_to_be_under,
-            line_length,
-            win_width, opts
-        )
-    elseif opts.options.overflow.mode == "none" then
-        chunks = { " " .. diag.message }
-    end
-
+    local chunks, ret = resize.get_chunks(opts, diag)
+    local need_to_be_under = ret.need_to_be_under
+    local offset = ret.offset
     local offset_space = ""
 
     if need_to_be_under then
@@ -288,19 +236,16 @@ function M.set_diagnostic_autocmds(opts)
 
     vim.api.nvim_create_autocmd("LspAttach", {
         callback = function(event)
-            local last_col = 0
-            local last_line = 0
-
             local function apply_diagnostics_virtual_texts(params)
+                pcall(vim.api.nvim_buf_clear_namespace, event.buf, diagnostic_ns, 0, -1)
+
                 if not M.enabled then
-                    pcall(vim.api.nvim_buf_clear_namespace, event.buf, diagnostic_ns, 0, -1)
                     return
                 end
 
                 local diag, curline, curcol = M.get_diagnostic_under_cursor(event.buf)
 
                 if diag == nil or curline == nil then
-                    pcall(vim.api.nvim_buf_clear_namespace, event.buf, diagnostic_ns, 0, -1)
                     return
                 end
 
@@ -309,10 +254,6 @@ function M.set_diagnostic_autocmds(opts)
                 --         return
                 --     end
                 -- end
-                pcall(vim.api.nvim_buf_clear_namespace, event.buf, diagnostic_ns, 0, -1)
-
-                last_line = curline
-                last_col = curcol
 
                 local virt_texts, offset, diag_overflow_last_line, need_to_be_under = forge_virt_texts_from_diagnostic(
                     opts, diag[1],

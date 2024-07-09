@@ -73,4 +73,14 @@ function M.setup_highlights(blend, default_hi)
     end
 end
 
+function M.get_diagnostic_highlights(severity)
+    local diag_type = { "Error", "Warn", "Info", "Hint" }
+
+    local hi = diag_type[severity]
+    local diag_hi = "TinyInlineDiagnosticVirtualText" .. hi
+    local diag_inv_hi = "TinyInlineInvDiagnosticVirtualText" .. hi
+
+    return diag_hi, diag_inv_hi
+end
+
 return M
