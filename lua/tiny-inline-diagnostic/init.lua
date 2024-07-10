@@ -1,7 +1,7 @@
 local M = {}
+
 local hi = require("tiny-inline-diagnostic.highlights")
 local diag = require("tiny-inline-diagnostic.diagnostic")
-
 
 local default_config = {
     signs = {
@@ -26,7 +26,6 @@ local default_config = {
         factor = 0.27,
     },
     options = {
-        -- update_in_insert = true,
         throttle   = 20,
         softwrap   = 15,
         overflow   = {

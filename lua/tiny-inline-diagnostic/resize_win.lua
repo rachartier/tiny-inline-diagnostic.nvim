@@ -1,9 +1,7 @@
 local M = {}
+
 local extmarks = require('tiny-inline-diagnostic.extmarks')
-
 local utils = require('tiny-inline-diagnostic.utils')
-
-
 
 --- Function to splits a diagnostic message into chunks for overflow handling.
 --- @param message string: The diagnostic message.

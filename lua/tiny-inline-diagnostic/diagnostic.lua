@@ -257,12 +257,6 @@ function M.set_diagnostic_autocmds(opts)
 
                 local virt_prorioty = opts.options.virt_texts.priority
 
-                -- if not (params and params.force) then
-                --     if curline == last_line and curcol == last_col then
-                --         return
-                --     end
-                -- end
-
                 local virt_lines, offset, diag_overflow_last_line, need_to_be_under = forge_virt_texts_from_diagnostic(
                     opts,
                     diag[1],
@@ -270,10 +264,7 @@ function M.set_diagnostic_autocmds(opts)
                     event.buf
                 )
 
-                -- if opts.options.overflow.position == "overlay" then
-                local win_endline = vim.fn.virtcol("$")
-
-                local win_col = win_endline
+                local win_col = vim.fn.virtcol("$")
 
                 if need_to_be_under then
                     win_col = 0
@@ -320,17 +311,6 @@ function M.set_diagnostic_autocmds(opts)
                         end
                     end
                 end
-                --
-                -- else
-                --     vim.api.nvim_buf_set_extmark(event.buf, diagnostic_ns, curline, 0, {
-                --         id = curline + 1,
-                --         virt_text_pos = "eol",
-                --         virt_text = virt_lines[1],
-                --         virt_lines = virt_lines[2 .. #virt_lines],
-                --         priority = 2048,
-                --         strict = false,
-                --     })
-                -- end
             end
 
             local throttled_apply_diagnostics_virtual_texts, timer = utils.throttle(
