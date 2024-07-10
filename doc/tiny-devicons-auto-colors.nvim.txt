@@ -95,6 +95,10 @@ OPTIONS   *tiny-devicons-auto-colors.nvim-tiny-inline-diagnostic.nvim-options*
                 break_line = {
                     enabled = false,
                     after = 30,
+                },
+    
+                virt_texts = {
+                    priority = 2048,
                 }
             }
     })
