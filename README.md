@@ -74,17 +74,16 @@ require('tiny-inline-diagnostic').setup({
                 --    - wrap: when the message is too long, it is then displayed on multiple lines.
                 --    - none: the message will not be truncated, and will be displayed on a single line.
                 mode = "wrap",
-
-                -- The position of the overflow message.
-                --    - overlay: The message is displayed on top of the line. Do not move lines forward, it writes over the text.
-                --    - eol: The message is displayed at the end of the line. Will move lines forward.
-                position = "overlay",
             },
 
             --- Enable it if you want to always have message with `after` characters length.
             break_line = {
                 enabled = false,
                 after = 30,
+            },
+
+            virt_texts = {
+                priority = 2048,
             }
         }
 })
@@ -123,3 +122,5 @@ require('tiny-inline-diagnostic').setup({
     - You need to set `vim.diagnostic.config({ virtual_text = false })` to remove all the others diagnostics.
 - **Q**: Diagnostics are not readable on a light background
     - You can either set `vim.g.background = "light"` to use white diagnostics background. Will not work if `hi.mixing_color` is set
+- **Q**: `GitBlame` (or other) is displayed first
+    - You need to modify the `virt_texts.priority` option to a higher value.

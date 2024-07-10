@@ -1,7 +1,7 @@
 local M = {}
+
 local hi = require("tiny-inline-diagnostic.highlights")
 local diag = require("tiny-inline-diagnostic.diagnostic")
-
 
 local default_config = {
     signs = {
@@ -27,15 +27,19 @@ local default_config = {
     },
     options = {
         throttle   = 20,
+        softwrap   = 15,
         overflow   = {
             mode = "wrap",
-            position = "overlay"
         },
-        softwrap   = 15,
         break_line = {
             enabled = false,
             after = 30,
+        },
+        virt_texts = {
+            priority = 2048,
         }
+    },
+    plugin = {
     }
 }
 
@@ -46,7 +50,7 @@ function M.setup(opts)
 
     local config = vim.tbl_deep_extend("force", default_config, opts)
 
-    config.options.overflow.position = config.options.overflow.position:lower()
+    -- config.options.overflow.position = config.options.overflow.position:lower()
     config.options.overflow.mode = config.options.overflow.mode:lower()
 
     hi.setup_highlights(config.blend, config.hi)

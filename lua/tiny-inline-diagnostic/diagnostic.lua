@@ -1,12 +1,14 @@
 local M = {}
 local timers_by_buffer = {}
 
+
 M.enabled = true
 
 local diagnostic_ns = vim.api.nvim_create_namespace("TinyInlineDiagnostic")
 local utils = require("tiny-inline-diagnostic.utils")
 local highlights = require("tiny-inline-diagnostic.highlights")
 local resize = require("tiny-inline-diagnostic.resize_win")
+local plugin = require("tiny-inline-diagnostic.plugin")
 
 --- Function to get diagnostics for the current position in the code.
 --- @param diagnostics table - The table of diagnostics to check.
@@ -40,7 +42,7 @@ end
 --- @param diag_overflow_last_line boolean: A flag indicating whether the diagnostic message is the last line of the buffer.
 --- @param diag_hi string: The highlight group for the diagnostic message.
 --- @param diag_inv_hi string: The highlight group for the diagnostic signs.
---- @param offset_space string: The offset space for aligning the chunk message.
+--- @param offset int: The offset for aligning the chunk message.
 --- @return table: A table representing the virtual text array for the diagnostic message header.
 local function get_header_from_chunk(
     message,
@@ -50,17 +52,15 @@ local function get_header_from_chunk(
     diag_overflow_last_line,
     diag_hi,
     diag_inv_hi,
-    offset_space
+    offset
 )
     local arrow = { opts.signs.arrow, "TinyInlineDiagnosticVirtualTextArrow" }
 
     if need_to_be_under then
         arrow = { opts.signs.up_arrow, "TinyInlineDiagnosticVirtualTextArrow" }
     end
-    --
-    if opts.options.overflow.position == "overlay" and not diag_overflow_last_line then
-        arrow[1] = " " .. arrow[1]
-    end
+
+    arrow[1] = string.rep(" ", offset) .. " " .. arrow[1]
 
     local text_after_message = " "
     local virt_texts = {
@@ -111,18 +111,14 @@ local function get_body_from_chunk(
     end
 
     local chunk_virtual_texts = {
-        { offset_space .. string.rep(" ", #opts.signs.arrow - 1), diag_inv_hi },
-        { vertical_sign,                                          diag_hi },
-        { " " .. chunk,                                           diag_hi },
-        { " ",                                                    diag_hi },
+        { string.rep(" ", #opts.signs.arrow), diag_inv_hi },
+        { vertical_sign,                      diag_hi },
+        { " " .. chunk,                       diag_hi },
+        { " ",                                diag_hi },
     }
 
-    if opts.options.overflow.position == "overlay" and not diag_overflow_last_line then
-        if need_to_be_under then
-            chunk_virtual_texts[1] = { offset_space .. string.rep(" ", #opts.signs.up_arrow - 1), diag_inv_hi }
-        else
-            chunk_virtual_texts[1] = { "", diag_inv_hi }
-        end
+    if need_to_be_under then
+        chunk_virtual_texts[1] = { offset_space .. string.rep(" ", #opts.signs.up_arrow - 1), diag_inv_hi }
     end
 
     if is_last then
@@ -152,14 +148,18 @@ end
 --- Function to forge the virtual texts from a diagnostic.
 --- @param opts table - The table of options, which includes the signs to use for the virtual texts.
 --- @param diag table - The diagnostic to get the virtual texts for.
+--- @param diag table - The diagnostic to get the virtual texts for.
 local function forge_virt_texts_from_diagnostic(opts, diag, curline, buf)
     local diag_hi, diag_inv_hi = highlights.get_diagnostic_highlights(diag.severity)
 
     local all_virtual_texts = {}
 
-    local chunks, ret = resize.get_chunks(opts, diag)
+    local plugin_offset = plugin.handle_plugins(opts)
+
+    local chunks, ret = resize.get_chunks(opts, diag, plugin_offset, curline, buf)
     local need_to_be_under = ret.need_to_be_under
     local offset = ret.offset
+    local offset_win_col = ret.offset_win_col
     local offset_space = ""
 
     if need_to_be_under then
@@ -172,7 +172,6 @@ local function forge_virt_texts_from_diagnostic(opts, diag, curline, buf)
 
     local line_count = vim.api.nvim_buf_line_count(buf)
     local diag_overflow_last_line = curline + #chunks > line_count - 1
-
 
     for i = 1, #chunks do
         local message = chunks[i]
@@ -189,7 +188,7 @@ local function forge_virt_texts_from_diagnostic(opts, diag, curline, buf)
                 diag_overflow_last_line,
                 diag_hi,
                 diag_inv_hi,
-                offset_space
+                offset_win_col
             )
 
             table.insert(all_virtual_texts, chunk_header)
@@ -215,7 +214,7 @@ local function forge_virt_texts_from_diagnostic(opts, diag, curline, buf)
         })
     end
 
-    return all_virtual_texts, offset, diag_overflow_last_line, need_to_be_under
+    return all_virtual_texts, offset_win_col, diag_overflow_last_line, need_to_be_under
 end
 
 --- Function to get the diagnostic under the cursor.
@@ -248,66 +247,69 @@ function M.set_diagnostic_autocmds(opts)
                     return
                 end
 
+                plugin.init(opts)
+
                 local diag, curline, curcol = M.get_diagnostic_under_cursor(event.buf)
 
                 if diag == nil or curline == nil then
                     return
                 end
 
-                -- if not (params and params.force) then
-                --     if curline == last_line and curcol == last_col then
-                --         return
-                --     end
-                -- end
+                local virt_prorioty = opts.options.virt_texts.priority
 
-                local virt_texts, offset, diag_overflow_last_line, need_to_be_under = forge_virt_texts_from_diagnostic(
+                local virt_lines, offset, diag_overflow_last_line, need_to_be_under = forge_virt_texts_from_diagnostic(
                     opts,
                     diag[1],
                     curline,
                     event.buf
                 )
 
-                local virt_lines = {}
+                local win_col = vim.fn.virtcol("$")
 
-                if #virt_texts > 1 then
-                    for i = 2, #virt_texts do
-                        table.insert(virt_lines, virt_texts[i])
-                    end
+                if need_to_be_under then
+                    win_col = 0
                 end
 
-                if opts.options.overflow.position == "overlay" and not diag_overflow_last_line then
-                    local win_endline = vim.fn.virtcol("$")
-
-                    for i, virt_text in ipairs(virt_texts) do
-                        local win_col = win_endline
-
-                        if need_to_be_under then
-                            win_col = 0
-                        else
-                            if i > 1 then
-                                win_col = win_endline + #opts.signs.arrow
-                            end
+                if diag_overflow_last_line then
+                    local other_virt_lines = {}
+                    for i, line in ipairs(virt_lines) do
+                        if i > 1 then
+                            table.insert(line, 1, { string.rep(" ", win_col + offset), "None" })
+                            table.insert(other_virt_lines, line)
                         end
-
-                        vim.api.nvim_buf_set_extmark(event.buf, diagnostic_ns, curline + i - 1, 0, {
-                            id = curline + 1 + i,
-                            line_hl_group = "CursorLine",
-                            virt_text_pos = "overlay",
-                            virt_text = virt_text,
-                            virt_text_win_col = win_col,
-                            priority = 2048,
-                            strict = false,
-                        })
                     end
+                    vim.api.nvim_buf_set_extmark(event.buf, diagnostic_ns, curline, 0, {
+                        id = curline + 1,
+                        line_hl_group = "CursorLine",
+                        virt_text_pos = "eol",
+                        virt_text = virt_lines[1],
+                        virt_lines = other_virt_lines,
+                        priority = virt_prorioty,
+                        strict = false,
+                    })
                 else
                     vim.api.nvim_buf_set_extmark(event.buf, diagnostic_ns, curline, 0, {
                         id = curline + 1,
                         line_hl_group = "CursorLine",
                         virt_text_pos = "eol",
-                        virt_text = virt_texts[1],
-                        virt_lines = virt_lines,
-                        priority = 2048,
+                        virt_text = virt_lines[1],
+                        -- virt_text_win_col = win_col + offset,
+                        priority = virt_prorioty,
+                        strict = false,
                     })
+
+                    for i, line in ipairs(virt_lines) do
+                        if i > 1 then
+                            vim.api.nvim_buf_set_extmark(event.buf, diagnostic_ns, curline + i - 1, 0, {
+                                id = curline + i + 1,
+                                virt_text_pos = "overlay",
+                                virt_text = line,
+                                virt_text_win_col = win_col + offset,
+                                priority = virt_prorioty,
+                                strict = false,
+                            })
+                        end
+                    end
                 end
             end
 
@@ -351,7 +353,16 @@ function M.set_diagnostic_autocmds(opts)
                 end
             })
 
-            vim.api.nvim_create_autocmd({ "CursorHold", "CursorHoldI" }, {
+            vim.api.nvim_create_autocmd("InsertEnter", {
+                buffer = event.buf,
+                callback = function()
+                    if vim.api.nvim_buf_is_valid(event.buf) then
+                        pcall(vim.api.nvim_buf_clear_namespace, event.buf, diagnostic_ns, 0, -1)
+                    end
+                end
+            })
+
+            vim.api.nvim_create_autocmd("CursorHold", {
                 buffer = event.buf,
                 callback = function()
                     if vim.api.nvim_buf_is_valid(event.buf) then
@@ -371,7 +382,7 @@ function M.set_diagnostic_autocmds(opts)
                 desc = "Handle window resize event, force diagnostics update to fit new window width.",
             })
 
-            vim.api.nvim_create_autocmd({ "CursorMoved", "CursorMovedI" }, {
+            vim.api.nvim_create_autocmd("CursorMoved", {
                 buffer = event.buf,
                 callback = function()
                     if vim.api.nvim_buf_is_valid(event.buf) then
