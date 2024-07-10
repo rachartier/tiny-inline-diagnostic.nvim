@@ -18,6 +18,7 @@ end
 
 function M.handle_other_extmarks(opts, buf, curline, col)
     local e = M.get_extmarks_on_line(buf, curline, col)
+    local offset = 0
 
     if #e > 0 then
         for _, extmark in ipairs(e) do
@@ -29,14 +30,14 @@ function M.handle_other_extmarks(opts, buf, curline, col)
             for _, to in ipairs(to_check) do
                 if detail["virt_text_pos"] == to then
                     if detail["virt_text"] ~= nil and detail["virt_text"][1][1] ~= nil then
-                        return #detail["virt_text"][1][1]
+                        offset = offset + #detail["virt_text"][1][1]
                     end
                 end
             end
         end
     end
 
-    return 0
+    return offset
 end
 
 return M

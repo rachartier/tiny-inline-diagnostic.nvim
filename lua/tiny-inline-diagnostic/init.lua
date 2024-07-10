@@ -26,6 +26,7 @@ local default_config = {
         factor = 0.27,
     },
     options = {
+        -- update_in_insert = true,
         throttle   = 20,
         overflow   = {
             mode = "wrap",

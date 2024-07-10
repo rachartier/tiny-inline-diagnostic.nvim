@@ -371,7 +371,16 @@ function M.set_diagnostic_autocmds(opts)
                 end
             })
 
-            vim.api.nvim_create_autocmd({ "CursorHold", "CursorHoldI" }, {
+            vim.api.nvim_create_autocmd("InsertEnter", {
+                buffer = event.buf,
+                callback = function()
+                    if vim.api.nvim_buf_is_valid(event.buf) then
+                        pcall(vim.api.nvim_buf_clear_namespace, event.buf, diagnostic_ns, 0, -1)
+                    end
+                end
+            })
+
+            vim.api.nvim_create_autocmd("CursorHold", {
                 buffer = event.buf,
                 callback = function()
                     if vim.api.nvim_buf_is_valid(event.buf) then
@@ -391,7 +400,7 @@ function M.set_diagnostic_autocmds(opts)
                 desc = "Handle window resize event, force diagnostics update to fit new window width.",
             })
 
-            vim.api.nvim_create_autocmd({ "CursorMoved", "CursorMovedI" }, {
+            vim.api.nvim_create_autocmd("CursorMoved", {
                 buffer = event.buf,
                 callback = function()
                     if vim.api.nvim_buf_is_valid(event.buf) then
