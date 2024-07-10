@@ -29,7 +29,6 @@ local default_config = {
         throttle   = 20,
         overflow   = {
             mode = "wrap",
-            position = "overlay"
         },
         softwrap   = 15,
         break_line = {
@@ -38,10 +37,6 @@ local default_config = {
         }
     },
     plugin = {
-        gitblame = {
-            enabled = true,
-            update = 150,
-        }
     }
 }
 
@@ -52,7 +47,7 @@ function M.setup(opts)
 
     local config = vim.tbl_deep_extend("force", default_config, opts)
 
-    config.options.overflow.position = config.options.overflow.position:lower()
+    -- config.options.overflow.position = config.options.overflow.position:lower()
     config.options.overflow.mode = config.options.overflow.mode:lower()
 
     hi.setup_highlights(config.blend, config.hi)

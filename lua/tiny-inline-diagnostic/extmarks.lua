@@ -3,7 +3,7 @@ local M = {}
 function M.get_extmarks_on_line(bufnr, linenr, col)
     local namespace_id = -1
     local start_pos = { linenr, col }
-    local end_pos = { linenr + 1, 0 }
+    local end_pos = { linenr, -1 }
 
     local extmarks = vim.api.nvim_buf_get_extmarks(
         bufnr,
