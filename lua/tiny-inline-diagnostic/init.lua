@@ -28,13 +28,16 @@ local default_config = {
     options = {
         -- update_in_insert = true,
         throttle   = 20,
+        softwrap   = 15,
         overflow   = {
             mode = "wrap",
         },
-        softwrap   = 15,
         break_line = {
             enabled = false,
             after = 30,
+        },
+        virt_texts = {
+            priority = 2048,
         }
     },
     plugin = {

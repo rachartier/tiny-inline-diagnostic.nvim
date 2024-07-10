@@ -80,6 +80,10 @@ require('tiny-inline-diagnostic').setup({
             break_line = {
                 enabled = false,
                 after = 30,
+            },
+
+            virt_texts = {
+                priority = 2048,
             }
         }
 })

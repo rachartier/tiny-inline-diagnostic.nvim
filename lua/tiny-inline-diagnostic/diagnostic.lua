@@ -255,6 +255,8 @@ function M.set_diagnostic_autocmds(opts)
                     return
                 end
 
+                local virt_prorioty = opts.options.virt_texts.priority
+
                 -- if not (params and params.force) then
                 --     if curline == last_line and curcol == last_col then
                 --         return
@@ -291,7 +293,7 @@ function M.set_diagnostic_autocmds(opts)
                         virt_text_pos = "eol",
                         virt_text = virt_lines[1],
                         virt_lines = other_virt_lines,
-                        priority = 2048,
+                        priority = virt_prorioty,
                         strict = false,
                     })
                 else
@@ -301,7 +303,7 @@ function M.set_diagnostic_autocmds(opts)
                         virt_text_pos = "eol",
                         virt_text = virt_lines[1],
                         -- virt_text_win_col = win_col + offset,
-                        priority = 2048,
+                        priority = virt_prorioty,
                         strict = false,
                     })
 
@@ -312,7 +314,7 @@ function M.set_diagnostic_autocmds(opts)
                                 virt_text_pos = "overlay",
                                 virt_text = line,
                                 virt_text_win_col = win_col + offset,
-                                priority = 2048,
+                                priority = virt_prorioty,
                                 strict = false,
                             })
                         end
