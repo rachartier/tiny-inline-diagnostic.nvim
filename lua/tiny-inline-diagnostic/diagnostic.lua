@@ -1,13 +1,14 @@
 local M = {}
 local timers_by_buffer = {}
 
+
 M.enabled = true
 
 local diagnostic_ns = vim.api.nvim_create_namespace("TinyInlineDiagnostic")
 local utils = require("tiny-inline-diagnostic.utils")
 local highlights = require("tiny-inline-diagnostic.highlights")
 local resize = require("tiny-inline-diagnostic.resize_win")
-local extmarks = require("tiny-inline-diagnostic.extmarks")
+local plugin = require("tiny-inline-diagnostic.plugin")
 
 --- Function to get diagnostics for the current position in the code.
 --- @param diagnostics table - The table of diagnostics to check.
@@ -58,9 +59,9 @@ local function get_header_from_chunk(
     if need_to_be_under then
         arrow = { opts.signs.up_arrow, "TinyInlineDiagnosticVirtualTextArrow" }
     end
-    --
+
     if opts.options.overflow.position == "overlay" and not diag_overflow_last_line then
-        arrow[1] = " " .. arrow[1]
+        arrow[1] = offset_space .. " " .. arrow[1]
     end
 
     local text_after_message = " "
@@ -112,17 +113,15 @@ local function get_body_from_chunk(
     end
 
     local chunk_virtual_texts = {
-        { offset_space .. string.rep(" ", #opts.signs.arrow - 1), diag_inv_hi },
-        { vertical_sign,                                          diag_hi },
-        { " " .. chunk,                                           diag_hi },
-        { " ",                                                    diag_hi },
+        { string.rep(" ", #opts.signs.vertical), diag_inv_hi },
+        { vertical_sign,                         diag_hi },
+        { " " .. chunk,                          diag_hi },
+        { " ",                                   diag_hi },
     }
 
     if opts.options.overflow.position == "overlay" and not diag_overflow_last_line then
         if need_to_be_under then
             chunk_virtual_texts[1] = { offset_space .. string.rep(" ", #opts.signs.up_arrow - 1), diag_inv_hi }
-        else
-            chunk_virtual_texts[1] = { "", diag_inv_hi }
         end
     end
 
@@ -153,15 +152,18 @@ end
 --- Function to forge the virtual texts from a diagnostic.
 --- @param opts table - The table of options, which includes the signs to use for the virtual texts.
 --- @param diag table - The diagnostic to get the virtual texts for.
+--- @param diag table - The diagnostic to get the virtual texts for.
 local function forge_virt_texts_from_diagnostic(opts, diag, curline, buf)
     local diag_hi, diag_inv_hi = highlights.get_diagnostic_highlights(diag.severity)
 
     local all_virtual_texts = {}
 
+    local plugin_offset = plugin.handle_plugins(opts)
 
-    local chunks, ret = resize.get_chunks(opts, diag, curline, buf)
+    local chunks, ret = resize.get_chunks(opts, diag, plugin_offset, curline, buf)
     local need_to_be_under = ret.need_to_be_under
     local offset = ret.offset
+    local offset_win_col = ret.offset_win_col
     local offset_space = ""
 
     if need_to_be_under then
@@ -174,7 +176,6 @@ local function forge_virt_texts_from_diagnostic(opts, diag, curline, buf)
 
     local line_count = vim.api.nvim_buf_line_count(buf)
     local diag_overflow_last_line = curline + #chunks > line_count - 1
-
 
     for i = 1, #chunks do
         local message = chunks[i]
@@ -217,7 +218,7 @@ local function forge_virt_texts_from_diagnostic(opts, diag, curline, buf)
         })
     end
 
-    return all_virtual_texts, offset, diag_overflow_last_line, need_to_be_under
+    return all_virtual_texts, offset_win_col, diag_overflow_last_line, need_to_be_under
 end
 
 --- Function to get the diagnostic under the cursor.
@@ -250,6 +251,8 @@ function M.set_diagnostic_autocmds(opts)
                     return
                 end
 
+                plugin.init(opts)
+
                 local diag, curline, curcol = M.get_diagnostic_under_cursor(event.buf)
 
                 if diag == nil or curline == nil then
@@ -281,10 +284,31 @@ function M.set_diagnostic_autocmds(opts)
                     vim.api.nvim_buf_set_extmark(event.buf, diagnostic_ns, curline, 0, {
                         id = curline + 1,
                         line_hl_group = "CursorLine",
-                        virt_text_pos = "overlay",
+                        virt_text_pos = "eol",
+                        virt_text = virt_lines[1],
+                        -- virt_text_win_col = win_col + offset,
+                        priority = 2048,
+                        strict = false,
+                    })
+
+                    for i, line in ipairs(virt_lines) do
+                        if i > 1 then
+                            vim.api.nvim_buf_set_extmark(event.buf, diagnostic_ns, curline + i - 1, 0, {
+                                id = curline + i + 1,
+                                virt_text_pos = "overlay",
+                                virt_text = line,
+                                virt_text_win_col = win_col + offset,
+                                priority = 2048,
+                                strict = false,
+                            })
+                        end
+                    end
+                else
+                    vim.api.nvim_buf_set_extmark(event.buf, diagnostic_ns, curline, 0, {
+                        id = curline + 1,
+                        virt_text_pos = "eol",
                         virt_text = virt_lines[1],
                         virt_lines = virt_lines[2 .. #virt_lines],
-                        virt_text_win_col = win_col + offset,
                         priority = 2048,
                         strict = false,
                     })
@@ -336,11 +360,6 @@ function M.set_diagnostic_autocmds(opts)
                 callback = function()
                     if vim.api.nvim_buf_is_valid(event.buf) then
                         vim.api.nvim_exec_autocmds("User", { pattern = "TinyDiagnosticEvent" })
-
-                        vim.defer_fn(function()
-                            print("ok")
-                            vim.api.nvim_exec_autocmds("User", { pattern = "TinyDiagnosticEvent" })
-                        end, 5000)
                     end
                 end,
                 desc = "Show diagnostics on cursor hold",

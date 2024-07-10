@@ -36,6 +36,12 @@ local default_config = {
             enabled = false,
             after = 30,
         }
+    },
+    plugin = {
+        gitblame = {
+            enabled = true,
+            update = 150,
+        }
     }
 }
 

@@ -3,6 +3,8 @@ local extmarks = require('tiny-inline-diagnostic.extmarks')
 
 local utils = require('tiny-inline-diagnostic.utils')
 
+
+
 --- Function to splits a diagnostic message into chunks for overflow handling.
 --- @param message string: The diagnostic message.
 --- @param offset number: The offset from the start of the line to the diagnostic position.
@@ -33,8 +35,7 @@ local function get_message_chunks_for_overflow(
     return message_chunk, need_to_be_under
 end
 
-
-function M.get_chunks(opts, diag, curline, buf)
+function M.get_chunks(opts, diag, plugin_offset, curline, buf)
     local win_width = vim.api.nvim_win_get_width(0)
     local line_length = #vim.api.nvim_get_current_line()
     local offset = 0
@@ -44,6 +45,7 @@ function M.get_chunks(opts, diag, curline, buf)
     local chunks = { diag.message }
 
     local other_extmarks_offset = extmarks.handle_other_extmarks(
+        opts,
         buf,
         curline,
         line_length
@@ -62,12 +64,12 @@ function M.get_chunks(opts, diag, curline, buf)
         if need_to_be_under then
             offset = 0
         else
-            offset = line_length + other_extmarks_offset
+            offset = line_length
         end
 
         chunks, need_to_be_under = get_message_chunks_for_overflow(
             diag.message,
-            offset,
+            offset + plugin_offset + other_extmarks_offset,
             need_to_be_under,
             win_width, opts
         )
@@ -78,6 +80,7 @@ function M.get_chunks(opts, diag, curline, buf)
 
     return chunks, {
         offset = offset,
+        offset_win_col = other_extmarks_offset + plugin_offset,
         need_to_be_under = need_to_be_under
     }
 end

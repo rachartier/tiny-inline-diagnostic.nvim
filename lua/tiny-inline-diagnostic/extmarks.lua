@@ -3,25 +3,24 @@ local M = {}
 function M.get_extmarks_on_line(bufnr, linenr, col)
     local namespace_id = -1
     local start_pos = { linenr, col }
-    local end_pos = { linenr, -1 }
+    local end_pos = { linenr + 1, 0 }
 
     local extmarks = vim.api.nvim_buf_get_extmarks(
         bufnr,
         namespace_id,
         start_pos,
         end_pos,
-        { details = true }
+        { details = true, overlap = true }
     )
 
     return extmarks
 end
 
-function M.handle_other_extmarks(buf, curline, col)
+function M.handle_other_extmarks(opts, buf, curline, col)
     local e = M.get_extmarks_on_line(buf, curline, col)
 
     if #e > 0 then
         for _, extmark in ipairs(e) do
-            print(vim.inspect(extmark))
             local detail = extmark[4]
             local to_check = {
                 "eol",
