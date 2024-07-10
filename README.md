@@ -122,3 +122,5 @@ require('tiny-inline-diagnostic').setup({
     - You need to set `vim.diagnostic.config({ virtual_text = false })` to remove all the others diagnostics.
 - **Q**: Diagnostics are not readable on a light background
     - You can either set `vim.g.background = "light"` to use white diagnostics background. Will not work if `hi.mixing_color` is set
+- **Q**: `GitBlame` (or other) is displayed first
+    - You need to modify the `virt_texts.priority` option to a higher value.
