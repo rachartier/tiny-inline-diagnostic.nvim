@@ -26,16 +26,17 @@ local default_config = {
         factor = 0.27,
     },
     options = {
-        throttle   = 20,
-        softwrap   = 15,
-        overflow   = {
+        throttle                   = 20,
+        softwrap                   = 15,
+        multiple_diag_under_cursor = true,
+        overflow                   = {
             mode = "wrap",
         },
-        break_line = {
+        break_line                 = {
             enabled = false,
             after = 30,
         },
-        virt_texts = {
+        virt_texts                 = {
             priority = 2048,
         }
     },

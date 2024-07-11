@@ -69,6 +69,9 @@ require('tiny-inline-diagnostic').setup({
             -- The minimum length of the message, otherwise it will be on a new line.
             softwrap = 15,
 
+            -- If multiple diagnostics are under the cursor, display all of them.
+            multiple_diag_under_cursor = false,
+
             overflow = {
                 -- Manage the overflow of the message.
                 --    - wrap: when the message is too long, it is then displayed on multiple lines.

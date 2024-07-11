@@ -46,6 +46,7 @@ end
 --- @return table: A table representing the virtual text array for the diagnostic message header.
 local function get_header_from_chunk(
     message,
+    index_diag,
     num_chunks,
     opts,
     need_to_be_under,
@@ -54,20 +55,29 @@ local function get_header_from_chunk(
     diag_inv_hi,
     offset
 )
-    local arrow = { opts.signs.arrow, "TinyInlineDiagnosticVirtualTextArrow" }
+    local virt_texts = {}
 
-    if need_to_be_under then
-        arrow = { opts.signs.up_arrow, "TinyInlineDiagnosticVirtualTextArrow" }
+    if index_diag == 1 then
+        local arrow = { opts.signs.arrow, "TinyInlineDiagnosticVirtualTextArrow" }
+
+        if need_to_be_under then
+            arrow = { opts.signs.up_arrow, "TinyInlineDiagnosticVirtualTextArrow" }
+        end
+
+        arrow[1] = string.rep(" ", offset) .. " " .. arrow[1]
+        virt_texts = {
+            arrow,
+            { opts.signs.left, diag_inv_hi },
+            { opts.signs.diag, diag_hi },
+        }
+    else
+        virt_texts = {
+            { string.rep(" ", #opts.signs.arrow - 1) .. " ", diag_inv_hi },
+            { opts.signs.diag,                               diag_hi },
+        }
     end
 
-    arrow[1] = string.rep(" ", offset) .. " " .. arrow[1]
-
     local text_after_message = " "
-    local virt_texts = {
-        arrow,
-        { opts.signs.left, diag_inv_hi },
-        { opts.signs.diag, diag_hi },
-    }
 
     if num_chunks == 1 then
         vim.list_extend(virt_texts, {
@@ -145,11 +155,11 @@ local function get_max_width_from_chunks(chunks)
     return max_chunk_line_length
 end
 
+
 --- Function to forge the virtual texts from a diagnostic.
 --- @param opts table - The table of options, which includes the signs to use for the virtual texts.
---- @param diag table - The diagnostic to get the virtual texts for.
---- @param diag table - The diagnostic to get the virtual texts for.
-local function forge_virt_texts_from_diagnostic(opts, diag, curline, buf)
+--- @param diags table - The diagnostic to get the virtual texts for.
+local function forge_virt_texts_from_diagnostic(opts, index_diag, diag, curline, buf)
     local diag_hi, diag_inv_hi = highlights.get_diagnostic_highlights(diag.severity)
 
     local all_virtual_texts = {}
@@ -182,6 +192,7 @@ local function forge_virt_texts_from_diagnostic(opts, diag, curline, buf)
         if i == 1 then
             local chunk_header = get_header_from_chunk(
                 message,
+                index_diag,
                 #chunks,
                 opts,
                 need_to_be_under,
@@ -215,6 +226,41 @@ local function forge_virt_texts_from_diagnostic(opts, diag, curline, buf)
     end
 
     return all_virtual_texts, offset_win_col, diag_overflow_last_line, need_to_be_under
+end
+
+local function forge_virt_texts_from_diagnostics(opts, diags, curline, buf)
+    local all_virtual_texts = {}
+    local offset_win_col = 0
+    local overflow_last_line = false
+    local need_to_be_under = false
+
+    for index_diag, diag in ipairs(diags) do
+        local virt_texts, diag_offset_win_col, diag_overflow_last_line, diag_need_to_be_under =
+            forge_virt_texts_from_diagnostic(
+                opts,
+                index_diag,
+                diag,
+                curline,
+                buf
+            )
+
+        if need_to_be_under == false then
+            need_to_be_under = diag_need_to_be_under
+        end
+
+        if overflow_last_line == false then
+            overflow_last_line = diag_overflow_last_line
+        end
+
+        -- Remove new line if not needed
+        if need_to_be_under and index_diag > 1 then
+            table.remove(virt_texts, 1)
+        end
+
+        vim.list_extend(all_virtual_texts, virt_texts)
+    end
+
+    return all_virtual_texts, offset_win_col, overflow_last_line, need_to_be_under
 end
 
 --- Function to get the diagnostic under the cursor.
@@ -253,20 +299,32 @@ function M.set_diagnostic_autocmds(opts)
 
                 plugin_handler.init(opts)
 
-                local diag, curline, curcol = M.get_diagnostic_under_cursor(event.buf)
+                local diags, curline, curcol = M.get_diagnostic_under_cursor(event.buf)
 
-                if diag == nil or curline == nil then
+                if diags == nil or curline == nil then
                     return
                 end
 
                 local virt_prorioty = opts.options.virt_texts.priority
+                local virt_lines, offset, diag_overflow_last_line, need_to_be_under
 
-                local virt_lines, offset, diag_overflow_last_line, need_to_be_under = forge_virt_texts_from_diagnostic(
-                    opts,
-                    diag[1],
-                    curline,
-                    event.buf
-                )
+                if opts.options.multiple_diag_under_cursor then
+                    virt_lines, offset, diag_overflow_last_line, need_to_be_under = forge_virt_texts_from_diagnostics(
+                        opts,
+                        diags,
+                        curline,
+                        event.buf
+                    )
+                else
+                    virt_lines, offset, diag_overflow_last_line, need_to_be_under = forge_virt_texts_from_diagnostic(
+                        opts,
+                        1,
+                        diags[1],
+                        curline,
+                        event.buf
+                    )
+                end
+
 
                 local win_col = vim.fn.virtcol("$")
 
