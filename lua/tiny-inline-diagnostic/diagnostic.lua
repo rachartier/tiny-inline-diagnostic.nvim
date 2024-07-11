@@ -8,7 +8,7 @@ local diagnostic_ns = vim.api.nvim_create_namespace("TinyInlineDiagnostic")
 local utils = require("tiny-inline-diagnostic.utils")
 local highlights = require("tiny-inline-diagnostic.highlights")
 local resize = require("tiny-inline-diagnostic.resize_win")
-local plugin = require("tiny-inline-diagnostic.plugin")
+local plugin_handler = require("tiny-inline-diagnostic.plugin")
 
 --- Function to get diagnostics for the current position in the code.
 --- @param diagnostics table - The table of diagnostics to check.
@@ -154,7 +154,7 @@ local function forge_virt_texts_from_diagnostic(opts, diag, curline, buf)
 
     local all_virtual_texts = {}
 
-    local plugin_offset = plugin.handle_plugins(opts)
+    local plugin_offset = plugin_handler.handle_plugins(opts)
 
     local chunks, ret = resize.get_chunks(opts, diag, plugin_offset, curline, buf)
     local need_to_be_under = ret.need_to_be_under
@@ -225,6 +225,10 @@ function M.get_diagnostic_under_cursor(buf)
     local curline = cursor_pos[1] - 1
     local curcol = cursor_pos[2]
 
+    if not vim.api.nvim_buf_is_valid(buf) then
+        return
+    end
+
     local diagnostics = vim.diagnostic.get(buf, { lnum = curline })
 
     if #diagnostics == 0 then
@@ -247,7 +251,7 @@ function M.set_diagnostic_autocmds(opts)
                     return
                 end
 
-                plugin.init(opts)
+                plugin_handler.init(opts)
 
                 local diag, curline, curcol = M.get_diagnostic_under_cursor(event.buf)
 
