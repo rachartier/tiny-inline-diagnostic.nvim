@@ -66,13 +66,14 @@ function M.setup(opts)
     diag.set_diagnostic_autocmds(config)
 end
 
-function M.change(background, factor)
+function M.change(background, factor, mixing_color)
     local config = vim.tbl_deep_extend("force", default_config, {
         blend = {
             factor = factor,
         },
         hi = {
             background = background,
+            mixing_color = mixing_color,
         }
     })
 
