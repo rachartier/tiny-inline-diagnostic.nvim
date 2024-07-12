@@ -1,7 +1,6 @@
 local M = {}
 local timers_by_buffer = {}
 
-
 M.enabled = true
 
 local diagnostic_ns = vim.api.nvim_create_namespace("TinyInlineDiagnostic")
@@ -284,102 +283,112 @@ function M.get_diagnostic_under_cursor(buf)
     return get_current_pos_diags(diagnostics, curline, curcol), curline, curcol
 end
 
+local function apply_diagnostics_virtual_texts(opts, event)
+    pcall(vim.api.nvim_buf_clear_namespace, event.buf, diagnostic_ns, 0, -1)
+
+    if not M.enabled then
+        return
+    end
+
+    plugin_handler.init(opts)
+
+    local diags, curline, curcol = M.get_diagnostic_under_cursor(event.buf)
+
+    if diags == nil or curline == nil then
+        return
+    end
+
+    local virt_prorioty = opts.options.virt_texts.priority
+    local virt_lines, offset, diag_overflow_last_line, need_to_be_under
+
+    if opts.options.multiple_diag_under_cursor then
+        virt_lines, offset, diag_overflow_last_line, need_to_be_under = forge_virt_texts_from_diagnostics(
+            opts,
+            diags,
+            curline,
+            event.buf
+        )
+    else
+        virt_lines, offset, diag_overflow_last_line, need_to_be_under = forge_virt_texts_from_diagnostic(
+            opts,
+            1,
+            diags[1],
+            curline,
+            event.buf
+        )
+    end
+
+
+    local win_col = vim.fn.virtcol("$")
+
+    if need_to_be_under then
+        win_col = 0
+    end
+
+    if diag_overflow_last_line then
+        local other_virt_lines = {}
+        for i, line in ipairs(virt_lines) do
+            if i > 1 then
+                table.insert(line, 1, { string.rep(" ", win_col + offset), "None" })
+                table.insert(other_virt_lines, line)
+            end
+        end
+        vim.api.nvim_buf_set_extmark(event.buf, diagnostic_ns, curline, 0, {
+            id = curline + 1,
+            line_hl_group = "CursorLine",
+            virt_text_pos = "eol",
+            virt_text = virt_lines[1],
+            virt_lines = other_virt_lines,
+            priority = virt_prorioty,
+            strict = false,
+        })
+    else
+        vim.api.nvim_buf_set_extmark(event.buf, diagnostic_ns, curline, 0, {
+            id = curline + 1,
+            line_hl_group = "CursorLine",
+            virt_text_pos = "eol",
+            virt_text = virt_lines[1],
+            -- virt_text_win_col = win_col + offset,
+            priority = virt_prorioty,
+            strict = false,
+        })
+
+        for i, line in ipairs(virt_lines) do
+            if i > 1 then
+                vim.api.nvim_buf_set_extmark(event.buf, diagnostic_ns, curline + i - 1, 0, {
+                    id = curline + i + 1,
+                    virt_text_pos = "overlay",
+                    virt_text = line,
+                    virt_text_win_col = win_col + offset,
+                    priority = virt_prorioty,
+                    strict = false,
+                })
+            end
+        end
+    end
+end
+
+
 --- Function to set diagnostic autocmds.
 --- This function creates an autocmd for the `LspAttach` event.
 --- @param opts table - The table of options, which includes the `clear_on_insert` option and the signs to use for the virtual texts.
 function M.set_diagnostic_autocmds(opts)
+    pcall(vim.api.nvim_buf_clear_namespace, 0, diagnostic_ns, 0, -1)
     local autocmd_ns = vim.api.nvim_create_augroup("TinyInlineDiagnosticAutocmds", { clear = true })
 
+    for _, timer in pairs(timers_by_buffer) do
+        if timer then
+            timer:close()
+        end
+    end
+    timers_by_buffer = {}
+
     vim.api.nvim_create_autocmd("LspAttach", {
-        group = autocmd_ns,
         callback = function(event)
-            local function apply_diagnostics_virtual_texts(params)
-                pcall(vim.api.nvim_buf_clear_namespace, event.buf, diagnostic_ns, 0, -1)
-
-                if not M.enabled then
-                    return
-                end
-
-                plugin_handler.init(opts)
-
-                local diags, curline, curcol = M.get_diagnostic_under_cursor(event.buf)
-
-                if diags == nil or curline == nil then
-                    return
-                end
-
-                local virt_prorioty = opts.options.virt_texts.priority
-                local virt_lines, offset, diag_overflow_last_line, need_to_be_under
-
-                if opts.options.multiple_diag_under_cursor then
-                    virt_lines, offset, diag_overflow_last_line, need_to_be_under = forge_virt_texts_from_diagnostics(
-                        opts,
-                        diags,
-                        curline,
-                        event.buf
-                    )
-                else
-                    virt_lines, offset, diag_overflow_last_line, need_to_be_under = forge_virt_texts_from_diagnostic(
-                        opts,
-                        1,
-                        diags[1],
-                        curline,
-                        event.buf
-                    )
-                end
-
-
-                local win_col = vim.fn.virtcol("$")
-
-                if need_to_be_under then
-                    win_col = 0
-                end
-
-                if diag_overflow_last_line then
-                    local other_virt_lines = {}
-                    for i, line in ipairs(virt_lines) do
-                        if i > 1 then
-                            table.insert(line, 1, { string.rep(" ", win_col + offset), "None" })
-                            table.insert(other_virt_lines, line)
-                        end
-                    end
-                    vim.api.nvim_buf_set_extmark(event.buf, diagnostic_ns, curline, 0, {
-                        id = curline + 1,
-                        line_hl_group = "CursorLine",
-                        virt_text_pos = "eol",
-                        virt_text = virt_lines[1],
-                        virt_lines = other_virt_lines,
-                        priority = virt_prorioty,
-                        strict = false,
-                    })
-                else
-                    vim.api.nvim_buf_set_extmark(event.buf, diagnostic_ns, curline, 0, {
-                        id = curline + 1,
-                        line_hl_group = "CursorLine",
-                        virt_text_pos = "eol",
-                        virt_text = virt_lines[1],
-                        -- virt_text_win_col = win_col + offset,
-                        priority = virt_prorioty,
-                        strict = false,
-                    })
-
-                    for i, line in ipairs(virt_lines) do
-                        if i > 1 then
-                            vim.api.nvim_buf_set_extmark(event.buf, diagnostic_ns, curline + i - 1, 0, {
-                                id = curline + i + 1,
-                                virt_text_pos = "overlay",
-                                virt_text = line,
-                                virt_text_win_col = win_col + offset,
-                                priority = virt_prorioty,
-                                strict = false,
-                            })
-                        end
-                    end
-                end
-            end
-
             local throttled_apply_diagnostics_virtual_texts, timer = utils.throttle(
-                apply_diagnostics_virtual_texts,
+                function()
+                    apply_diagnostics_virtual_texts(opts, event)
+                end,
                 opts.options.throttle
             )
 
@@ -391,7 +400,7 @@ function M.set_diagnostic_autocmds(opts)
                 group = autocmd_ns,
                 pattern = "TinyDiagnosticEvent",
                 callback = function()
-                    apply_diagnostics_virtual_texts()
+                    apply_diagnostics_virtual_texts(opts, event)
                 end
             })
 
@@ -411,14 +420,6 @@ function M.set_diagnostic_autocmds(opts)
                 pattern = "TinyDiagnosticEventThrottled",
                 callback = function()
                     throttled_apply_diagnostics_virtual_texts()
-                end
-            })
-
-            vim.api.nvim_create_autocmd("User", {
-                group = autocmd_ns,
-                pattern = "TinyDiagnosticEventForce",
-                callback = function()
-                    apply_diagnostics_virtual_texts({ force = true })
                 end
             })
 
@@ -448,7 +449,7 @@ function M.set_diagnostic_autocmds(opts)
                 buffer = event.buf,
                 callback = function()
                     if vim.api.nvim_buf_is_valid(event.buf) then
-                        vim.api.nvim_exec_autocmds("User", { pattern = "TinyDiagnosticEventForce" })
+                        vim.api.nvim_exec_autocmds("User", { pattern = "TinyDiagnosticEvent" })
                     end
                 end,
                 desc = "Handle window resize event, force diagnostics update to fit new window width.",
@@ -471,17 +472,17 @@ end
 
 function M.enable()
     M.enabled = true
-    vim.api.nvim_exec_autocmds("User", { pattern = "TinyDiagnosticEventForce" })
+    vim.api.nvim_exec_autocmds("User", { pattern = "TinyDiagnosticEvent" })
 end
 
 function M.disable()
     M.enabled = false
-    vim.api.nvim_exec_autocmds("User", { pattern = "TinyDiagnosticEventForce" })
+    vim.api.nvim_exec_autocmds("User", { pattern = "TinyDiagnosticEvent" })
 end
 
 function M.toggle()
     M.enabled = not M.enabled
-    vim.api.nvim_exec_autocmds("User", { pattern = "TinyDiagnosticEventForce" })
+    vim.api.nvim_exec_autocmds("User", { pattern = "TinyDiagnosticEvent" })
 end
 
 return M
