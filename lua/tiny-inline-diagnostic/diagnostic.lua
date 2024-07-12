@@ -373,7 +373,6 @@ end
 --- This function creates an autocmd for the `LspAttach` event.
 --- @param opts table - The table of options, which includes the `clear_on_insert` option and the signs to use for the virtual texts.
 function M.set_diagnostic_autocmds(opts)
-    pcall(vim.api.nvim_buf_clear_namespace, 0, diagnostic_ns, 0, -1)
     local autocmd_ns = vim.api.nvim_create_augroup("TinyInlineDiagnosticAutocmds", { clear = true })
 
     for _, timer in pairs(timers_by_buffer) do
