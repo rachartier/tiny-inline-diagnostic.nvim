@@ -1,26 +1,26 @@
-*tiny-devicons-auto-colors.nvim.txt*For Neovim >= 0.7.0Last change: 2024 July 11
+*tiny-inline-diagnostic.nvim.txt* For Neovim >= 0.7.0Last change: 2024 July 11
 
 ==============================================================================
-Table of Contents           *tiny-devicons-auto-colors.nvim-table-of-contents*
+Table of Contents              *tiny-inline-diagnostic.nvim-table-of-contents*
 
-1. tiny-inline-diagnostic.nvim|tiny-devicons-auto-colors.nvim-tiny-inline-diagnostic.nvim|
-  - Images |tiny-devicons-auto-colors.nvim-tiny-inline-diagnostic.nvim-images|
-  - Setup   |tiny-devicons-auto-colors.nvim-tiny-inline-diagnostic.nvim-setup|
-  - Installation|tiny-devicons-auto-colors.nvim-tiny-inline-diagnostic.nvim-installation|
-  - Options|tiny-devicons-auto-colors.nvim-tiny-inline-diagnostic.nvim-options|
-  - Highlights|tiny-devicons-auto-colors.nvim-tiny-inline-diagnostic.nvim-highlights|
-  - API       |tiny-devicons-auto-colors.nvim-tiny-inline-diagnostic.nvim-api|
-  - FAQ:     |tiny-devicons-auto-colors.nvim-tiny-inline-diagnostic.nvim-faq:|
-2. Links                                |tiny-devicons-auto-colors.nvim-links|
+1. tiny-inline-diagnostic.nvim|tiny-inline-diagnostic.nvim-tiny-inline-diagnostic.nvim|
+  - Images    |tiny-inline-diagnostic.nvim-tiny-inline-diagnostic.nvim-images|
+  - Setup      |tiny-inline-diagnostic.nvim-tiny-inline-diagnostic.nvim-setup|
+  - Installation|tiny-inline-diagnostic.nvim-tiny-inline-diagnostic.nvim-installation|
+  - Options  |tiny-inline-diagnostic.nvim-tiny-inline-diagnostic.nvim-options|
+  - Highlights|tiny-inline-diagnostic.nvim-tiny-inline-diagnostic.nvim-highlights|
+  - API          |tiny-inline-diagnostic.nvim-tiny-inline-diagnostic.nvim-api|
+  - FAQ:        |tiny-inline-diagnostic.nvim-tiny-inline-diagnostic.nvim-faq:|
+2. Links                                   |tiny-inline-diagnostic.nvim-links|
 
 ==============================================================================
-1. tiny-inline-diagnostic.nvim*tiny-devicons-auto-colors.nvim-tiny-inline-diagnostic.nvim*
+1. tiny-inline-diagnostic.nvim*tiny-inline-diagnostic.nvim-tiny-inline-diagnostic.nvim*
 
 A Neovim plugin that display prettier diagnostic messages. Display one line
 diagnostic messages where the cursor is, with icons and colors.
 
 
-IMAGES     *tiny-devicons-auto-colors.nvim-tiny-inline-diagnostic.nvim-images*
+IMAGES        *tiny-inline-diagnostic.nvim-tiny-inline-diagnostic.nvim-images*
 
 
 OVERFLOW HANDLING ENABLED ~
@@ -29,12 +29,12 @@ OVERFLOW HANDLING ENABLED ~
 BREAK LINE ENABLED ~
 
 
-SETUP       *tiny-devicons-auto-colors.nvim-tiny-inline-diagnostic.nvim-setup*
+SETUP          *tiny-inline-diagnostic.nvim-tiny-inline-diagnostic.nvim-setup*
 
 - You need to set `vim.diagnostic.config({ virtual_text = false })`, to not have all diagnostics in the buffer displayed.
 
 
-INSTALLATION*tiny-devicons-auto-colors.nvim-tiny-inline-diagnostic.nvim-installation*
+INSTALLATION*tiny-inline-diagnostic.nvim-tiny-inline-diagnostic.nvim-installation*
 
 With Lazy.nvim:
 
@@ -49,7 +49,7 @@ With Lazy.nvim:
 <
 
 
-OPTIONS   *tiny-devicons-auto-colors.nvim-tiny-inline-diagnostic.nvim-options*
+OPTIONS      *tiny-inline-diagnostic.nvim-tiny-inline-diagnostic.nvim-options*
 
 >lua
     -- Default configuration
@@ -108,7 +108,7 @@ OPTIONS   *tiny-devicons-auto-colors.nvim-tiny-inline-diagnostic.nvim-options*
 <
 
 
-HIGHLIGHTS*tiny-devicons-auto-colors.nvim-tiny-inline-diagnostic.nvim-highlights*
+HIGHLIGHTS*tiny-inline-diagnostic.nvim-tiny-inline-diagnostic.nvim-highlights*
 
 - TinyInlineDiagnosticVirtualTextError
 - TinyInlineDiagnosticVirtualTextWarn
@@ -122,7 +122,7 @@ TinyInlineInvDiagnosticVirtualTextWarn - TinyInlineInvDiagnosticVirtualTextInfo
 - TinyInlineInvDiagnosticVirtualTextHint
 
 
-API           *tiny-devicons-auto-colors.nvim-tiny-inline-diagnostic.nvim-api*
+API              *tiny-inline-diagnostic.nvim-tiny-inline-diagnostic.nvim-api*
 
 - `require("tiny-inline-diagnostic").change(background, factor)`change the background color and the blend factor, useful if you want to change the colorscheme on the fly.
 - `require("tiny-inline-diagnostic").get_diagnostic_under_cursor(bufnr)`get the diagnostic under the cursor, useful if you want to display the diagnostic in a statusline.
@@ -131,7 +131,7 @@ API           *tiny-devicons-auto-colors.nvim-tiny-inline-diagnostic.nvim-api*
 - `require("tiny-inline-diagnostic").toggle()`toggle the diagnostic, on/off.
 
 
-FAQ:         *tiny-devicons-auto-colors.nvim-tiny-inline-diagnostic.nvim-faq:*
+FAQ:            *tiny-inline-diagnostic.nvim-tiny-inline-diagnostic.nvim-faq:*
 
 - **Q**My colors are bad
     - You can change the colors with the `hi` option.
@@ -144,7 +144,7 @@ FAQ:         *tiny-devicons-auto-colors.nvim-tiny-inline-diagnostic.nvim-faq:*
     - You need to modify the `virt_texts.priority` option to a higher value.
 
 ==============================================================================
-2. Links                                *tiny-devicons-auto-colors.nvim-links*
+2. Links                                   *tiny-inline-diagnostic.nvim-links*
 
 1. *tinyinlinediagnostic_2*: https://github.com/rachartier/tiny-inline-diagnostic.nvim/assets/2057541/d0033fe8-1ac3-416b-92a6-96aa49472cc9
 2. *tinyinlinediagnostic_wrap*: https://github.com/rachartier/tiny-inline-diagnostic.nvim/assets/2057541/799fd09f-ba7a-4881-825b-8068af8c53bb

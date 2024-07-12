@@ -20,7 +20,7 @@ jobs:
       - name: panvimdoc
         uses: kdheepak/panvimdoc@main
         with:
-          vimdoc: tiny-devicons-auto-colors.nvim
+          vimdoc: tiny-inline-diagnostic.nvim
           version: "Neovim >= 0.7.0"
           demojify: true
           treesitter: true
