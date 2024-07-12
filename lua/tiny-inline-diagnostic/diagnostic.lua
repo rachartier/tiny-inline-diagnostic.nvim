@@ -127,7 +127,7 @@ local function get_body_from_chunk(
     }
 
     if need_to_be_under then
-        chunk_virtual_texts[1] = { offset_space .. string.rep(" ", #opts.signs.up_arrow - 1), diag_inv_hi }
+        chunk_virtual_texts[1] = { offset_space .. string.rep(" ", #opts.signs.up_arrow), diag_inv_hi }
     end
 
     if is_last then
