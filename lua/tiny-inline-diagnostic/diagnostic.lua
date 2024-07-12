@@ -288,7 +288,10 @@ end
 --- This function creates an autocmd for the `LspAttach` event.
 --- @param opts table - The table of options, which includes the `clear_on_insert` option and the signs to use for the virtual texts.
 function M.set_diagnostic_autocmds(opts)
+    local autocmd_ns = vim.api.nvim_create_augroup("TinyInlineDiagnosticAutocmds", { clear = true })
+
     vim.api.nvim_create_autocmd("LspAttach", {
+        group = autocmd_ns,
         callback = function(event)
             local function apply_diagnostics_virtual_texts(params)
                 pcall(vim.api.nvim_buf_clear_namespace, event.buf, diagnostic_ns, 0, -1)
@@ -385,6 +388,7 @@ function M.set_diagnostic_autocmds(opts)
             end
 
             vim.api.nvim_create_autocmd("User", {
+                group = autocmd_ns,
                 pattern = "TinyDiagnosticEvent",
                 callback = function()
                     apply_diagnostics_virtual_texts()
@@ -392,6 +396,7 @@ function M.set_diagnostic_autocmds(opts)
             })
 
             vim.api.nvim_create_autocmd({ "LspDetach" }, {
+                group = autocmd_ns,
                 buffer = event.buf,
                 callback = function()
                     if timers_by_buffer[event.buf] then
@@ -402,6 +407,7 @@ function M.set_diagnostic_autocmds(opts)
             })
 
             vim.api.nvim_create_autocmd("User", {
+                group = autocmd_ns,
                 pattern = "TinyDiagnosticEventThrottled",
                 callback = function()
                     throttled_apply_diagnostics_virtual_texts()
@@ -409,6 +415,7 @@ function M.set_diagnostic_autocmds(opts)
             })
 
             vim.api.nvim_create_autocmd("User", {
+                group = autocmd_ns,
                 pattern = "TinyDiagnosticEventForce",
                 callback = function()
                     apply_diagnostics_virtual_texts({ force = true })
@@ -416,6 +423,7 @@ function M.set_diagnostic_autocmds(opts)
             })
 
             vim.api.nvim_create_autocmd("InsertEnter", {
+                group = autocmd_ns,
                 buffer = event.buf,
                 callback = function()
                     if vim.api.nvim_buf_is_valid(event.buf) then
@@ -425,6 +433,7 @@ function M.set_diagnostic_autocmds(opts)
             })
 
             vim.api.nvim_create_autocmd("CursorHold", {
+                group = autocmd_ns,
                 buffer = event.buf,
                 callback = function()
                     if vim.api.nvim_buf_is_valid(event.buf) then
@@ -435,6 +444,7 @@ function M.set_diagnostic_autocmds(opts)
             })
 
             vim.api.nvim_create_autocmd({ "VimResized" }, {
+                group = autocmd_ns,
                 buffer = event.buf,
                 callback = function()
                     if vim.api.nvim_buf_is_valid(event.buf) then
@@ -445,6 +455,7 @@ function M.set_diagnostic_autocmds(opts)
             })
 
             vim.api.nvim_create_autocmd("CursorMoved", {
+                group = autocmd_ns,
                 buffer = event.buf,
                 callback = function()
                     if vim.api.nvim_buf_is_valid(event.buf) then

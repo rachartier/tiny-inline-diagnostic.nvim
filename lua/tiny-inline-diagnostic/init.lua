@@ -28,7 +28,7 @@ local default_config = {
     options = {
         throttle                   = 20,
         softwrap                   = 15,
-        multiple_diag_under_cursor = false,
+        multiple_diag_under_cursor = true,
         overflow                   = {
             mode = "wrap",
         },
