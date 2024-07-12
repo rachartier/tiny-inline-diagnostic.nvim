@@ -1,4 +1,4 @@
-*tiny-inline-diagnostic.nvim.txt* For Neovim >= 0.7.0Last change: 2024 July 11
+*tiny-inline-diagnostic.nvim.txt* For Neovim >= 0.7.0Last change: 2024 July 12
 
 ==============================================================================
 Table of Contents              *tiny-inline-diagnostic.nvim-table-of-contents*
