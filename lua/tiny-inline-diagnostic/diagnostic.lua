@@ -117,7 +117,7 @@ local function get_body_from_chunk(
     }
 
     if not need_to_be_under then
-        table.insert(chunk_virtual_texts, 1, { string.rep(" ", #opts.signs.arrow), diag_inv_hi })
+        table.insert(chunk_virtual_texts, 1, { string.rep(" ", #opts.signs.arrow - 1), diag_inv_hi })
     else
         table.insert(chunk_virtual_texts, 1, { " ", diag_inv_hi })
     end
