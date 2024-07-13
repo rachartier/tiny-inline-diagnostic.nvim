@@ -37,44 +37,35 @@ end
 --- @param message string: The diagnostic message.
 --- @param num_chunks number: The total number of chunks the message is split into.
 --- @param opts table: The options table, which includes signs for the diagnostic message.
---- @param need_to_be_under boolean: A flag indicating whether the arrow needs to point upwards.
---- @param diag_overflow_last_line boolean: A flag indicating whether the diagnostic message is the last line of the buffer.
 --- @param diag_hi string: The highlight group for the diagnostic message.
 --- @param diag_inv_hi string: The highlight group for the diagnostic signs.
---- @param offset int: The offset for aligning the chunk message.
 --- @return table: A table representing the virtual text array for the diagnostic message header.
 local function get_header_from_chunk(
     message,
     index_diag,
     num_chunks,
-    opts,
     need_to_be_under,
-    diag_overflow_last_line,
+    opts,
     diag_hi,
-    diag_inv_hi,
-    offset
+    diag_inv_hi
 )
     local virt_texts = {}
 
-    if index_diag == 1 then
-        local arrow = { opts.signs.arrow, "TinyInlineDiagnosticVirtualTextArrow" }
+    virt_texts = {
+        { opts.signs.left, diag_inv_hi },
+        { opts.signs.diag, diag_hi }
+    }
 
-        if need_to_be_under then
-            arrow = { opts.signs.up_arrow, "TinyInlineDiagnosticVirtualTextArrow" }
-        end
-
-        arrow[1] = string.rep(" ", offset) .. " " .. arrow[1]
-        virt_texts = {
-            arrow,
-            { opts.signs.left, diag_inv_hi },
-            { opts.signs.diag, diag_hi },
-        }
-    else
-        virt_texts = {
-            { string.rep(" ", #opts.signs.arrow - 1) .. " ", diag_inv_hi },
-            { opts.signs.diag,                               diag_hi },
-        }
+    if not need_to_be_under and index_diag > 1 then
+        table.insert(virt_texts, 1, { string.rep(" ", #opts.signs.arrow - 2), diag_inv_hi })
     end
+
+    -- if need_to_be_under then
+    --     virt_texts = {
+    --         { string.rep(" ", #opts.signs.arrow - 1) .. " ", diag_inv_hi },
+    --         { opts.signs.diag,                               diag_hi },
+    --     }
+    -- end
 
     local text_after_message = " "
 
@@ -120,14 +111,15 @@ local function get_body_from_chunk(
     end
 
     local chunk_virtual_texts = {
-        { string.rep(" ", #opts.signs.arrow), diag_inv_hi },
-        { vertical_sign,                      diag_hi },
-        { " " .. chunk,                       diag_hi },
-        { " ",                                diag_hi },
+        { vertical_sign, diag_hi },
+        { " " .. chunk,  diag_hi },
+        { " ",           diag_hi },
     }
 
-    if need_to_be_under then
-        chunk_virtual_texts[1] = { offset_space .. string.rep(" ", #opts.signs.up_arrow), diag_inv_hi }
+    if not need_to_be_under then
+        table.insert(chunk_virtual_texts, 1, { string.rep(" ", #opts.signs.arrow), diag_inv_hi })
+    else
+        table.insert(chunk_virtual_texts, 1, { " ", diag_inv_hi })
     end
 
     if is_last then
@@ -137,6 +129,29 @@ local function get_body_from_chunk(
     end
 
     return chunk_virtual_texts
+end
+
+local function get_arrow_from_chunk(
+    offset,
+    cursorpos,
+    opts,
+    need_to_be_under
+)
+    local arrow = opts.signs.arrow
+    local chunck = {}
+
+    if need_to_be_under then
+        arrow = opts.signs.up_arrow
+        arrow = string.rep(" ", cursorpos[2] - math.floor(#arrow / 2) + 1) .. arrow
+        chunck = {
+            { " ",   "None" },
+            { arrow, "TinyInlineDiagnosticVirtualTextArrow" },
+        }
+    else
+        chunck = { arrow, "TinyInlineDiagnosticVirtualTextArrow" }
+    end
+
+    return chunck
 end
 
 --- Function to calculates the maximum width from a list of chunks.
@@ -158,8 +173,9 @@ end
 --- Function to forge the virtual texts from a diagnostic.
 --- @param opts table - The table of options, which includes the signs to use for the virtual texts.
 --- @param diags table - The diagnostic to get the virtual texts for.
-local function forge_virt_texts_from_diagnostic(opts, index_diag, diag, curline, buf)
+local function forge_virt_texts_from_diagnostic(opts, cursorpos, index_diag, diag, buf)
     local diag_hi, diag_inv_hi = highlights.get_diagnostic_highlights(diag.severity)
+    local curline = cursorpos[1]
 
     local all_virtual_texts = {}
 
@@ -183,7 +199,7 @@ local function forge_virt_texts_from_diagnostic(opts, index_diag, diag, curline,
     local diag_overflow_last_line = curline + #chunks > line_count - 1
 
     for i = 1, #chunks do
-        local message = chunks[i]
+        local message = utils.trim(chunks[i])
 
         local to_add = max_chunk_line_length - #message
         message = message .. string.rep(" ", to_add)
@@ -193,13 +209,27 @@ local function forge_virt_texts_from_diagnostic(opts, index_diag, diag, curline,
                 message,
                 index_diag,
                 #chunks,
-                opts,
                 need_to_be_under,
-                diag_overflow_last_line,
+                opts,
                 diag_hi,
-                diag_inv_hi,
-                offset_win_col
+                diag_inv_hi
             )
+
+            if index_diag == 1 then
+                local chunck_arrow = get_arrow_from_chunk(
+                    offset,
+                    cursorpos,
+                    opts,
+                    need_to_be_under
+                )
+
+
+                if type(chunck_arrow[1]) == "table" then
+                    table.insert(all_virtual_texts, chunck_arrow)
+                else
+                    table.insert(chunk_header, 1, chunck_arrow)
+                end
+            end
 
             table.insert(all_virtual_texts, chunk_header)
         else
@@ -220,14 +250,14 @@ local function forge_virt_texts_from_diagnostic(opts, index_diag, diag, curline,
 
     if need_to_be_under then
         table.insert(all_virtual_texts, 1, {
-            { " ", "None" }
+            { " ", "None" },
         })
     end
 
     return all_virtual_texts, offset_win_col, diag_overflow_last_line, need_to_be_under
 end
 
-local function forge_virt_texts_from_diagnostics(opts, diags, curline, buf)
+local function forge_virt_texts_from_diagnostics(opts, diags, cursor_pos, buf)
     local all_virtual_texts = {}
     local offset_win_col = 0
     local overflow_last_line = false
@@ -237,9 +267,9 @@ local function forge_virt_texts_from_diagnostics(opts, diags, curline, buf)
         local virt_texts, diag_offset_win_col, diag_overflow_last_line, diag_need_to_be_under =
             forge_virt_texts_from_diagnostic(
                 opts,
+                cursor_pos,
                 index_diag,
                 diag,
-                curline,
                 buf
             )
 
@@ -294,6 +324,11 @@ local function apply_diagnostics_virtual_texts(opts, event)
 
     local diags, curline, curcol = M.get_diagnostic_under_cursor(event.buf)
 
+    local cursorpos = {
+        curline,
+        curcol,
+    }
+
     if diags == nil or curline == nil then
         return
     end
@@ -305,15 +340,15 @@ local function apply_diagnostics_virtual_texts(opts, event)
         virt_lines, offset, diag_overflow_last_line, need_to_be_under = forge_virt_texts_from_diagnostics(
             opts,
             diags,
-            curline,
+            cursorpos,
             event.buf
         )
     else
         virt_lines, offset, diag_overflow_last_line, need_to_be_under = forge_virt_texts_from_diagnostic(
             opts,
+            cursorpos,
             1,
             diags[1],
-            curline,
             event.buf
         )
     end
