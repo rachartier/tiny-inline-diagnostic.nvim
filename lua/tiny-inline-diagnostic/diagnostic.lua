@@ -33,10 +33,11 @@ local function get_current_pos_diags(diagnostics, curline, curcol)
     return current_pos_diags
 end
 
-
---- Function to forge the virtual texts from a diagnostic.
---- @param opts table - The table of options, which includes the signs to use for the virtual texts.
---- @param diags table - The diagnostic to get the virtual texts for.
+--- @param opts table containing options
+--- @param cursorpos table containing cursor position
+--- @param index_diag integer representing the diagnostic index
+--- @param diag table containing diagnostic data
+--- @param buf integer: buffer number.
 local function forge_virt_texts_from_diagnostic(opts, cursorpos, index_diag, diag, buf)
     local diag_hi, diag_inv_hi = highlights.get_diagnostic_highlights(diag.severity)
     local curline = cursorpos[1]
@@ -215,11 +216,11 @@ local function apply_diagnostics_virtual_texts(opts, event)
     end
 
     if need_to_be_under then
-        vim.api.nvim_buf_set_extmark(event.buf, diagnostic_ns, curline + 1, cursorpos[2], {
+        vim.api.nvim_buf_set_extmark(event.buf, diagnostic_ns, curline + 1, 0, {
             id = curline + 1000,
             line_hl_group = "CursorLine",
             virt_text_pos = "overlay",
-            virt_text_win_col = cursorpos[2] - 1,
+            virt_text_win_col = 0,
             virt_text = virt_lines[2],
             priority = virt_prorioty,
             strict = false,

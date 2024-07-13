@@ -9,7 +9,7 @@ local default_config = {
         right = "",
         diag = " ●",
         arrow = "    ",
-        up_arrow = "",
+        up_arrow = "    ",
         vertical = " │",
         vertical_end = " └"
     },
