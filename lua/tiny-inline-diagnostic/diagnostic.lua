@@ -142,7 +142,6 @@ local function get_arrow_from_chunk(
 
     if need_to_be_under then
         arrow = opts.signs.up_arrow
-        arrow = string.rep(" ", cursorpos[2] - math.floor(#arrow / 2) + 1) .. arrow
         chunck = {
             { " ",   "None" },
             { arrow, "TinyInlineDiagnosticVirtualTextArrow" },
@@ -222,7 +221,6 @@ local function forge_virt_texts_from_diagnostic(opts, cursorpos, index_diag, dia
                     opts,
                     need_to_be_under
                 )
-
 
                 if type(chunck_arrow[1]) == "table" then
                     table.insert(all_virtual_texts, chunck_arrow)
@@ -353,11 +351,26 @@ local function apply_diagnostics_virtual_texts(opts, event)
         )
     end
 
-
     local win_col = vim.fn.virtcol("$")
 
     if need_to_be_under then
         win_col = 0
+    end
+
+    if need_to_be_under then
+        vim.api.nvim_buf_set_extmark(event.buf, diagnostic_ns, curline + 1, cursorpos[2], {
+            id = curline + 100,
+            line_hl_group = "CursorLine",
+            virt_text_pos = "overlay",
+            virt_text_win_col = cursorpos[2] - 1,
+            virt_text = virt_lines[2],
+            priority = virt_prorioty,
+            strict = false,
+        })
+        table.remove(virt_lines, 2)
+        if not diag_overflow_last_line then
+            curline = curline + 1
+        end
     end
 
     if diag_overflow_last_line then
@@ -368,6 +381,7 @@ local function apply_diagnostics_virtual_texts(opts, event)
                 table.insert(other_virt_lines, line)
             end
         end
+
         vim.api.nvim_buf_set_extmark(event.buf, diagnostic_ns, curline, 0, {
             id = curline + 1,
             line_hl_group = "CursorLine",
