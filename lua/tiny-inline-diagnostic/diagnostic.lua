@@ -205,7 +205,8 @@ local function apply_diagnostics_virtual_texts(opts, event)
     local buf_lines_count = vim.api.nvim_buf_line_count(event.buf)
 
     local total_lines = #virt_lines
-    if total_lines >= buf_lines_count - 1 then
+    print("total_lines", total_lines, buf_lines_count - 1)
+    if curline - 1 + total_lines > buf_lines_count - 1 then
         diag_overflow_last_line = true
     end
 

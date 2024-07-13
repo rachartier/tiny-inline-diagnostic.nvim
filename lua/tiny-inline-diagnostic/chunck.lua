@@ -154,9 +154,10 @@ function M.get_message_chunks_for_overflow(
 
     local distance = win_width - offset - signs_total_text_len
 
-    if distance < opts.options.softwrap then
-        distance = win_width - signs_total_text_len
-    end
+    -- if distance < opts.options.softwrap then
+    --     distance = win_width - signs_total_text_len - #message
+    --     print("distance", distance)
+    -- end
 
     local message_chunk = {}
     message_chunk = utils.wrap_text(message, distance)
