@@ -142,7 +142,7 @@ end
 --- @param line_length number: The length of the line where the diagnostic message is.
 --- @param win_width number: The width of the window where the diagnostic message is displayed.
 --- @param opts table: The options table, which includes signs for the diagnostic message and the softwrap option.
---- @return table, boolean: A table representing the chunks of the diagnostic message, and a boolean indicating whether the message needs to be displayed under the line.
+--- @return table: A table representing the chunks of the diagnostic message.
 function M.get_message_chunks_for_overflow(
     message,
     offset,
@@ -155,14 +155,13 @@ function M.get_message_chunks_for_overflow(
     local distance = win_width - offset - signs_total_text_len
 
     if distance < opts.options.softwrap then
-        need_to_be_under = true
         distance = win_width - signs_total_text_len
     end
 
     local message_chunk = {}
     message_chunk = utils.wrap_text(message, distance)
 
-    return message_chunk, need_to_be_under
+    return message_chunk
 end
 
 function M.get_chunks(opts, diag, plugin_offset, curline, buf)
@@ -170,7 +169,7 @@ function M.get_chunks(opts, diag, plugin_offset, curline, buf)
     local line_length = #vim.api.nvim_get_current_line()
     local offset = 0
     local need_to_be_under = false
-    local win_option_wrap_enabled = vim.api.nvim_get_option_value("wrap", { win = 0 })
+    -- local win_option_wrap_enabled = vim.api.nvim_get_option_value("wrap", { win = 0 })
 
     local chunks = { diag.message }
 
@@ -181,10 +180,8 @@ function M.get_chunks(opts, diag, plugin_offset, curline, buf)
         line_length
     )
 
-    if win_option_wrap_enabled then
-        if line_length > win_width - opts.options.softwrap then
-            need_to_be_under = true
-        end
+    if line_length > win_width - opts.options.softwrap then
+        need_to_be_under = true
     end
 
     if opts.options.break_line.enabled == true then
@@ -197,7 +194,7 @@ function M.get_chunks(opts, diag, plugin_offset, curline, buf)
             offset = line_length
         end
 
-        chunks, need_to_be_under = M.get_message_chunks_for_overflow(
+        chunks = M.get_message_chunks_for_overflow(
             diag.message,
             offset + plugin_offset + other_extmarks_offset,
             need_to_be_under,

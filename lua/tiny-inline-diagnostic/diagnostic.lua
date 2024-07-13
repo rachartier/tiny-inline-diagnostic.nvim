@@ -124,8 +124,8 @@ local function forge_virt_texts_from_diagnostics(opts, diags, cursor_pos, buf)
                 buf
             )
 
-        if need_to_be_under == false then
-            need_to_be_under = diag_need_to_be_under
+        if diag_need_to_be_under == true then
+            need_to_be_under = true
         end
 
         -- Remove new line if not needed
@@ -135,7 +135,7 @@ local function forge_virt_texts_from_diagnostics(opts, diags, cursor_pos, buf)
 
         vim.list_extend(all_virtual_texts, virt_texts)
     end
-    return all_virtual_texts, offset_win_col, overflow_last_line, need_to_be_under
+    return all_virtual_texts, offset_win_col, need_to_be_under
 end
 
 --- Function to get the diagnostic under the cursor.
@@ -199,11 +199,12 @@ local function apply_diagnostics_virtual_texts(opts, event)
         )
     end
 
+
     local diag_overflow_last_line = false
-    local lines_count = vim.api.nvim_buf_line_count(event.buf)
+    local buf_lines_count = vim.api.nvim_buf_line_count(event.buf)
 
     local total_lines = #virt_lines
-    if total_lines > lines_count then
+    if total_lines >= buf_lines_count - 1 then
         diag_overflow_last_line = true
     end
 
@@ -224,7 +225,9 @@ local function apply_diagnostics_virtual_texts(opts, event)
             strict = false,
         })
         table.remove(virt_lines, 2)
-        if not diag_overflow_last_line then
+        win_col = 0
+
+        if curline < buf_lines_count - 1 then
             curline = curline + 1
         end
     end
@@ -241,9 +244,10 @@ local function apply_diagnostics_virtual_texts(opts, event)
         vim.api.nvim_buf_set_extmark(event.buf, diagnostic_ns, curline, 0, {
             id = curline + 1,
             line_hl_group = "CursorLine",
-            virt_text_pos = "eol",
+            virt_text_pos = "overlay",
             virt_text = virt_lines[1],
             virt_lines = other_virt_lines,
+            virt_text_win_col = win_col + offset,
             priority = virt_prorioty,
             strict = false,
         })
