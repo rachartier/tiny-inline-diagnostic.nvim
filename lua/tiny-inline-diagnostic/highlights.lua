@@ -57,7 +57,7 @@ function M.setup_highlights(blend, default_hi)
         TinyInlineDiagnosticVirtualTextWarn = { bg = blends.warn, fg = colors.warn.fg },
         TinyInlineDiagnosticVirtualTextInfo = { bg = blends.info, fg = colors.info.fg },
         TinyInlineDiagnosticVirtualTextHint = { bg = blends.hint, fg = colors.hint.fg },
-        TinyInlineDiagnosticVirtualTextArrow = { bg = colors.background, colors.arrow },
+        TinyInlineDiagnosticVirtualTextArrow = { bg = colors.background, fg = colors.arrow.fg },
 
         TinyInlineInvDiagnosticVirtualTextError = { fg = blends.error, bg = colors.background },
         TinyInlineInvDiagnosticVirtualTextWarn = { fg = blends.warn, bg = colors.background },
