@@ -42,12 +42,14 @@ function M.int_to_hex(int)
 end
 
 function M.trim(s)
+    s = s:gsub("^[%s\194\160]*", ""):gsub("[%s\194\160]*$", "")
+
     return s:match("^%s*(.-)%s*$")
 end
 
 function M.split_lines(s)
     local lines = {}
-    for line in s:gmatch("([^\n]*)\n?") do
+    for line in s:gmatch("([^\n\t]*)\n?") do
         table.insert(lines, line)
     end
     table.remove(lines, #lines)
