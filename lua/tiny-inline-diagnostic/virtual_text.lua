@@ -8,27 +8,20 @@ local utils = require("tiny-inline-diagnostic.utils")
 --- @param opts table containing options
 --- @param cursorpos table containing cursor position
 --- @param index_diag integer representing the diagnostic index
---- @param diag table containing diagnostic data
---- @param buf integer: buffer number.
-function M.from_diagnostic(opts, cursorpos, index_diag, diag, buf)
-    local diag_hi, diag_inv_hi = highlights.get_diagnostic_highlights(diag.severity)
-    local curline = cursorpos[1]
+function M.from_diagnostic(opts, ret, cursorpos, index_diag, padding, total_chunks)
+    local diag_hi, diag_inv_hi = highlights.get_diagnostic_highlights(ret.severity)
 
     local all_virtual_texts = {}
 
-    local plugin_offset = plugin_handler.handle_plugins(opts)
-
-    local chunks, ret = chunck_utils.get_chunks(opts, diag, plugin_offset, curline, buf)
+    local chunks = ret.chunks
     local need_to_be_under = ret.need_to_be_under
     local offset = ret.offset
     local offset_win_col = ret.offset_win_col
 
-    local max_chunk_line_length = chunck_utils.get_max_width_from_chunks(chunks)
-
     for index_chunk = 1, #chunks do
         local message = utils.trim(chunks[index_chunk])
 
-        local to_add = max_chunk_line_length - #message
+        local to_add = padding - #message
         message = message .. string.rep(" ", to_add)
 
         if index_chunk == 1 then
@@ -39,7 +32,8 @@ function M.from_diagnostic(opts, cursorpos, index_diag, diag, buf)
                 need_to_be_under,
                 opts,
                 diag_hi,
-                diag_inv_hi
+                diag_inv_hi,
+                total_chunks
             )
 
             if index_diag == 1 then
@@ -61,11 +55,14 @@ function M.from_diagnostic(opts, cursorpos, index_diag, diag, buf)
         else
             local chunk_body = chunck_utils.get_body_from_chunk(
                 message,
-                opts,
+                index_diag,
+                index_chunk,
+                #chunks,
                 need_to_be_under,
+                opts,
                 diag_hi,
                 diag_inv_hi,
-                index_chunk == #chunks
+                total_chunks
             )
 
             table.insert(all_virtual_texts, chunk_body)
@@ -82,18 +79,35 @@ function M.from_diagnostic(opts, cursorpos, index_diag, diag, buf)
 end
 
 function M.from_diagnostics(opts, diags, cursor_pos, buf)
-    local all_virtual_texts = {}
-    local offset_win_col = 0
-    local need_to_be_under = false
+    local all_virtual_texts     = {}
+    local offset_win_col        = 0
+    local need_to_be_under      = false
+
+    local plugin_offset         = plugin_handler.handle_plugins(opts)
+
+    local max_chunk_line_length = 0
+    local chunks_by_diag        = {}
 
     for index_diag, diag in ipairs(diags) do
+        local ret = chunck_utils.get_chunks(opts, diag, plugin_offset, cursor_pos[1], buf)
+        local chunk_line_length = chunck_utils.get_max_width_from_chunks(ret.chunks)
+
+        if chunk_line_length > max_chunk_line_length then
+            max_chunk_line_length = chunk_line_length
+        end
+
+        chunks_by_diag[index_diag] = ret
+    end
+
+    for index_diag, ret in ipairs(chunks_by_diag) do
         local virt_texts, diag_offset_win_col, diag_need_to_be_under =
             M.from_diagnostic(
                 opts,
+                ret,
                 cursor_pos,
                 index_diag,
-                diag,
-                buf
+                max_chunk_line_length,
+                #chunks_by_diag
             )
 
         if diag_need_to_be_under == true then

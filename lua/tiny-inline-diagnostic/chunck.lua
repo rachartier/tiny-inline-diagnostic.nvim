@@ -33,14 +33,22 @@ function M.get_header_from_chunk(
     need_to_be_under,
     opts,
     diag_hi,
-    diag_inv_hi
+    diag_inv_hi,
+    total_chunks
 )
     local virt_texts = {}
 
-    virt_texts = {
-        { opts.signs.left, diag_inv_hi },
-        { opts.signs.diag, diag_hi }
-    }
+    if index_diag == 1 then
+        virt_texts = {
+            { opts.signs.left, diag_inv_hi },
+            { opts.signs.diag, diag_hi }
+        }
+    else
+        virt_texts = {
+            { " ",             "None" },
+            { opts.signs.diag, diag_hi }
+        }
+    end
 
     if not need_to_be_under and index_diag > 1 then
         table.insert(virt_texts, 1, { string.rep(" ", #opts.signs.arrow - 2), diag_inv_hi })
@@ -56,10 +64,17 @@ function M.get_header_from_chunk(
     local text_after_message = " "
 
     if num_chunks == 1 then
-        vim.list_extend(virt_texts, {
-            { " " .. message .. " ", diag_hi },
-            { opts.signs.right,      diag_inv_hi },
-        })
+        if total_chunks == 1 or index_diag == total_chunks then
+            vim.list_extend(virt_texts, {
+                { " " .. message .. " ", diag_hi },
+                { opts.signs.right,      diag_inv_hi },
+            })
+        else
+            vim.list_extend(virt_texts, {
+                { " " .. message .. text_after_message, diag_hi },
+                { string.rep(" ", #opts.signs.right),   diag_inv_hi },
+            })
+        end
     else
         vim.list_extend(virt_texts, {
             { " " .. message .. text_after_message, diag_hi },
@@ -80,15 +95,19 @@ end
 --- @return table: A table representing the virtual text array for the diagnostic message body.
 function M.get_body_from_chunk(
     chunk,
-    opts,
+    index_diag,
+    index_chunk,
+    num_chunks,
     need_to_be_under,
+    opts,
     diag_hi,
     diag_inv_hi,
-    is_last
+    total_chunks
 )
     local vertical_sign = opts.signs.vertical
+    local is_last = index_diag == total_chunks and index_chunk == num_chunks
 
-    if is_last then
+    if index_chunk == num_chunks then
         vertical_sign = opts.signs.vertical_end
     end
 
@@ -206,7 +225,9 @@ function M.get_chunks(opts, diag, plugin_offset, curline, buf)
     end
 
 
-    return chunks, {
+    return {
+        chunks = chunks,
+        severity = diag.severity,
         offset = offset,
         offset_win_col = other_extmarks_offset + plugin_offset,
         need_to_be_under = need_to_be_under

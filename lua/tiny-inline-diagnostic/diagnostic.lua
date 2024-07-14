@@ -2,6 +2,7 @@ local M = {}
 
 M.enabled = true
 
+local chunck_utils = require("tiny-inline-diagnostic.chunck")
 local utils = require("tiny-inline-diagnostic.utils")
 local plugin_handler = require("tiny-inline-diagnostic.plugin")
 local virtual_text_forge = require("tiny-inline-diagnostic.virtual_text")
@@ -31,6 +32,7 @@ local function get_current_pos_diags(diagnostics, curline, curcol)
 
     return current_pos_diags
 end
+
 --- Function to get the diagnostic under the cursor.
 --- @param buf number - The buffer number to get the diagnostics for.
 --- @return table, number, number - A table of diagnostics for the current position, the current line number, the current col, or nil if there are no diagnostics.
@@ -83,15 +85,19 @@ local function apply_diagnostics_virtual_texts(opts, event)
             event.buf
         )
     else
+        local plugin_offset = plugin_handler.handle_plugins(opts)
+        local ret = chunck_utils.get_chunks(opts, diags[1], plugin_offset, cursorpos[1], event.buf)
+        local max_chunk_line_length = chunck_utils.get_max_width_from_chunks(ret.chunks)
+
         virt_lines, offset, need_to_be_under = virtual_text_forge.from_diagnostic(
             opts,
+            ret,
             cursorpos,
             1,
-            diags[1],
-            event.buf
+            max_chunk_line_length,
+            1
         )
     end
-
 
     extmarks.create_extmarks(
         event,
