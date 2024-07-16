@@ -22,6 +22,9 @@ A Neovim plugin that display prettier diagnostic messages. Display one line diag
 
 ## 📥 Installation
 
+> [!NOTE]
+> Only works with Neovim >= 0.10
+
 With Lazy.nvim:
 
 ```lua
