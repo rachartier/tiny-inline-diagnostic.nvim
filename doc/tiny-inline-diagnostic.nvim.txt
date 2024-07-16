@@ -1,4 +1,4 @@
-*tiny-inline-diagnostic.nvim.txt* For Neovim >= 0.7.0Last change: 2024 July 14
+*tiny-inline-diagnostic.nvim.txt* For Neovim >= 0.7.0Last change: 2024 July 16
 
 ==============================================================================
 Table of Contents              *tiny-inline-diagnostic.nvim-table-of-contents*
@@ -36,6 +36,8 @@ SETUP          *tiny-inline-diagnostic.nvim-tiny-inline-diagnostic.nvim-setup*
 
 INSTALLATION*tiny-inline-diagnostic.nvim-tiny-inline-diagnostic.nvim-installation*
 
+
+  [!NOTE] Only works with Neovim >= 0.10
 With Lazy.nvim:
 
 >lua
