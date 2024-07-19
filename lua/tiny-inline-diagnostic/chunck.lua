@@ -3,7 +3,6 @@ local M = {}
 local extmarks = require('tiny-inline-diagnostic.extmarks')
 local utils = require('tiny-inline-diagnostic.utils')
 
-
 --- Function to calculates the maximum width from a list of chunks.
 --- @param chunks table: A table representing the chunks of a diagnostic message.
 --- @return number: The maximum width among all chunks.
@@ -91,7 +90,6 @@ end
 --- @param need_to_be_under boolean: A flag indicating whether the arrow needs to point upwards.
 --- @param diag_hi string: The highlight group for the diagnostic message.
 --- @param diag_inv_hi string: The highlight group for the diagnostic signs.
---- @param is_last boolean: A flag indicating whether the chunk is the last one.
 --- @return table: A table representing the virtual text array for the diagnostic message body.
 function M.get_body_from_chunk(
     chunk,
@@ -133,8 +131,6 @@ function M.get_body_from_chunk(
 end
 
 function M.get_arrow_from_chunk(
-    offset,
-    cursorpos,
     opts,
     need_to_be_under
 )
@@ -157,15 +153,12 @@ end
 --- Function to splits a diagnostic message into chunks for overflow handling.
 --- @param message string: The diagnostic message.
 --- @param offset number: The offset from the start of the line to the diagnostic position.
---- @param need_to_be_under boolean: A flag indicating whether the diagnostic message needs to be displayed under the line.
---- @param line_length number: The length of the line where the diagnostic message is.
 --- @param win_width number: The width of the window where the diagnostic message is displayed.
 --- @param opts table: The options table, which includes signs for the diagnostic message and the softwrap option.
 --- @return table: A table representing the chunks of the diagnostic message.
 function M.get_message_chunks_for_overflow(
     message,
     offset,
-    need_to_be_under,
     win_width,
     opts
 )
@@ -217,7 +210,6 @@ function M.get_chunks(opts, diag, plugin_offset, curline, buf)
         chunks = M.get_message_chunks_for_overflow(
             diag.message,
             offset + plugin_offset + other_extmarks_offset,
-            need_to_be_under,
             win_width, opts
         )
     elseif opts.options.overflow.position == "none" then
