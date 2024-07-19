@@ -21,7 +21,7 @@ jobs:
         uses: kdheepak/panvimdoc@main
         with:
           vimdoc: tiny-inline-diagnostic.nvim
-          version: "Neovim >= 0.7.0"
+          version: "Neovim >= 0.10.0"
           demojify: true
           treesitter: true
       - name: Push changes
