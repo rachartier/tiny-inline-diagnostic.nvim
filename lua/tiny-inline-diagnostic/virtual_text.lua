@@ -38,8 +38,6 @@ function M.from_diagnostic(opts, ret, cursorpos, index_diag, padding, total_chun
 
             if index_diag == 1 then
                 local chunck_arrow = chunck_utils.get_arrow_from_chunk(
-                    offset,
-                    cursorpos,
                     opts,
                     need_to_be_under
                 )
