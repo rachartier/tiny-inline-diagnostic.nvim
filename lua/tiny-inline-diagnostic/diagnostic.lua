@@ -30,7 +30,6 @@ local function get_current_pos_diags(diagnostics, curline, curcol)
 		table.insert(current_pos_diags, diagnostics[1])
 	end
 
-	print(vim.inspect(current_pos_diags))
 	return current_pos_diags
 end
 
