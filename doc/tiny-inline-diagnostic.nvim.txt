@@ -1,4 +1,4 @@
-*tiny-inline-diagnostic.nvim.txt*For Neovim >= 0.10.0Last change: 2024 July 26
+*tiny-inline-diagnostic.nvim.txt*For Neovim >= 0.10.0Last change: 2024 July 27
 
 ==============================================================================
 Table of Contents              *tiny-inline-diagnostic.nvim-table-of-contents*
@@ -91,6 +91,10 @@ OPTIONS      *tiny-inline-diagnostic.nvim-tiny-inline-diagnostic.nvim-options*
     
             -- If multiple diagnostics are under the cursor, display all of them.
             multiple_diag_under_cursor = false,
+    
+            -- Enable diagnostic message on all lines.
+            -- /!\ Still an experimental feature, can be slow on big files.
+            multilines = false,
     
             overflow = {
                 -- Manage the overflow of the message.
