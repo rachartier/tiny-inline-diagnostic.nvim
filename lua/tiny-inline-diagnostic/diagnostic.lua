@@ -82,13 +82,18 @@ local function apply_diagnostics_virtual_texts(opts, event)
 		return
 	end
 
+	local fist_visually_seen_line = vim.fn.line("w0")
+	local last_visually_seen_line = vim.fn.line("w$")
+
 	-- group all_diags by lnum
 	local all_diags_grouped = {}
 	for _, diag in ipairs(all_diags) do
-		if all_diags_grouped[diag.lnum] == nil then
-			all_diags_grouped[diag.lnum] = {}
+		if diag.lnum >= fist_visually_seen_line and diag.lnum <= last_visually_seen_line then
+			if all_diags_grouped[diag.lnum] == nil then
+				all_diags_grouped[diag.lnum] = {}
+			end
+			table.insert(all_diags_grouped[diag.lnum], diag)
 		end
-		table.insert(all_diags_grouped[diag.lnum], diag)
 	end
 
 	for lnum, line_diags in pairs(all_diags_grouped) do

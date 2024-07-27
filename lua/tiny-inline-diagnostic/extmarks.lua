@@ -1,7 +1,10 @@
 local M = {}
 
 local uuid_extmark = 999999999999
-local lines_to_skip_extmark = {}
+local count_lines_to_skip_extmark = {
+	count = 0,
+	start_line = 0,
+}
 
 local diagnostic_ns = vim.api.nvim_create_namespace("TinyInlineDiagnostic")
 local utils = require("tiny-inline-diagnostic.utils")
@@ -75,7 +78,12 @@ function M.create_extmarks(opts, event, curline, virt_lines, offset, need_to_be_
 	local cursor_line = vim.api.nvim_win_get_cursor(0)[1] - 1
 
 	if opts.options.multilines and curline ~= cursor_line then
-		if vim.list_contains(lines_to_skip_extmark, curline + 1) then
+		if
+			count_lines_to_skip_extmark.count > 0
+			and curline > count_lines_to_skip_extmark.start_line
+			and curline < count_lines_to_skip_extmark.start_line + count_lines_to_skip_extmark.count
+		then
+			count_lines_to_skip_extmark.count = count_lines_to_skip_extmark.count - 1
 			return
 		end
 
@@ -98,10 +106,8 @@ function M.create_extmarks(opts, event, curline, virt_lines, offset, need_to_be_
 		return
 	end
 
-	lines_to_skip_extmark = {}
-	for i = 1, #virt_lines do
-		table.insert(lines_to_skip_extmark, curline + i)
-	end
+	count_lines_to_skip_extmark.count = #virt_lines
+	count_lines_to_skip_extmark.start_line = curline
 
 	if need_to_be_under then
 		vim.api.nvim_buf_set_extmark(event.buf, diagnostic_ns, curline + 1, 0, {

@@ -30,7 +30,7 @@ local default_config = {
 		throttle = 20,
 		softwrap = 30,
 		multiple_diag_under_cursor = true,
-		multilines = false,
+		multilines = true,
 		overflow = {
 			mode = "wrap",
 		},
