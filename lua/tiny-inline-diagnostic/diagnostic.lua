@@ -35,7 +35,7 @@ end
 
 --- Function to get the diagnostic under the cursor.
 --- @param buf number - The buffer number to get the diagnostics for.
---- @return table, number, number - A table of diagnostics for the current position, the current line number, the current col, or nil if there are no diagnostics.
+--- @return table, number - A table of diagnostics for the current position, the current line number.
 function M.get_diagnostic_under_cursor(buf)
 	local cursor_pos = vim.api.nvim_win_get_cursor(0)
 	local curline = cursor_pos[1] - 1
@@ -51,7 +51,15 @@ function M.get_diagnostic_under_cursor(buf)
 		return
 	end
 
-	return get_current_pos_diags(diagnostics, curline, curcol), curline, curcol
+	return get_current_pos_diags(diagnostics, curline, curcol), curcol
+end
+
+function M.get_all_diagnostics(buf)
+	if not vim.api.nvim_buf_is_valid(buf) then
+		return
+	end
+
+	return vim.diagnostic.get(buf)
 end
 
 local function apply_diagnostics_virtual_texts(opts, event)
@@ -63,32 +71,54 @@ local function apply_diagnostics_virtual_texts(opts, event)
 
 	plugin_handler.init(opts)
 
-	local diags, curline, curcol = M.get_diagnostic_under_cursor(event.buf)
+	local all_diags = nil
+	if opts.options.multilines then
+		all_diags = M.get_all_diagnostics(event.buf)
+	else
+		all_diags = M.get_diagnostic_under_cursor(event.buf)
+	end
 
-	local cursorpos = {
-		curline,
-		curcol,
-	}
-
-	if diags == nil or curline == nil then
+	if all_diags == nil then
 		return
 	end
 
-	local virt_priority = opts.options.virt_texts.priority
-	local virt_lines, offset, need_to_be_under
-
-	if opts.options.multiple_diag_under_cursor then
-		virt_lines, offset, need_to_be_under = virtual_text_forge.from_diagnostics(opts, diags, cursorpos, event.buf)
-	else
-		local plugin_offset = plugin_handler.handle_plugins(opts)
-		local ret = chunk_utils.get_chunks(opts, diags[1], plugin_offset, cursorpos[1], event.buf)
-		local max_chunk_line_length = chunk_utils.get_max_width_from_chunks(ret.chunks)
-
-		virt_lines, offset, need_to_be_under =
-			virtual_text_forge.from_diagnostic(opts, ret, cursorpos, 1, max_chunk_line_length, 1)
+	-- group all_diags by lnum
+	local all_diags_grouped = {}
+	for _, diag in ipairs(all_diags) do
+		if all_diags_grouped[diag.lnum] == nil then
+			all_diags_grouped[diag.lnum] = {}
+		end
+		table.insert(all_diags_grouped[diag.lnum], diag)
 	end
 
-	extmarks.create_extmarks(event, curline, virt_lines, offset, need_to_be_under, virt_priority)
+	for lnum, line_diags in pairs(all_diags_grouped) do
+		if line_diags == nil then
+			return
+		end
+
+		local cursorpos = {
+			lnum,
+			0,
+		}
+
+		local virt_priority = opts.options.virt_texts.priority
+		local virt_lines, offset, need_to_be_under
+		local cursor_line = vim.api.nvim_win_get_cursor(0)[1] - 1
+
+		if opts.options.multiple_diag_under_cursor and lnum == cursor_line then
+			virt_lines, offset, need_to_be_under =
+				virtual_text_forge.from_diagnostics(opts, line_diags, cursorpos, event.buf)
+		else
+			local plugin_offset = plugin_handler.handle_plugins(opts)
+			local ret = chunk_utils.get_chunks(opts, line_diags[1], plugin_offset, cursorpos[1], event.buf)
+			local max_chunk_line_length = chunk_utils.get_max_width_from_chunks(ret.chunks)
+
+			virt_lines, offset, need_to_be_under =
+				virtual_text_forge.from_diagnostic(opts, ret, cursorpos, 1, max_chunk_line_length, 1)
+		end
+
+		extmarks.create_extmarks(opts, event, cursorpos[1], virt_lines, offset, need_to_be_under, virt_priority)
+	end
 end
 
 --- Function to set diagnostic autocmds.

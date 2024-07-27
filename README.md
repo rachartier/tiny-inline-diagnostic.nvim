@@ -78,6 +78,10 @@ require("tiny-inline-diagnostic").setup({
 		-- If multiple diagnostics are under the cursor, display all of them.
 		multiple_diag_under_cursor = false,
 
+		-- Enable diagnostic message on all lines.
+		-- /!\ Still an experimental feature, can be slow on big files.
+		multilines = false,
+
 		overflow = {
 			-- Manage the overflow of the message.
 			--    - wrap: when the message is too long, it is then displayed on multiple lines.

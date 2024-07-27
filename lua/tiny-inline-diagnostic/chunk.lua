@@ -171,36 +171,43 @@ end
 
 function M.get_chunks(opts, diag, plugin_offset, curline, buf)
 	local win_width = vim.api.nvim_win_get_width(0)
-	local line_length = #vim.api.nvim_get_current_line()
+	local line_length = #vim.api.nvim_buf_get_lines(buf, curline, curline + 1, false)[1]
 	local offset = 0
 	local need_to_be_under = false
+	local current_line = vim.api.nvim_win_get_cursor(0)[1] - 1
 	-- local win_option_wrap_enabled = vim.api.nvim_get_option_value("wrap", { win = 0 })
 
 	local chunks = { diag.message }
 
 	local other_extmarks_offset = extmarks.handle_other_extmarks(opts, buf, curline, line_length)
 
-	if line_length > win_width - opts.options.softwrap then
-		need_to_be_under = true
+	if (opts.options.overflow.mode ~= "none" and not opts.options.multilines) or current_line == curline then
+		if line_length > win_width - opts.options.softwrap then
+			need_to_be_under = true
+		end
 	end
 
-	if opts.options.break_line.enabled == true then
-		chunks = {}
-		chunks = utils.wrap_text(diag.message, opts.options.break_line.after)
-	elseif opts.options.overflow.mode == "wrap" then
-		if need_to_be_under then
-			offset = 0
-		else
-			offset = line_length
-		end
+	if not opts.options.multilines or current_line == curline then
+		if opts.options.break_line.enabled == true then
+			chunks = {}
+			chunks = utils.wrap_text(diag.message, opts.options.break_line.after)
+		elseif opts.options.overflow.mode == "wrap" then
+			if need_to_be_under then
+				offset = 0
+			else
+				offset = line_length
+			end
 
-		chunks = M.get_message_chunks_for_overflow(
-			diag.message,
-			offset + plugin_offset + other_extmarks_offset,
-			win_width,
-			opts
-		)
-	elseif opts.options.overflow.position == "none" then
+			chunks = M.get_message_chunks_for_overflow(
+				diag.message,
+				offset + plugin_offset + other_extmarks_offset,
+				win_width,
+				opts
+			)
+		elseif opts.options.overflow.position == "none" then
+			chunks = { " " .. diag.message }
+		end
+	else
 		chunks = { " " .. diag.message }
 	end
 
