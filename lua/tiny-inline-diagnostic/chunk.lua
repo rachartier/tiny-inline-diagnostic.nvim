@@ -171,11 +171,16 @@ end
 
 function M.get_chunks(opts, diag, plugin_offset, curline, buf)
 	local win_width = vim.api.nvim_win_get_width(0)
-	local line_length = #vim.api.nvim_buf_get_lines(buf, curline, curline + 1, false)[1]
+	local lines = vim.api.nvim_buf_get_lines(buf, curline, curline + 1, false)
+	local line_length = 0
 	local offset = 0
 	local need_to_be_under = false
 	local current_line = vim.api.nvim_win_get_cursor(0)[1] - 1
 	-- local win_option_wrap_enabled = vim.api.nvim_get_option_value("wrap", { win = 0 })
+
+	if lines ~= nil and lines[1] ~= nil then
+		line_length = #lines[1]
+	end
 
 	local chunks = { diag.message }
 

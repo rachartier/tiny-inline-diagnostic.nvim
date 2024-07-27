@@ -71,15 +71,29 @@ local function apply_diagnostics_virtual_texts(opts, event)
 
 	plugin_handler.init(opts)
 
-	local all_diags = nil
+	local diagnostics = nil
 	if opts.options.multilines then
-		all_diags = M.get_all_diagnostics(event.buf)
+		diagnostics = M.get_all_diagnostics(event.buf)
 	else
-		all_diags = M.get_diagnostic_under_cursor(event.buf)
+		diagnostics = M.get_diagnostic_under_cursor(event.buf)
 	end
 
-	if all_diags == nil then
+	if diagnostics == nil then
 		return
+	end
+
+	if opts.options.multilines then
+		local under_cursor_diags = M.get_diagnostic_under_cursor(event.buf)
+		if under_cursor_diags ~= nil then
+			for i, diag in ipairs(diagnostics) do
+				if diag.lnum == under_cursor_diags[1].lnum then
+					table.remove(diagnostics, i)
+				end
+			end
+			for _, diag in ipairs(under_cursor_diags) do
+				table.insert(diagnostics, diag)
+			end
+		end
 	end
 
 	local fist_visually_seen_line = vim.fn.line("w0")
@@ -87,7 +101,7 @@ local function apply_diagnostics_virtual_texts(opts, event)
 
 	-- group all_diags by lnum
 	local all_diags_grouped = {}
-	for _, diag in ipairs(all_diags) do
+	for _, diag in ipairs(diagnostics) do
 		if diag.lnum >= fist_visually_seen_line and diag.lnum <= last_visually_seen_line then
 			if all_diags_grouped[diag.lnum] == nil then
 				all_diags_grouped[diag.lnum] = {}
