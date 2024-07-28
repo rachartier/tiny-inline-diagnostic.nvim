@@ -200,7 +200,8 @@ function M.get_chunks(opts, diag, plugin_offset, curline, buf)
 			if need_to_be_under then
 				offset = 0
 			else
-				offset = line_length
+				local win_col = vim.fn.virtcol("$")
+				offset = win_col
 			end
 
 			chunks = M.get_message_chunks_for_overflow(
