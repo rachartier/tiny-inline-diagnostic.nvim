@@ -102,13 +102,15 @@ local function apply_diagnostics_virtual_texts(opts, event)
 	-- group all_diags by lnum
 	local all_diags_grouped = {}
 	for _, diag in ipairs(diagnostics) do
-		if diag.lnum >= fist_visually_seen_line and diag.lnum <= last_visually_seen_line then
+		if diag.lnum >= fist_visually_seen_line - 1 and diag.lnum <= last_visually_seen_line then
 			if all_diags_grouped[diag.lnum] == nil then
 				all_diags_grouped[diag.lnum] = {}
 			end
 			table.insert(all_diags_grouped[diag.lnum], diag)
 		end
 	end
+
+	local cursor_line = vim.api.nvim_win_get_cursor(0)[1] - 1
 
 	for lnum, line_diags in pairs(all_diags_grouped) do
 		if line_diags == nil then
@@ -122,7 +124,6 @@ local function apply_diagnostics_virtual_texts(opts, event)
 
 		local virt_priority = opts.options.virt_texts.priority
 		local virt_lines, offset, need_to_be_under
-		local cursor_line = vim.api.nvim_win_get_cursor(0)[1] - 1
 
 		if opts.options.multiple_diag_under_cursor and lnum == cursor_line then
 			virt_lines, offset, need_to_be_under =

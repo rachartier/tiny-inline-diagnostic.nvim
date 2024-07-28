@@ -10,18 +10,21 @@ local function get_hi(name)
 	return {
 		fg = utils.int_to_hex(hi.fg),
 		bg = utils.int_to_hex(hi.bg),
+		italic = hi.italic,
 	}
 end
 
 --- Function to setup highlights for diagnostics.
 -- @param blend table - The table of blend options, which includes the blend factor.
 -- @param default_hi table - The table of default highlights, which includes the colors for each diagnostic type, the arrow, and the background.
+-- @param italics boolean - Whether to use italics for the diagnostics.
 function M.setup_highlights(blend, default_hi)
 	local colors = {
 		error = get_hi(default_hi.error),
 		warn = get_hi(default_hi.warn),
 		info = get_hi(default_hi.info),
 		hint = get_hi(default_hi.hint),
+		ok = get_hi(default_hi.ok),
 		arrow = get_hi(default_hi.arrow),
 	}
 
@@ -52,10 +55,11 @@ function M.setup_highlights(blend, default_hi)
 	}
 
 	local hi = {
-		TinyInlineDiagnosticVirtualTextError = { bg = blends.error, fg = colors.error.fg },
-		TinyInlineDiagnosticVirtualTextWarn = { bg = blends.warn, fg = colors.warn.fg },
-		TinyInlineDiagnosticVirtualTextInfo = { bg = blends.info, fg = colors.info.fg },
-		TinyInlineDiagnosticVirtualTextHint = { bg = blends.hint, fg = colors.hint.fg },
+		TinyInlineDiagnosticVirtualTextError = { bg = blends.error, fg = colors.error.fg, italic = colors.error.italic },
+		TinyInlineDiagnosticVirtualTextWarn = { bg = blends.warn, fg = colors.warn.fg, italic = colors.warn.italic },
+		TinyInlineDiagnosticVirtualTextInfo = { bg = blends.info, fg = colors.info.fg, italic = colors.info.italic },
+		TinyInlineDiagnosticVirtualTextHint = { bg = blends.hint, fg = colors.hint.fg, italic = colors.hint.italic },
+		TinyInlineDiagnosticVirtualTextOk = { bg = blends.hint, fg = colors.hint.fg, italic = colors.ok.italic },
 
 		TinyInlineDiagnosticVirtualTextArrow = { bg = colors.background, fg = colors.arrow.fg },
 
