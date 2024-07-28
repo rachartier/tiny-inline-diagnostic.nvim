@@ -70,10 +70,7 @@ function M.setup_highlights(blend, default_hi)
 	}
 
 	for name, opts in pairs(hi) do
-		vim.api.nvim_set_hl(0, name, {
-			bg = opts.bg,
-			fg = opts.fg,
-		})
+		vim.api.nvim_set_hl(0, name, opts)
 	end
 end
 
