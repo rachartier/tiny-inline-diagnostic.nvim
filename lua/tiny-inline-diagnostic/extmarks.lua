@@ -69,7 +69,10 @@ function M.create_extmarks(opts, event, curline, virt_lines, offset, need_to_be_
 		diag_overflow_last_line = true
 	end
 
-	local win_col = vim.fn.virtcol("$")
+	local win_col = vim.fn.virtcol({
+		curline + 1,
+		"$",
+	})
 
 	if need_to_be_under then
 		win_col = 0
