@@ -210,8 +210,8 @@ function M.get_chunks(opts, diag, plugin_offset, curline, buf)
 				win_width,
 				opts
 			)
-		elseif opts.options.overflow.position == "none" then
-			chunks = { " " .. diag.message }
+		elseif opts.options.overflow.mode == "none" then
+			chunks = utils.wrap_text(diag.message, 0)
 		end
 	else
 		chunks = { " " .. diag.message }

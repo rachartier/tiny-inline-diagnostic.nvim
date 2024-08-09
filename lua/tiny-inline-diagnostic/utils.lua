@@ -64,7 +64,7 @@ function M.wrap_text(text, max_length)
 		local line = ""
 
 		for word in split_line:gmatch("%S+") do
-			if #line + #word <= max_length then
+			if #line + #word <= max_length or max_length <= 0 then
 				if #line == 0 and i > 1 then
 					line = word
 				else
