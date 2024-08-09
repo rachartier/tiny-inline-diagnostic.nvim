@@ -181,16 +181,6 @@ function M.set_diagnostic_autocmds(opts)
 				end,
 			})
 
-			vim.api.nvim_create_autocmd("InsertEnter", {
-				group = autocmd_ns,
-				buffer = event.buf,
-				callback = function()
-					if vim.api.nvim_buf_is_valid(event.buf) then
-						extmarks.clear(event.buf)
-					end
-				end,
-			})
-
 			vim.api.nvim_create_autocmd("CursorHold", {
 				group = autocmd_ns,
 				buffer = event.buf,
@@ -222,6 +212,27 @@ function M.set_diagnostic_autocmds(opts)
 					end
 				end,
 				desc = "Show diagnostics on cursor move, throttled.",
+			})
+
+			vim.api.nvim_create_autocmd("ModeChanged", {
+				group = autocmd_ns,
+				pattern = "*:[vV\x16is]*",
+				callback = function()
+					if vim.api.nvim_buf_is_valid(event.buf) then
+						M.disable()
+						extmarks.clear(event.buf)
+					end
+				end,
+			})
+
+			vim.api.nvim_create_autocmd("ModeChanged", {
+				group = autocmd_ns,
+				pattern = "[vV\x16is]*:*",
+				callback = function()
+					if vim.api.nvim_buf_is_valid(event.buf) then
+						M.enable()
+					end
+				end,
 			})
 		end,
 		desc = "Apply autocmds for diagnostics on cursor move and window resize events.",
