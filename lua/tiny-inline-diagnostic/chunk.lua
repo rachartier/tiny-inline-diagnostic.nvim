@@ -212,6 +212,9 @@ function M.get_chunks(opts, diag, plugin_offset, curline, buf)
 			)
 		elseif opts.options.overflow.mode == "none" then
 			chunks = utils.wrap_text(diag.message, 0)
+		elseif opts.options.overflow.mode == "oneline" then
+			print(utils.remove_newline(diag.message .. "\ncoucou\ncoucu\n\nazeaz"))
+			chunks = { utils.remove_newline(diag.message .. "\ncoucou\ncoucu\n\nazeaz") }
 		end
 	else
 		chunks = { " " .. diag.message }

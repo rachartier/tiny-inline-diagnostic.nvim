@@ -55,6 +55,11 @@ function M.split_lines(s)
 	return lines
 end
 
+function M.remove_newline(s)
+	local removed_nl, _ = s:gsub("\n", " ")
+	return removed_nl
+end
+
 function M.wrap_text(text, max_length)
 	local lines = {}
 

@@ -85,7 +85,8 @@ require("tiny-inline-diagnostic").setup({
 		overflow = {
 			-- Manage the overflow of the message.
 			--    - wrap: when the message is too long, it is then displayed on multiple lines.
-			--    - none: the message will not be truncated, and will be displayed on a single line.
+			--    - none: the message will not be truncated.
+			--    - oneline: message will be displayed entirely on one line.
 			mode = "wrap",
 		},
 
