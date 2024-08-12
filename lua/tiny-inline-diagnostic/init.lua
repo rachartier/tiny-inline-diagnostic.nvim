@@ -31,6 +31,7 @@ local default_config = {
 		softwrap = 30,
 		multiple_diag_under_cursor = true,
 		multilines = false,
+		format = nil,
 		overflow = {
 			mode = "wrap",
 		},

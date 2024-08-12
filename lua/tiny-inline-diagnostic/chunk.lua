@@ -192,10 +192,16 @@ function M.get_chunks(opts, diag, plugin_offset, curline, buf)
 		end
 	end
 
+	local diag_message = diag.message
+
+	if opts.options.format ~= nil and diag_message ~= nil then
+		diag_message = opts.options.format(diag)
+	end
+
 	if not opts.options.multilines or current_line == curline then
 		if opts.options.break_line.enabled == true then
 			chunks = {}
-			chunks = utils.wrap_text(diag.message, opts.options.break_line.after)
+			chunks = utils.wrap_text(diag_message, opts.options.break_line.after)
 		elseif opts.options.overflow.mode == "wrap" then
 			if need_to_be_under then
 				offset = 0
@@ -211,12 +217,12 @@ function M.get_chunks(opts, diag, plugin_offset, curline, buf)
 				opts
 			)
 		elseif opts.options.overflow.mode == "none" then
-			chunks = utils.wrap_text(diag.message, 0)
+			chunks = utils.wrap_text(diag_message, 0)
 		elseif opts.options.overflow.mode == "oneline" then
-			chunks = { utils.remove_newline(diag.message) }
+			chunks = { utils.remove_newline(diag_message) }
 		end
 	else
-		chunks = { " " .. diag.message }
+		chunks = { " " .. diag_message }
 	end
 
 	return {

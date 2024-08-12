@@ -90,6 +90,13 @@ require("tiny-inline-diagnostic").setup({
 			mode = "wrap",
 		},
 
+		-- Format the diagnostic message.
+		-- Example:
+		-- format = function(diagnostic)
+		--     return diagnostic.message .. " [" .. diagnostic.source .. "]"
+		-- end,
+		format = nil,
+
 		--- Enable it if you want to always have message with `after` characters length.
 		break_line = {
 			enabled = false,
