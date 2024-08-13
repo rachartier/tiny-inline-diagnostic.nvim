@@ -211,7 +211,7 @@ function M.get_chunks(opts, diag, plugin_offset, curline, buf)
 			end
 
 			chunks = M.get_message_chunks_for_overflow(
-				diag.message,
+				diag_message,
 				offset + plugin_offset + other_extmarks_offset,
 				win_width,
 				opts
