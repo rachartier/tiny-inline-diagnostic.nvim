@@ -99,7 +99,7 @@ function M.create_extmarks(opts, event, curline, virt_lines, offset, need_to_be_
 
 		vim.api.nvim_buf_set_extmark(event.buf, diagnostic_ns, curline, 0, {
 			id = curline + 1000,
-			line_hl_group = "CursorLine",
+			line_hl_group = "TinyInlineDiagnosticVirtualTextBg",
 			virt_text_pos = "eol",
 			virt_text = virt_lines[1],
 			virt_lines = v,
@@ -115,7 +115,7 @@ function M.create_extmarks(opts, event, curline, virt_lines, offset, need_to_be_
 	if need_to_be_under then
 		vim.api.nvim_buf_set_extmark(event.buf, diagnostic_ns, curline + 1, 0, {
 			id = get_uuid(),
-			line_hl_group = "CursorLine",
+			line_hl_group = "TinyInlineDiagnosticVirtualTextBg",
 			virt_text_pos = "overlay",
 			virt_text_win_col = 0,
 			virt_text = virt_lines[2],
@@ -141,7 +141,7 @@ function M.create_extmarks(opts, event, curline, virt_lines, offset, need_to_be_
 
 		vim.api.nvim_buf_set_extmark(event.buf, diagnostic_ns, curline, 0, {
 			id = get_uuid(),
-			line_hl_group = "CursorLine",
+			line_hl_group = "TinyInlineDiagnosticVirtualTextBg",
 			virt_text_pos = "overlay",
 			virt_text = virt_lines[1],
 			virt_lines = other_virt_lines,
@@ -152,7 +152,7 @@ function M.create_extmarks(opts, event, curline, virt_lines, offset, need_to_be_
 	else
 		vim.api.nvim_buf_set_extmark(event.buf, diagnostic_ns, curline, 0, {
 			id = get_uuid(),
-			line_hl_group = "CursorLine",
+			line_hl_group = "TinyInlineDiagnosticVirtualTextBg",
 			virt_text_pos = "eol",
 			virt_text = virt_lines[1],
 			-- virt_text_win_col = win_col + offset,

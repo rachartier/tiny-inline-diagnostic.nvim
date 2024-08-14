@@ -111,7 +111,7 @@ require("tiny-inline-diagnostic").setup({
 ```
 
 ## 💡 Highlights
-
+- TinyInlineDiagnosticVirtualTextBg
 - TinyInlineDiagnosticVirtualTextError
 - TinyInlineDiagnosticVirtualTextWarn
 - TinyInlineDiagnosticVirtualTextInfo

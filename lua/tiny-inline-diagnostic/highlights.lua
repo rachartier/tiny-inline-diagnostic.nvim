@@ -55,6 +55,7 @@ function M.setup_highlights(blend, default_hi)
 	}
 
 	local hi = {
+		TinyInlineDiagnosticVirtualTextBg = { bg = colors.background },
 		TinyInlineDiagnosticVirtualTextError = { bg = blends.error, fg = colors.error.fg, italic = colors.error.italic },
 		TinyInlineDiagnosticVirtualTextWarn = { bg = blends.warn, fg = colors.warn.fg, italic = colors.warn.italic },
 		TinyInlineDiagnosticVirtualTextInfo = { bg = blends.info, fg = colors.info.fg, italic = colors.info.italic },
