@@ -45,6 +45,10 @@ function M.get_diagnostic_under_cursor(buf)
 		return
 	end
 
+	if vim.api.nvim_get_current_buf() ~= buf then
+		return
+	end
+
 	local diagnostics = vim.diagnostic.get(buf, { lnum = curline })
 
 	if #diagnostics == 0 then
@@ -56,6 +60,10 @@ end
 
 function M.get_all_diagnostics(buf)
 	if not vim.api.nvim_buf_is_valid(buf) then
+		return
+	end
+
+	if vim.api.nvim_get_current_buf() ~= buf then
 		return
 	end
 
