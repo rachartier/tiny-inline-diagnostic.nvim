@@ -200,6 +200,16 @@ function M.set_diagnostic_autocmds(opts)
 				desc = "Show diagnostics on cursor hold",
 			})
 
+			vim.api.nvim_create_autocmd("DiagnosticChanged", {
+				group = autocmd_ns,
+				buffer = event.buf,
+				callback = function()
+					if vim.api.nvim_buf_is_valid(event.buf) then
+						vim.api.nvim_exec_autocmds("User", { pattern = "TinyDiagnosticEvent" })
+					end
+				end,
+			})
+
 			vim.api.nvim_create_autocmd({ "VimResized" }, {
 				group = autocmd_ns,
 				buffer = event.buf,
