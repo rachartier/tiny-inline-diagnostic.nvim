@@ -45,6 +45,10 @@ function M.get_diagnostic_under_cursor(buf)
 		return
 	end
 
+	if vim.api.nvim_get_current_buf() ~= buf then
+		return
+	end
+
 	local diagnostics = vim.diagnostic.get(buf, { lnum = curline })
 
 	if #diagnostics == 0 then
@@ -56,6 +60,10 @@ end
 
 function M.get_all_diagnostics(buf)
 	if not vim.api.nvim_buf_is_valid(buf) then
+		return
+	end
+
+	if vim.api.nvim_get_current_buf() ~= buf then
 		return
 	end
 
@@ -190,6 +198,16 @@ function M.set_diagnostic_autocmds(opts)
 					end
 				end,
 				desc = "Show diagnostics on cursor hold",
+			})
+
+			vim.api.nvim_create_autocmd("DiagnosticChanged", {
+				group = autocmd_ns,
+				buffer = event.buf,
+				callback = function()
+					if vim.api.nvim_buf_is_valid(event.buf) then
+						vim.api.nvim_exec_autocmds("User", { pattern = "TinyDiagnosticEvent" })
+					end
+				end,
 			})
 
 			vim.api.nvim_create_autocmd({ "VimResized" }, {
