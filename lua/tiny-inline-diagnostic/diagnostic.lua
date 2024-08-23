@@ -98,6 +98,7 @@ local function apply_diagnostics_virtual_texts(opts, event)
 					table.remove(diagnostics, i)
 				end
 			end
+			diagnostics = {}
 			for _, diag in ipairs(under_cursor_diags) do
 				table.insert(diagnostics, diag)
 			end
