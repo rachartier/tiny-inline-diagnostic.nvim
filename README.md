@@ -106,6 +106,14 @@ require("tiny-inline-diagnostic").setup({
 		virt_texts = {
 			priority = 2048,
 		},
+
+		-- Filter by severity.
+		severity = {
+			vim.diagnostic.severity.ERROR,
+			vim.diagnostic.severity.WARN,
+			vim.diagnostic.severity.INFO,
+			vim.diagnostic.severity.HINT,
+		},
 	},
 })
 ```
