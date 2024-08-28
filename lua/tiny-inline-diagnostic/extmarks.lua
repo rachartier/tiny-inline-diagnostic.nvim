@@ -18,10 +18,17 @@ function M.get_extmarks_on_line(bufnr, linenr, col)
 	local start_pos = { linenr, col }
 	local end_pos = { linenr, -1 }
 
-	local extmarks = vim.api.nvim_buf_get_extmarks(bufnr, namespace_id, start_pos, end_pos, {
+	local opts = {
 		details = true,
-		overlap = true,
-	})
+	}
+
+	if vim.fn.has("nvim-0.10.0") == 1 then
+		vim.tbl_extend("force", opts, {
+			overlap = true,
+		})
+	end
+
+	local extmarks = vim.api.nvim_buf_get_extmarks(bufnr, namespace_id, start_pos, end_pos, opts)
 
 	return extmarks
 end
