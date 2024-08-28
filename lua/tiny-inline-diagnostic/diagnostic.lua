@@ -78,6 +78,10 @@ local function apply_diagnostics_virtual_texts(opts, event)
 		return
 	end
 
+	if not vim.diagnostic.is_enabled() then
+		return
+	end
+
 	plugin_handler.init(opts)
 
 	local diagnostics = nil
