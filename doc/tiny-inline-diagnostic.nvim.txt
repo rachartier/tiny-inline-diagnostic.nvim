@@ -1,4 +1,4 @@
-*tiny-inline-diagnostic.nvim.txt*For Neovim >= 0.10.0Last change: 2024 August 23
+*tiny-inline-diagnostic.nvim.txt*For Neovim >= 0.10.0Last change: 2024 August 28
 
 ==============================================================================
 Table of Contents              *tiny-inline-diagnostic.nvim-table-of-contents*
@@ -119,6 +119,14 @@ OPTIONS      *tiny-inline-diagnostic.nvim-tiny-inline-diagnostic.nvim-options*
     
             virt_texts = {
                 priority = 2048,
+            },
+    
+            -- Filter by severity.
+            severity = {
+                vim.diagnostic.severity.ERROR,
+                vim.diagnostic.severity.WARN,
+                vim.diagnostic.severity.INFO,
+                vim.diagnostic.severity.HINT,
             },
         },
     })
