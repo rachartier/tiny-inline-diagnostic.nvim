@@ -35,8 +35,9 @@ end
 
 --- Function to get the diagnostic under the cursor.
 --- @param buf number - The buffer number to get the diagnostics for.
+--- @param opts table - The table of options.
 --- @return table, number - A table of diagnostics for the current position, the current line number.
-function M.get_diagnostic_under_cursor(buf)
+function M.get_diagnostic_under_cursor(buf, opts)
 	local cursor_pos = vim.api.nvim_win_get_cursor(0)
 	local curline = cursor_pos[1] - 1
 	local curcol = cursor_pos[2]
@@ -49,7 +50,7 @@ function M.get_diagnostic_under_cursor(buf)
 		return
 	end
 
-	local diagnostics = vim.diagnostic.get(buf, { lnum = curline })
+	local diagnostics = vim.diagnostic.get(buf, { lnum = curline, severity = opts.options.severity })
 
 	if #diagnostics == 0 then
 		return
@@ -58,7 +59,7 @@ function M.get_diagnostic_under_cursor(buf)
 	return get_current_pos_diags(diagnostics, curline, curcol), curcol
 end
 
-function M.get_all_diagnostics(buf)
+function M.get_all_diagnostics(buf, opts)
 	if not vim.api.nvim_buf_is_valid(buf) then
 		return
 	end
@@ -67,7 +68,7 @@ function M.get_all_diagnostics(buf)
 		return
 	end
 
-	return vim.diagnostic.get(buf)
+	return vim.diagnostic.get(buf, { severity = opts.options.severity })
 end
 
 local function apply_diagnostics_virtual_texts(opts, event)
@@ -81,9 +82,9 @@ local function apply_diagnostics_virtual_texts(opts, event)
 
 	local diagnostics = nil
 	if opts.options.multilines then
-		diagnostics = M.get_all_diagnostics(event.buf)
+		diagnostics = M.get_all_diagnostics(event.buf, opts)
 	else
-		diagnostics = M.get_diagnostic_under_cursor(event.buf)
+		diagnostics = M.get_diagnostic_under_cursor(event.buf, opts)
 	end
 
 	if diagnostics == nil then
@@ -91,7 +92,7 @@ local function apply_diagnostics_virtual_texts(opts, event)
 	end
 
 	if opts.options.multilines then
-		local under_cursor_diags = M.get_diagnostic_under_cursor(event.buf)
+		local under_cursor_diags = M.get_diagnostic_under_cursor(event.buf, opts)
 		if under_cursor_diags ~= nil then
 			for i, diag in ipairs(diagnostics) do
 				if diag.lnum == under_cursor_diags[1].lnum then

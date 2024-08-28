@@ -42,6 +42,12 @@ local default_config = {
 		virt_texts = {
 			priority = 2048,
 		},
+		severity = {
+			vim.diagnostic.severity.ERROR,
+			vim.diagnostic.severity.WARN,
+			vim.diagnostic.severity.INFO,
+			vim.diagnostic.severity.HINT,
+		},
 	},
 	plugin = {},
 }
