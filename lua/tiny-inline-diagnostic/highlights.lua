@@ -5,6 +5,7 @@ local utils = require("tiny-inline-diagnostic.utils")
 local function get_hi(name)
 	local hi = vim.api.nvim_get_hl(0, {
 		name = name,
+		link = false,
 	})
 
 	return {
