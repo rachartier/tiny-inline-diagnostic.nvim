@@ -131,7 +131,7 @@ local function apply_diagnostics_virtual_texts(opts, event)
 			return
 		end
 
-		local cursorpos = {
+		local diagnostic_pos = {
 			lnum,
 			0,
 		}
@@ -141,17 +141,17 @@ local function apply_diagnostics_virtual_texts(opts, event)
 
 		if opts.options.multiple_diag_under_cursor and lnum == cursor_line then
 			virt_lines, offset, need_to_be_under =
-				virtual_text_forge.from_diagnostics(opts, line_diags, cursorpos, event.buf)
+				virtual_text_forge.from_diagnostics(opts, line_diags, diagnostic_pos, event.buf)
 		else
 			local plugin_offset = plugin_handler.handle_plugins(opts)
-			local ret = chunk_utils.get_chunks(opts, line_diags[1], plugin_offset, cursorpos[1], event.buf)
+			local ret = chunk_utils.get_chunks(opts, line_diags[1], plugin_offset, diagnostic_pos[1], event.buf)
 			local max_chunk_line_length = chunk_utils.get_max_width_from_chunks(ret.chunks)
 
 			virt_lines, offset, need_to_be_under =
-				virtual_text_forge.from_diagnostic(opts, ret, cursorpos, 1, max_chunk_line_length, 1)
+				virtual_text_forge.from_diagnostic(opts, ret, diagnostic_pos, 1, max_chunk_line_length, 1)
 		end
 
-		extmarks.create_extmarks(opts, event, cursorpos[1], virt_lines, offset, need_to_be_under, virt_priority)
+		extmarks.create_extmarks(opts, event, diagnostic_pos[1], virt_lines, offset, need_to_be_under, virt_priority)
 	end
 end
 

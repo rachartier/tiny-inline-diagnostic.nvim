@@ -6,10 +6,11 @@ local plugin_handler = require("tiny-inline-diagnostic.plugin")
 local utils = require("tiny-inline-diagnostic.utils")
 
 --- @param opts table containing options
---- @param cursorpos table containing cursor position
+--- @param diagnostic_pos table containing cursor position
 --- @param index_diag integer representing the diagnostic index
-function M.from_diagnostic(opts, ret, cursorpos, index_diag, padding, total_chunks)
-	local diag_hi, diag_inv_hi = highlights.get_diagnostic_highlights(ret.severity)
+function M.from_diagnostic(opts, ret, diagnostic_pos, index_diag, padding, total_chunks)
+	local cursor_line = vim.api.nvim_win_get_cursor(0)[1] - 1
+	local diag_hi, diag_inv_hi, body_hi = highlights.get_diagnostic_highlights(ret, cursor_line, index_diag)
 
 	local all_virtual_texts = {}
 
@@ -42,7 +43,7 @@ function M.from_diagnostic(opts, ret, cursorpos, index_diag, padding, total_chun
 			)
 
 			if index_diag == 1 then
-				local chunk_arrow = chunk_utils.get_arrow_from_chunk(opts, need_to_be_under)
+				local chunk_arrow = chunk_utils.get_arrow_from_chunk(opts, cursor_line, ret)
 
 				if type(chunk_arrow[1]) == "table" then
 					table.insert(all_virtual_texts, chunk_arrow)
@@ -61,7 +62,7 @@ function M.from_diagnostic(opts, ret, cursorpos, index_diag, padding, total_chun
 				need_to_be_under,
 				opts,
 				diag_hi,
-				diag_inv_hi,
+				body_hi,
 				total_chunks
 			)
 

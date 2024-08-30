@@ -83,16 +83,6 @@ function M.change(blend, highlights)
 	hi.setup_highlights(config.blend, config.hi)
 end
 
-function M.get_diagnostic_under_cursor(buf)
-	local diags, curline = diag.get_diagnostic_under_cursor(buf)
-
-	if diags == nil then
-		return
-	end
-
-	return diags, curline + 1
-end
-
 function M.enable()
 	diag.enable()
 end

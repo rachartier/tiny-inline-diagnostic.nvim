@@ -130,18 +130,26 @@ function M.get_body_from_chunk(
 	return chunk_virtual_texts
 end
 
-function M.get_arrow_from_chunk(opts, need_to_be_under)
+function M.get_arrow_from_chunk(opts, diagnostic_line, ret)
 	local arrow = opts.signs.arrow
+	local need_to_be_under = ret.need_to_be_under
+
 	local chunk = {}
+
+	local hi = "TinyInlineDiagnosticVirtualTextArrow"
+
+	if diagnostic_line ~= ret.line or ret.need_to_be_under then
+		hi = "TinyInlineDiagnosticVirtualTextArrowNoBg"
+	end
 
 	if need_to_be_under then
 		arrow = opts.signs.up_arrow
 		chunk = {
 			{ " ", "None" },
-			{ arrow, "TinyInlineDiagnosticVirtualTextArrow" },
+			{ arrow, hi },
 		}
 	else
-		chunk = { arrow, "TinyInlineDiagnosticVirtualTextArrow" }
+		chunk = { arrow, hi }
 	end
 
 	return chunk
@@ -232,6 +240,7 @@ function M.get_chunks(opts, diag, plugin_offset, curline, buf)
 		offset = offset,
 		offset_win_col = other_extmarks_offset + plugin_offset,
 		need_to_be_under = need_to_be_under,
+		line = diag.lnum,
 	}
 end
 
