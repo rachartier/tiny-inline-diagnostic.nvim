@@ -96,6 +96,7 @@ function M.throttle(fn, ms)
 	local function wrapped_fn(...)
 		if not running then
 			timer:start(ms, 0, function()
+				timer:stop()
 				running = false
 			end)
 			running = true
