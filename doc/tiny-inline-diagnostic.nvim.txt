@@ -1,4 +1,4 @@
-*tiny-inline-diagnostic.nvim.txt*For Neovim >= 0.10.0Last change: 2024 September 02
+*tiny-inline-diagnostic.nvim.txt*For Neovim >= 0.10.0Last change: 2024 September 05
 
 ==============================================================================
 Table of Contents              *tiny-inline-diagnostic.nvim-table-of-contents*
@@ -128,6 +128,10 @@ OPTIONS      *tiny-inline-diagnostic.nvim-tiny-inline-diagnostic.nvim-options*
                 vim.diagnostic.severity.INFO,
                 vim.diagnostic.severity.HINT,
             },
+    
+            -- Overwrite events to attach to a buffer. You should not change it, but if the plugin
+            -- does not works in your configuration, you may try to tweak it.
+            overwrite_events = nil,
         },
     })
 <
