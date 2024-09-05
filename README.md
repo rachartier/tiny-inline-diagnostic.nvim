@@ -114,6 +114,10 @@ require("tiny-inline-diagnostic").setup({
 			vim.diagnostic.severity.INFO,
 			vim.diagnostic.severity.HINT,
 		},
+
+        -- Overwrite events to attach to a buffer. You should not change it, but if the plugin
+        -- does not works in your configuration, you may try to tweak it.
+        overwrite_events = nil,
 	},
 })
 ```

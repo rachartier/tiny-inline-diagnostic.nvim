@@ -9,6 +9,8 @@ local virtual_text_forge = require("tiny-inline-diagnostic.virtual_text")
 local extmarks = require("tiny-inline-diagnostic.extmarks")
 local timers = require("tiny-inline-diagnostic.timer")
 
+local attached_buffers = {}
+
 --- Function to get diagnostics for the current position in the code.
 --- @param diagnostics table - The table of diagnostics to check.
 --- @param curline number - The current line number.
@@ -163,8 +165,16 @@ function M.set_diagnostic_autocmds(opts)
 
 	timers.set_timers()
 
-	vim.api.nvim_create_autocmd("LspAttach", {
+	local events = opts.options.overwrite_events or { "LspAttach" }
+
+	vim.api.nvim_create_autocmd(events, {
 		callback = function(event)
+			if attached_buffers[event.buf] then
+				return
+			end
+
+			table.insert(attached_buffers, event.buf)
+
 			local throttled_apply_diagnostics_virtual_texts, timer = utils.throttle(function()
 				apply_diagnostics_virtual_texts(opts, event)
 			end, opts.options.throttle)
@@ -179,11 +189,15 @@ function M.set_diagnostic_autocmds(opts)
 				end,
 			})
 
-			vim.api.nvim_create_autocmd({ "LspDetach" }, {
+			vim.api.nvim_create_autocmd({ "LspDetach", "BufDelete" }, {
 				group = autocmd_ns,
 				buffer = event.buf,
 				callback = function()
 					timers.close(event.buf)
+
+					if attached_buffers[event.buf] then
+						attached_buffers[event.buf] = nil
+					end
 				end,
 			})
 
