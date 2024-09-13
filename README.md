@@ -30,7 +30,7 @@ With Lazy.nvim:
 ```lua
 {
     "rachartier/tiny-inline-diagnostic.nvim",
-    event = "VeryLazy",
+    event = "VeryLazy", -- Or `LspAttach`
     config = function()
         require('tiny-inline-diagnostic').setup()
     end
