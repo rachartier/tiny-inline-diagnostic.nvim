@@ -1,4 +1,4 @@
-*tiny-inline-diagnostic.nvim.txt*For Neovim >= 0.10.0Last change: 2024 September 05
+*tiny-inline-diagnostic.nvim.txt*For Neovim >= 0.10.0Last change: 2024 September 13
 
 ==============================================================================
 Table of Contents              *tiny-inline-diagnostic.nvim-table-of-contents*
@@ -43,7 +43,7 @@ With Lazy.nvim:
 >lua
     {
         "rachartier/tiny-inline-diagnostic.nvim",
-        event = "VeryLazy",
+        event = "VeryLazy", -- Or `LspAttach`
         config = function()
             require('tiny-inline-diagnostic').setup()
         end
