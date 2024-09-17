@@ -79,7 +79,6 @@ require("tiny-inline-diagnostic").setup({
 		multiple_diag_under_cursor = false,
 
 		-- Enable diagnostic message on all lines.
-		-- /!\ Still an experimental feature, can be slow on big files.
 		multilines = false,
 
 		overflow = {
