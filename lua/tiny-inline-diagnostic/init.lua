@@ -55,6 +55,8 @@ local default_config = {
 
 M.config = nil
 
+--- Setup the tiny-inline-diagnostic plugin with user options.
+-- @param opts table: User configuration options to override the default settings.
 function M.setup(opts)
 	if opts == nil then
 		opts = {}
@@ -78,6 +80,9 @@ function M.setup(opts)
 	diag.set_diagnostic_autocmds(config)
 end
 
+--- Change the blend and highlight settings dynamically.
+-- @param blend table: New blend settings to apply.
+-- @param highlights table: New highlight settings to apply.
 function M.change(blend, highlights)
 	local config = vim.tbl_deep_extend("force", M.config, {
 		blend = blend or M.config.blend,
@@ -87,14 +92,17 @@ function M.change(blend, highlights)
 	hi.setup_highlights(config.blend, config.hi)
 end
 
+--- Enable the diagnostic display.
 function M.enable()
 	diag.enable()
 end
 
+--- Disable the diagnostic display.
 function M.disable()
 	diag.disable()
 end
 
+--- Toggle the diagnostic display on or off.
 function M.toggle()
 	diag.toggle()
 end
