@@ -54,7 +54,6 @@ function M.get_header_from_chunk(
 	if index_diag == 1 and total_chunks == 1 then
 		if severities ~= nil and #severities > 0 then
 			-- skip the first severity, as it is already highlighted
-			print("severities", vim.inspect(severities))
 			table.sort(severities, function(a, b)
 				return a > b
 			end)
