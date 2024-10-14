@@ -187,42 +187,35 @@ function M.get_message_chunks_for_overflow(message, offset, win_width, opts)
 	local signs_total_text_len = #opts.signs.arrow + #opts.signs.right + #opts.signs.left + #opts.signs.diag + 4
 
 	local distance = win_width - offset - signs_total_text_len
-
-	-- if distance < opts.options.softwrap then
-	--     distance = win_width - signs_total_text_len - #message
-	--     print("distance", distance)
-	-- end
-
 	local message_chunk = {}
+
 	message_chunk = utils.wrap_text(message, distance)
 
 	return message_chunk
 end
 
-function M.get_chunks(opts, diags, diag_index, plugin_offset, curline, buf)
+function M.get_chunks(opts, diags_on_line, diag_index, diag_line, cursor_line, buf)
 	local win_width = vim.api.nvim_win_get_width(0)
-	local lines = vim.api.nvim_buf_get_lines(buf, curline, curline + 1, false)
+	local lines = vim.api.nvim_buf_get_lines(buf, diag_line, diag_line + 1, false)
 	local line_length = 0
 	local offset = 0
 	local need_to_be_under = false
-	local current_line = vim.api.nvim_win_get_cursor(0)[1] - 1
-	-- local win_option_wrap_enabled = vim.api.nvim_get_option_value("wrap", { win = 0 })
 
 	if lines ~= nil and lines[1] ~= nil then
 		line_length = #lines[1]
 	end
 
-	local diag = diags[diag_index]
+	local diag = diags_on_line[diag_index]
 	local chunks = { diag.message }
 	local severities = {}
 
-	for _, other_diag in ipairs(diags) do
+	for _, other_diag in ipairs(diags_on_line) do
 		table.insert(severities, other_diag.severity)
 	end
 
-	local other_extmarks_offset = extmarks.handle_other_extmarks(opts, buf, curline, line_length)
+	local other_extmarks_offset = extmarks.handle_other_extmarks(opts, buf, diag_line, line_length)
 
-	if (opts.options.overflow.mode ~= "none" and not opts.options.multilines) or current_line == curline then
+	if (opts.options.overflow.mode ~= "none" and not opts.options.multilines) or cursor_line == diag_line then
 		if line_length > win_width - opts.options.softwrap then
 			need_to_be_under = true
 		end
@@ -234,7 +227,7 @@ function M.get_chunks(opts, diags, diag_index, plugin_offset, curline, buf)
 		diag_message = opts.options.format(diag)
 	end
 
-	if not opts.options.multilines or current_line == curline then
+	if not opts.options.multilines or cursor_line == diag_line then
 		if opts.options.break_line.enabled == true then
 			chunks = {}
 			chunks = utils.wrap_text(diag_message, opts.options.break_line.after)
@@ -246,12 +239,7 @@ function M.get_chunks(opts, diags, diag_index, plugin_offset, curline, buf)
 				offset = win_col
 			end
 
-			chunks = M.get_message_chunks_for_overflow(
-				diag_message,
-				offset + plugin_offset + other_extmarks_offset,
-				win_width,
-				opts
-			)
+			chunks = M.get_message_chunks_for_overflow(diag_message, offset + other_extmarks_offset, win_width, opts)
 		elseif opts.options.overflow.mode == "none" then
 			chunks = utils.wrap_text(diag_message, 0)
 		elseif opts.options.overflow.mode == "oneline" then
@@ -264,12 +252,12 @@ function M.get_chunks(opts, diags, diag_index, plugin_offset, curline, buf)
 	return {
 		chunks = chunks,
 		severity = diag.severity,
+		severities = severities,
 		source = diag.source,
 		offset = offset,
-		offset_win_col = other_extmarks_offset + plugin_offset,
+		offset_win_col = other_extmarks_offset,
 		need_to_be_under = need_to_be_under,
 		line = diag.lnum,
-		severities = severities,
 	}
 end
 

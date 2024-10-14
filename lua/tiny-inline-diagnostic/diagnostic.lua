@@ -1,10 +1,11 @@
 local M = {}
 
+M.diagnostics = {}
+
 M.enabled = true
 
 local chunk_utils = require("tiny-inline-diagnostic.chunk")
 local utils = require("tiny-inline-diagnostic.utils")
-local plugin_handler = require("tiny-inline-diagnostic.plugin")
 local virtual_text_forge = require("tiny-inline-diagnostic.virtual_text")
 local extmarks = require("tiny-inline-diagnostic.extmarks")
 local timers = require("tiny-inline-diagnostic.timer")
@@ -13,23 +14,27 @@ local attached_buffers = {}
 
 --- Function to get diagnostics for the current position in the code.
 --- @param diagnostics table - The table of diagnostics to check.
---- @param curline number - The current line number.
---- @param curcol number - The current column number.
+--- @param line number - The current line number.
+--- @param col number - The current column number.
 --- @return table - A table of diagnostics for the current position.
-local function get_current_pos_diags(diagnostics, curline, curcol)
+local function filter_diags_at(diagnostics, line, col)
 	local current_pos_diags = {}
+	local diags_on_line = {}
 
 	for _, diag in ipairs(diagnostics) do
-		if diag.lnum == curline and curcol >= diag.col and curcol <= diag.end_col then
+		if diag.lnum == line then
+			table.insert(diags_on_line, diag)
+		end
+		if diag.lnum == line and col >= diag.col and col <= diag.end_col then
 			table.insert(current_pos_diags, diag)
 		end
 	end
 
-	if next(current_pos_diags) == nil then
-		if #diagnostics == 0 then
-			return current_pos_diags
+	if #current_pos_diags == 0 then
+		if #diags_on_line == 0 then
+			return
 		end
-		table.insert(current_pos_diags, diagnostics[1])
+		return diags_on_line
 	end
 
 	return current_pos_diags
@@ -39,7 +44,7 @@ end
 --- @param buf number - The buffer number to get the diagnostics for.
 --- @param opts table - The table of options.
 --- @return table, number - A table of diagnostics for the current position, the current line number.
-function M.get_diagnostic_under_cursor(buf, opts)
+function M.filter_diags_under_cursor(buf, diagnostics)
 	local cursor_pos = vim.api.nvim_win_get_cursor(0)
 	local curline = cursor_pos[1] - 1
 	local curcol = cursor_pos[2]
@@ -52,66 +57,43 @@ function M.get_diagnostic_under_cursor(buf, opts)
 		return
 	end
 
-	local diagnostics = vim.diagnostic.get(buf, { lnum = curline, severity = opts.options.severity })
-
 	if #diagnostics == 0 then
 		return
 	end
 
-	return get_current_pos_diags(diagnostics, curline, curcol), curcol
+	return filter_diags_at(diagnostics, curline, curcol), curcol
 end
 
-function M.get_all_diagnostics(buf, opts)
-	if not vim.api.nvim_buf_is_valid(buf) then
-		return
-	end
+local function filter_by_severity(opts, diagnostics)
+	local severity_filter = opts.options.severity
+	local diags_filtered = {}
 
-	if vim.api.nvim_get_current_buf() ~= buf then
-		return
-	end
-
-	return vim.diagnostic.get(buf, { severity = opts.options.severity })
-end
-
-local function apply_diagnostics_virtual_texts(opts, event)
-	extmarks.clear(event.buf)
-
-	if not M.enabled then
-		return
-	end
-
-	if not vim.diagnostic.is_enabled() then
-		return
-	end
-
-	plugin_handler.init(opts)
-
-	local diagnostics = nil
-	if opts.options.multilines then
-		diagnostics = M.get_all_diagnostics(event.buf, opts)
-	else
-		diagnostics = M.get_diagnostic_under_cursor(event.buf, opts)
-	end
-
-	if diagnostics == nil then
-		return
-	end
-
-	if opts.options.multilines then
-		local under_cursor_diags = M.get_diagnostic_under_cursor(event.buf, opts)
-		if under_cursor_diags ~= nil then
-			for i, diag in ipairs(diagnostics) do
-				if diag.lnum == under_cursor_diags[1].lnum then
-					table.remove(diagnostics, i)
-				end
-			end
-			diagnostics = {}
-			for _, diag in ipairs(under_cursor_diags) do
-				table.insert(diagnostics, diag)
-			end
+	for _, diag in ipairs(diagnostics) do
+		if severity_filter[diag.severity] ~= nil then
+			table.insert(diags_filtered, diag)
 		end
 	end
 
+	return diags_filtered
+end
+
+local function filter_diags(opts, event, diagnostics)
+	local filtered_diags = filter_by_severity(opts, diagnostics)
+
+	if opts.options.multilines == false then
+		filtered_diags = M.filter_diags_under_cursor(event.buf, filtered_diags)
+	else
+		local under_cursor_diags = M.filter_diags_under_cursor(event.buf, filtered_diags)
+
+		if under_cursor_diags ~= nil then
+			return under_cursor_diags
+		end
+	end
+
+	return filtered_diags
+end
+
+local function clip_window(diagnostics)
 	local fist_visually_seen_line = vim.fn.line("w0")
 	local last_visually_seen_line = vim.fn.line("w$")
 
@@ -126,10 +108,31 @@ local function apply_diagnostics_virtual_texts(opts, event)
 		end
 	end
 
-	local cursor_line = vim.api.nvim_win_get_cursor(0)[1] - 1
+	return all_diags_grouped
+end
 
-	for lnum, line_diags in pairs(all_diags_grouped) do
-		if line_diags == nil then
+local function apply_virtual_texts(opts, event)
+	extmarks.clear(event.buf)
+
+	if not M.enabled then
+		return
+	end
+
+	if not vim.diagnostic.is_enabled() then
+		return
+	end
+
+	if M.diagnostics == nil then
+		return
+	end
+
+	local diagnostics = filter_diags(opts, event, M.diagnostics)
+
+	local cursor_line = vim.api.nvim_win_get_cursor(0)[1] - 1
+	local clipped_diags = clip_window(diagnostics)
+
+	for lnum, diags in pairs(clipped_diags) do
+		if diags == nil then
 			return
 		end
 
@@ -143,15 +146,14 @@ local function apply_diagnostics_virtual_texts(opts, event)
 
 		if opts.options.multiple_diag_under_cursor and lnum == cursor_line then
 			virt_lines, offset, need_to_be_under =
-				virtual_text_forge.from_diagnostics(opts, line_diags, diagnostic_pos, event.buf)
+				virtual_text_forge.from_diagnostics(opts, diags, diagnostic_pos, event.buf)
 		else
-			local plugin_offset = plugin_handler.handle_plugins(opts)
-			local ret = chunk_utils.get_chunks(opts, line_diags, 1, plugin_offset, diagnostic_pos[1], event.buf)
+			local ret = chunk_utils.get_chunks(opts, diags, 1, diagnostic_pos[1], cursor_line, event.buf)
 
 			local max_chunk_line_length = chunk_utils.get_max_width_from_chunks(ret.chunks)
 
 			virt_lines, offset, need_to_be_under =
-				virtual_text_forge.from_diagnostic(opts, ret, diagnostic_pos, 1, max_chunk_line_length, 1)
+				virtual_text_forge.from_diagnostic(opts, ret, 1, max_chunk_line_length, 1)
 		end
 
 		extmarks.create_extmarks(opts, event, diagnostic_pos[1], virt_lines, offset, need_to_be_under, virt_priority)
@@ -177,16 +179,29 @@ function M.set_diagnostic_autocmds(opts)
 			table.insert(attached_buffers, event.buf)
 
 			local throttled_apply_diagnostics_virtual_texts, timer = utils.throttle(function()
-				apply_diagnostics_virtual_texts(opts, event)
+				apply_virtual_texts(opts, event)
 			end, opts.options.throttle)
 
 			timers.add(event.buf, timer)
+
+			vim.api.nvim_create_autocmd("DiagnosticChanged", {
+				group = autocmd_ns,
+				buffer = event.buf,
+				callback = function(args)
+					local diagnostics = args.data.diagnostics
+					M.diagnostics = diagnostics
+
+					if vim.api.nvim_buf_is_valid(event.buf) then
+						vim.api.nvim_exec_autocmds("User", { pattern = "TinyDiagnosticEvent" })
+					end
+				end,
+			})
 
 			vim.api.nvim_create_autocmd("User", {
 				group = autocmd_ns,
 				pattern = "TinyDiagnosticEvent",
 				callback = function()
-					apply_diagnostics_virtual_texts(opts, event)
+					apply_virtual_texts(opts, event)
 				end,
 			})
 
@@ -209,27 +224,26 @@ function M.set_diagnostic_autocmds(opts)
 					throttled_apply_diagnostics_virtual_texts()
 				end,
 			})
+			--
+			-- vim.api.nvim_create_autocmd("CursorHold", {
+			-- 	group = autocmd_ns,
+			-- 	buffer = event.buf,
+			-- 	callback = function()
+			-- 		if vim.api.nvim_buf_is_valid(event.buf) then
+			-- 			vim.api.nvim_exec_autocmds("User", { pattern = "TinyDiagnosticEvent" })
+			-- 		end
+			-- 	end,
+			-- 	desc = "Show diagnostics on cursor hold",
+			-- })
 
-			vim.api.nvim_create_autocmd("CursorHold", {
-				group = autocmd_ns,
-				buffer = event.buf,
-				callback = function()
-					if vim.api.nvim_buf_is_valid(event.buf) then
-						vim.api.nvim_exec_autocmds("User", { pattern = "TinyDiagnosticEvent" })
-					end
-				end,
-				desc = "Show diagnostics on cursor hold",
-			})
-
-			vim.api.nvim_create_autocmd("DiagnosticChanged", {
-				group = autocmd_ns,
-				buffer = event.buf,
-				callback = function()
-					if vim.api.nvim_buf_is_valid(event.buf) then
-						vim.api.nvim_exec_autocmds("User", { pattern = "TinyDiagnosticEvent" })
-					end
-				end,
-			})
+			-- vim.api.nvim_create_autocmd("DiagnosticChanged", {
+			--
+			-- 	callback = function()
+			-- 		if vim.api.nvim_buf_is_valid(event.buf) then
+			-- 			vim.api.nvim_exec_autocmds("User", { pattern = "TinyDiagnosticEvent" })
+			-- 		end
+			-- 	end,
+			-- })
 
 			vim.api.nvim_create_autocmd({ "VimResized" }, {
 				group = autocmd_ns,
