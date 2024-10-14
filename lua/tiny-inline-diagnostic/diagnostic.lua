@@ -105,7 +105,7 @@ local function filter_diags(opts, event, diagnostics)
 	else
 		local under_cursor_diags = M.filter_diags_under_cursor(opts, event.buf, filtered_diags)
 
-		if under_cursor_diags ~= nil then
+		if not vim.tbl_isempty(under_cursor_diags) then
 			return under_cursor_diags
 		end
 	end
