@@ -81,6 +81,9 @@ require("tiny-inline-diagnostic").setup({
 		-- Enable diagnostic message on all lines.
 		multilines = false,
 
+		-- Show all diagnostics on the cursor line.
+		show_all_diags_on_cursorline = false,
+
 		overflow = {
 			-- Manage the overflow of the message.
 			--    - wrap: when the message is too long, it is then displayed on multiple lines.
