@@ -142,6 +142,7 @@ require("tiny-inline-diagnostic").setup({
 - `require("tiny-inline-diagnostic").enable()`: enable the diagnostic.
 - `require("tiny-inline-diagnostic").disable()`: disable the diagnostic.
 - `require("tiny-inline-diagnostic").toggle()`: toggle the diagnostic, on/off.
+- `require("tiny-inline-diagnostic").change_severities(severities)`: change the severity of the diagnostic. `severities` is an array of severity, like `vim.diagnostic.severity.ERROR`.
 
 
 ## ❓ FAQ:

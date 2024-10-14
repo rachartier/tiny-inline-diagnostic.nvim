@@ -99,4 +99,8 @@ function M.toggle()
 	diag.toggle()
 end
 
+function M.change_severities(severities)
+	M.config.options.severity = severities
+end
+
 return M
