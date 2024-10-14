@@ -31,6 +31,7 @@ local default_config = {
 		softwrap = 30,
 		multiple_diag_under_cursor = true,
 		multilines = false,
+		show_all_diags_on_cursorline = false,
 		format = nil,
 		overflow = {
 			mode = "wrap",
