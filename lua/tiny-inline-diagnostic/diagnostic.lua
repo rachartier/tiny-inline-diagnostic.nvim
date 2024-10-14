@@ -25,14 +25,15 @@ local function filter_diags_at(opts, diagnostics, line, col)
 		if diag.lnum == line then
 			table.insert(diags_on_line, diag)
 		end
-		if opts.options.show_all_diags_on_cursorline then
+
+		if opts.options.show_all_diags_on_cursorline == false then
 			if diag.lnum == line and col >= diag.col and col <= diag.end_col then
 				table.insert(current_pos_diags, diag)
 			end
 		end
 	end
 
-	if opts.options.show_all_diags_on_cursorline then
+	if opts.options.show_all_diags_on_cursorline == true then
 		if #diags_on_line == 0 then
 			return
 		end
