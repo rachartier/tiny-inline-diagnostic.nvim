@@ -78,6 +78,30 @@ function M.setup_highlights(blend, default_hi)
 		TinyInlineInvDiagnosticVirtualTextHintNoBg = { fg = blends.hint, bg = "None" },
 	}
 
+	-- mix up all background with foreground for each VirtualTextError, Warn, Info, Hint, Ok
+	local to_mix = {
+		"TinyInlineDiagnosticVirtualTextError",
+		"TinyInlineDiagnosticVirtualTextWarn",
+		"TinyInlineDiagnosticVirtualTextInfo",
+		"TinyInlineDiagnosticVirtualTextHint",
+	}
+
+	local mixed_name = {
+		"MixError",
+		"MixWarn",
+		"MixInfo",
+		"MixHint",
+	}
+
+	for i, name in ipairs(to_mix) do
+		for _, bg_name in ipairs(to_mix) do
+			local fg = hi[name].fg
+			local bg = hi[bg_name].bg
+
+			hi[bg_name .. mixed_name[i]] = { fg = fg, bg = bg, italic = hi[name].italic }
+		end
+	end
+
 	for name, opts in pairs(hi) do
 		vim.api.nvim_set_hl(0, name, opts)
 	end
@@ -92,13 +116,7 @@ function M.get_diagnostic_highlights(diag_ret, curline, index_diag)
 	local severity = diag_ret.severity
 	local diag_line = diag_ret.line
 
-	local diag_type = { "Error", "Warn", "Info", "Hint" }
-
-	local hi = diag_type[severity]
-
-	local diag_hi = "TinyInlineDiagnosticVirtualText" .. hi
-	local diag_inv_hi = "TinyInlineInvDiagnosticVirtualText" .. hi
-	local body_hi = "TinyInlineInvDiagnosticVirtualText" .. hi .. "NoBg"
+	local diag_hi, diag_inv_hi, body_hi = M.get_diagnostic_highlights_from_severity(severity)
 
 	if diag_line and diag_line ~= curline or index_diag > 1 or diag_ret.need_to_be_under then
 		diag_inv_hi = diag_inv_hi .. "NoBg"
@@ -107,4 +125,27 @@ function M.get_diagnostic_highlights(diag_ret, curline, index_diag)
 	return diag_hi, diag_inv_hi, body_hi
 end
 
+function M.get_diagnostic_highlights_from_severity(severity)
+	local diag_type = { "Error", "Warn", "Info", "Hint" }
+
+	local hi = diag_type[severity]
+
+	local diag_hi = "TinyInlineDiagnosticVirtualText" .. hi
+	local diag_inv_hi = "TinyInlineInvDiagnosticVirtualText" .. hi
+	local body_hi = "TinyInlineInvDiagnosticVirtualText" .. hi .. "NoBg"
+
+	return diag_hi, diag_inv_hi, body_hi
+end
+
+function M.get_diagnostic_mixed_highlights_from_severity(severity_a, severity_b)
+	local diag_type = { "Error", "Warn", "Info", "Hint" }
+
+	local hi_a = diag_type[severity_a]
+	local hi_b = diag_type[severity_b]
+
+	local diag_hi = "TinyInlineDiagnosticVirtualText" .. hi_a .. "Mix" .. hi_b
+	local diag_inv_hi = "TinyInlineInvDiagnosticVirtualText" .. hi_a .. "Mix" .. hi_b
+
+	return diag_hi, diag_inv_hi
+end
 return M
