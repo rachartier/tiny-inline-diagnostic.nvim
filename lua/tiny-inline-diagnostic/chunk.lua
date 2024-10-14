@@ -54,9 +54,14 @@ function M.get_header_from_chunk(
 	if index_diag == 1 and total_chunks == 1 then
 		if severities ~= nil and #severities > 0 then
 			-- skip the first severity, as it is already highlighted
-			for i = 2, #severities do
+			print("severities", vim.inspect(severities))
+			table.sort(severities, function(a, b)
+				return a > b
+			end)
+
+			for i = 1, #severities - 1 do
 				local hl, hl_inv, _ =
-					highlights.get_diagnostic_mixed_highlights_from_severity(severities[1], severities[i])
+					highlights.get_diagnostic_mixed_highlights_from_severity(severities[#severities], severities[i])
 
 				local severity_virt_texts = {
 					{ opts.signs.diag, hl },
