@@ -35,7 +35,7 @@ local function filter_diags_at(opts, diagnostics, line, col)
 
 	if opts.options.show_all_diags_on_cursorline == true then
 		if #diags_on_line == 0 then
-			return
+			return {}
 		end
 
 		return diags_on_line
@@ -43,7 +43,7 @@ local function filter_diags_at(opts, diagnostics, line, col)
 
 	if #current_pos_diags == 0 then
 		if #diags_on_line == 0 then
-			return
+			return {}
 		end
 		return diags_on_line
 	end
@@ -61,15 +61,15 @@ function M.filter_diags_under_cursor(opts, buf, diagnostics)
 	local curcol = cursor_pos[2]
 
 	if not vim.api.nvim_buf_is_valid(buf) then
-		return
+		return {}, curcol
 	end
 
 	if vim.api.nvim_get_current_buf() ~= buf then
-		return
+		return {}, curcol
 	end
 
 	if #diagnostics == 0 then
-		return
+		return {}, curcol
 	end
 
 	return filter_diags_at(opts, diagnostics, curline, curcol), curcol
@@ -214,8 +214,9 @@ function M.set_diagnostic_autocmds(opts)
 				buffer = event.buf,
 				callback = function(args)
 					local diagnostics = args.data.diagnostics
-					M.diagnostics = diagnostics
-
+					if diagnostics ~= nil then
+						M.diagnostics = diagnostics
+					end
 					if vim.api.nvim_buf_is_valid(event.buf) then
 						vim.api.nvim_exec_autocmds("User", { pattern = "TinyDiagnosticEvent" })
 					end
