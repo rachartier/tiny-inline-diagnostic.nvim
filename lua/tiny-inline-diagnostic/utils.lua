@@ -63,6 +63,10 @@ end
 function M.wrap_text(text, max_length)
 	local lines = {}
 
+	if text == nil then
+		return lines
+	end
+
 	local split_lines = M.split_lines(text)
 
 	for i, split_line in ipairs(split_lines) do

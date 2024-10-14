@@ -1,4 +1,4 @@
-*tiny-inline-diagnostic.nvim.txt*For Neovim >= 0.10.0Last change: 2024 September 05
+*tiny-inline-diagnostic.nvim.txt*For Neovim >= 0.10.0Last change: 2024 October 14
 
 ==============================================================================
 Table of Contents              *tiny-inline-diagnostic.nvim-table-of-contents*
@@ -43,7 +43,7 @@ With Lazy.nvim:
 >lua
     {
         "rachartier/tiny-inline-diagnostic.nvim",
-        event = "VeryLazy",
+        event = "VeryLazy", -- Or `LspAttach`
         config = function()
             require('tiny-inline-diagnostic').setup()
         end
@@ -93,7 +93,6 @@ OPTIONS      *tiny-inline-diagnostic.nvim-tiny-inline-diagnostic.nvim-options*
             multiple_diag_under_cursor = false,
     
             -- Enable diagnostic message on all lines.
-            -- /!\ Still an experimental feature, can be slow on big files.
             multilines = false,
     
             overflow = {
@@ -158,6 +157,7 @@ API              *tiny-inline-diagnostic.nvim-tiny-inline-diagnostic.nvim-api*
 - `require("tiny-inline-diagnostic").enable()`enable the diagnostic.
 - `require("tiny-inline-diagnostic").disable()`disable the diagnostic.
 - `require("tiny-inline-diagnostic").toggle()`toggle the diagnostic, on/off.
+- `require("tiny-inline-diagnostic").change_severities(severities)`change the severity of the diagnostic. `severities` is an array of severity, like `vim.diagnostic.severity.ERROR`.
 
 
 FAQ:            *tiny-inline-diagnostic.nvim-tiny-inline-diagnostic.nvim-faq:*

@@ -2,6 +2,7 @@ local M = {}
 
 local extmarks = require("tiny-inline-diagnostic.extmarks")
 local utils = require("tiny-inline-diagnostic.utils")
+local highlights = require("tiny-inline-diagnostic.highlights")
 
 --- Function to calculates the maximum width from a list of chunks.
 --- @param chunks table: A table representing the chunks of a diagnostic message.
@@ -33,21 +34,42 @@ function M.get_header_from_chunk(
 	opts,
 	diag_hi,
 	diag_inv_hi,
-	total_chunks
+	total_chunks,
+	severities
 )
 	local virt_texts = {}
 
 	if index_diag == 1 then
 		virt_texts = {
 			{ opts.signs.left, diag_inv_hi },
-			{ opts.signs.diag, diag_hi },
 		}
 	else
 		virt_texts = {
 			{ " ", "None" },
-			{ opts.signs.diag, diag_hi },
 		}
 	end
+
+	vim.list_extend(virt_texts, { { " ", diag_hi } })
+
+	if index_diag == 1 and total_chunks == 1 then
+		if severities ~= nil and #severities > 0 then
+			-- skip the first severity, as it is already highlighted
+			for i = 2, #severities do
+				local hl, hl_inv, _ =
+					highlights.get_diagnostic_mixed_highlights_from_severity(severities[1], severities[i])
+
+				local severity_virt_texts = {
+					{ opts.signs.diag, hl },
+				}
+
+				vim.list_extend(virt_texts, severity_virt_texts)
+			end
+		end
+	end
+
+	vim.list_extend(virt_texts, {
+		{ opts.signs.diag, diag_hi },
+	})
 
 	if not need_to_be_under and index_diag > 1 then
 		table.insert(virt_texts, 1, { string.rep(" ", #opts.signs.arrow - 2), diag_inv_hi })
@@ -177,7 +199,7 @@ function M.get_message_chunks_for_overflow(message, offset, win_width, opts)
 	return message_chunk
 end
 
-function M.get_chunks(opts, diag, plugin_offset, curline, buf)
+function M.get_chunks(opts, diags, diag_index, plugin_offset, curline, buf)
 	local win_width = vim.api.nvim_win_get_width(0)
 	local lines = vim.api.nvim_buf_get_lines(buf, curline, curline + 1, false)
 	local line_length = 0
@@ -190,7 +212,13 @@ function M.get_chunks(opts, diag, plugin_offset, curline, buf)
 		line_length = #lines[1]
 	end
 
+	local diag = diags[diag_index]
 	local chunks = { diag.message }
+	local severities = {}
+
+	for _, other_diag in ipairs(diags) do
+		table.insert(severities, other_diag.severity)
+	end
 
 	local other_extmarks_offset = extmarks.handle_other_extmarks(opts, buf, curline, line_length)
 
@@ -241,6 +269,7 @@ function M.get_chunks(opts, diag, plugin_offset, curline, buf)
 		offset_win_col = other_extmarks_offset + plugin_offset,
 		need_to_be_under = need_to_be_under,
 		line = diag.lnum,
+		severities = severities,
 	}
 end
 

@@ -19,6 +19,7 @@ function M.from_diagnostic(opts, ret, diagnostic_pos, index_diag, padding, total
 	local offset = ret.offset
 	local offset_win_col = ret.offset_win_col
 	local source = ret.source
+	local severities = ret.severities
 
 	if opts.options.show_source and source ~= nil then
 		chunks[#chunks] = chunks[#chunks] .. " (" .. source .. ")"
@@ -39,7 +40,8 @@ function M.from_diagnostic(opts, ret, diagnostic_pos, index_diag, padding, total
 				opts,
 				diag_hi,
 				diag_inv_hi,
-				total_chunks
+				total_chunks,
+				severities
 			)
 
 			if index_diag == 1 then
@@ -90,7 +92,7 @@ function M.from_diagnostics(opts, diags, cursor_pos, buf)
 	local chunks_by_diag = {}
 
 	for index_diag, diag in ipairs(diags) do
-		local ret = chunk_utils.get_chunks(opts, diag, plugin_offset, cursor_pos[1], buf)
+		local ret = chunk_utils.get_chunks(opts, diags, index_diag, plugin_offset, cursor_pos[1], buf)
 		local chunk_line_length = chunk_utils.get_max_width_from_chunks(ret.chunks)
 
 		if chunk_line_length > max_chunk_line_length then

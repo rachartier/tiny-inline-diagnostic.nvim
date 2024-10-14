@@ -79,7 +79,6 @@ require("tiny-inline-diagnostic").setup({
 		multiple_diag_under_cursor = false,
 
 		-- Enable diagnostic message on all lines.
-		-- /!\ Still an experimental feature, can be slow on big files.
 		multilines = false,
 
 		overflow = {
@@ -143,6 +142,7 @@ require("tiny-inline-diagnostic").setup({
 - `require("tiny-inline-diagnostic").enable()`: enable the diagnostic.
 - `require("tiny-inline-diagnostic").disable()`: disable the diagnostic.
 - `require("tiny-inline-diagnostic").toggle()`: toggle the diagnostic, on/off.
+- `require("tiny-inline-diagnostic").change_severities(severities)`: change the severity of the diagnostic. `severities` is an array of severity, like `vim.diagnostic.severity.ERROR`.
 
 
 ## ❓ FAQ:

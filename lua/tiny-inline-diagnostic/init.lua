@@ -7,7 +7,7 @@ local default_config = {
 	signs = {
 		left = "",
 		right = "",
-		diag = " ●",
+		diag = "●",
 		arrow = "    ",
 		up_arrow = "    ",
 		vertical = " │",
@@ -105,6 +105,10 @@ end
 --- Toggle the diagnostic display on or off.
 function M.toggle()
 	diag.toggle()
+end
+
+function M.change_severities(severities)
+	M.config.options.severity = severities
 end
 
 return M
