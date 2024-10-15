@@ -84,7 +84,7 @@ local function filter_by_severity(opts, diagnostics)
 	local diags_filtered = {}
 
 	for _, diag in ipairs(diagnostics) do
-		if severity_filter[diag.severity] ~= nil then
+		if vim.tbl_contains(severity_filter, diag.severity) then
 			table.insert(diags_filtered, diag)
 		end
 	end
