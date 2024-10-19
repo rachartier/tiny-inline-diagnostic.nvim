@@ -1,7 +1,5 @@
 local M = {}
 
-M.diagnostics = {}
-
 M.enabled = true
 
 local chunk_utils = require("tiny-inline-diagnostic.chunk")
@@ -147,11 +145,13 @@ local function apply_virtual_texts(opts, event)
 		return
 	end
 
-	if M.diagnostics == nil then
+	local diagnostics = vim.diagnostic.get(event.buf)
+
+	if vim.tbl_isempty(diagnostics) then
 		return
 	end
 
-	local diagnostics = filter_diags(opts, event, M.diagnostics)
+	diagnostics = filter_diags(opts, event, diagnostics)
 
 	local cursor_line = vim.api.nvim_win_get_cursor(0)[1] - 1
 	local clipped_diags = clip_window(diagnostics)
@@ -213,10 +213,6 @@ function M.set_diagnostic_autocmds(opts)
 				group = autocmd_ns,
 				buffer = event.buf,
 				callback = function(args)
-					local diagnostics = args.data.diagnostics
-					if diagnostics ~= nil then
-						M.diagnostics = diagnostics
-					end
 					if vim.api.nvim_buf_is_valid(event.buf) then
 						vim.api.nvim_exec_autocmds("User", { pattern = "TinyDiagnosticEvent" })
 					end
