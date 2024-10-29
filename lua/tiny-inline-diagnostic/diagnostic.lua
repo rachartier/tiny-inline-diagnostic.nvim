@@ -197,6 +197,10 @@ function M.set_diagnostic_autocmds(opts)
 
 	vim.api.nvim_create_autocmd(events, {
 		callback = function(event)
+			if not vim.api.nvim_buf_is_valid(event.buf) then
+				return
+			end
+
 			if attached_buffers[event.buf] then
 				return
 			end
@@ -211,8 +215,8 @@ function M.set_diagnostic_autocmds(opts)
 
 			vim.api.nvim_create_autocmd("DiagnosticChanged", {
 				group = autocmd_ns,
-				buffer = event.buf,
 				callback = function(args)
+					print(vim.inspect(args))
 					if vim.api.nvim_buf_is_valid(event.buf) then
 						vim.api.nvim_exec_autocmds("User", { pattern = "TinyDiagnosticEvent" })
 					end
@@ -227,10 +231,14 @@ function M.set_diagnostic_autocmds(opts)
 				end,
 			})
 
-			vim.api.nvim_create_autocmd({ "LspDetach", "BufDelete" }, {
+			vim.api.nvim_create_autocmd({ "LspDetach", "BufDelete", "BufUnload", "BufWipeout" }, {
 				group = autocmd_ns,
 				buffer = event.buf,
 				callback = function()
+					if not vim.api.nvim_buf_is_valid(event.buf) then
+						return
+					end
+
 					timers.close(event.buf)
 
 					if attached_buffers[event.buf] then
