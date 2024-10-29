@@ -216,7 +216,6 @@ function M.set_diagnostic_autocmds(opts)
 			vim.api.nvim_create_autocmd("DiagnosticChanged", {
 				group = autocmd_ns,
 				callback = function(args)
-					print(vim.inspect(args))
 					if vim.api.nvim_buf_is_valid(event.buf) then
 						vim.api.nvim_exec_autocmds("User", { pattern = "TinyDiagnosticEvent" })
 					end
