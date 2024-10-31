@@ -192,8 +192,6 @@ end
 local function detach(buf)
 	timers.close(buf)
 
-	print("buf", buf)
-
 	if attached_buffers[buf] then
 		attached_buffers[buf] = nil
 	end
