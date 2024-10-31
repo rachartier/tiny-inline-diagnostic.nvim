@@ -137,15 +137,19 @@ end
 local function apply_virtual_texts(opts, event)
 	extmarks.clear(event.buf)
 
-	if not M.enabled then
+
+    -- stylua: ignore
+	if not M.enabled
+        or not vim.diagnostic.is_enabled()
+        or not vim.api.nvim_buf_is_valid(event.buf) then
 		return
 	end
 
-	if not vim.diagnostic.is_enabled() then
+	local ok, diagnostics = pcall(vim.diagnostic.get, event.buf)
+
+	if not ok then
 		return
 	end
-
-	local diagnostics = vim.diagnostic.get(event.buf)
 
 	if vim.tbl_isempty(diagnostics) then
 		return
@@ -182,6 +186,16 @@ local function apply_virtual_texts(opts, event)
 		end
 
 		extmarks.create_extmarks(opts, event, diagnostic_pos[1], virt_lines, offset, need_to_be_under, virt_priority)
+	end
+end
+
+local function detach(buf)
+	timers.close(buf)
+
+	print("buf", buf)
+
+	if attached_buffers[buf] then
+		attached_buffers[buf] = nil
 	end
 end
 
@@ -234,15 +248,7 @@ function M.set_diagnostic_autocmds(opts)
 				group = autocmd_ns,
 				buffer = event.buf,
 				callback = function()
-					if not vim.api.nvim_buf_is_valid(event.buf) then
-						return
-					end
-
-					timers.close(event.buf)
-
-					if attached_buffers[event.buf] then
-						attached_buffers[event.buf] = nil
-					end
+					detach(event.buf)
 				end,
 			})
 
@@ -260,6 +266,8 @@ function M.set_diagnostic_autocmds(opts)
 				callback = function()
 					if vim.api.nvim_buf_is_valid(event.buf) then
 						vim.api.nvim_exec_autocmds("User", { pattern = "TinyDiagnosticEvent" })
+					else
+						detach(event.buf)
 					end
 				end,
 				desc = "Handle window resize event, force diagnostics update to fit new window width.",
@@ -271,6 +279,8 @@ function M.set_diagnostic_autocmds(opts)
 				callback = function()
 					if vim.api.nvim_buf_is_valid(event.buf) then
 						vim.api.nvim_exec_autocmds("User", { pattern = "TinyDiagnosticEventThrottled" })
+					else
+						detach(event.buf)
 					end
 				end,
 				desc = "Show diagnostics on cursor move, throttled.",
@@ -283,6 +293,8 @@ function M.set_diagnostic_autocmds(opts)
 					if vim.api.nvim_buf_is_valid(event.buf) then
 						M.disable()
 						extmarks.clear(event.buf)
+					else
+						detach(event.buf)
 					end
 				end,
 			})
@@ -293,6 +305,8 @@ function M.set_diagnostic_autocmds(opts)
 				callback = function()
 					if vim.api.nvim_buf_is_valid(event.buf) then
 						M.enable()
+					else
+						detach(event.buf)
 					end
 				end,
 			})
