@@ -1,4 +1,4 @@
-*tiny-inline-diagnostic.nvim.txt*For Neovim >= 0.10.0Last change: 2024 October 31
+*tiny-inline-diagnostic.nvim.txt*For Neovim >= 0.10.0Last change: 2024 November 03
 
 ==============================================================================
 Table of Contents              *tiny-inline-diagnostic.nvim-table-of-contents*
@@ -97,6 +97,9 @@ OPTIONS      *tiny-inline-diagnostic.nvim-tiny-inline-diagnostic.nvim-options*
     
             -- Show all diagnostics on the cursor line.
             show_all_diags_on_cursorline = false,
+    
+            -- Enable diagnostics on Insert mode. You should also se the `throttle` option to 0, as some artefacts may appear.
+            enable_on_insert = false,
     
             overflow = {
                 -- Manage the overflow of the message.
