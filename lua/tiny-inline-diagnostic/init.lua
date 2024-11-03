@@ -32,6 +32,7 @@ local default_config = {
 		multiple_diag_under_cursor = true,
 		multilines = false,
 		show_all_diags_on_cursorline = false,
+		enable_on_insert = false,
 		format = nil,
 		overflow = {
 			mode = "wrap",
