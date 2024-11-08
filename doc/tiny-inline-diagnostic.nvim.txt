@@ -1,4 +1,4 @@
-*tiny-inline-diagnostic.nvim.txt*For Neovim >= 0.10.0Last change: 2024 November 07
+*tiny-inline-diagnostic.nvim.txt*For Neovim >= 0.10.0Last change: 2024 November 08
 
 ==============================================================================
 Table of Contents              *tiny-inline-diagnostic.nvim-table-of-contents*
@@ -47,6 +47,7 @@ With Lazy.nvim:
     {
         "rachartier/tiny-inline-diagnostic.nvim",
         event = "VeryLazy", -- Or `LspAttach`
+        priority = 1000, -- needs to be loaded in first
         config = function()
             require('tiny-inline-diagnostic').setup()
         end
