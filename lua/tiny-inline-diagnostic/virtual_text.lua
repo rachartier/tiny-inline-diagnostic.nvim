@@ -4,9 +4,13 @@ local chunk_utils = require("tiny-inline-diagnostic.chunk")
 local highlights = require("tiny-inline-diagnostic.highlights")
 local utils = require("tiny-inline-diagnostic.utils")
 
---- @param opts table containing options
---- @param diagnostic_pos table containing cursor position
---- @param index_diag integer representing the diagnostic index
+--- Generate virtual text from a diagnostic.
+--- @param opts table: User configuration options.
+--- @param ret table: Diagnostic information.
+--- @param index_diag number: Index of the current diagnostic.
+--- @param padding number: Padding to align the text.
+--- @param total_chunks number: Total number of chunks.
+--- @return table, number, boolean: Virtual texts, offset window column, and whether it needs to be under.
 function M.from_diagnostic(opts, ret, index_diag, padding, total_chunks)
 	local cursor_line = vim.api.nvim_win_get_cursor(0)[1] - 1
 	local diag_hi, diag_inv_hi, body_hi = highlights.get_diagnostic_highlights(ret, cursor_line, index_diag)
@@ -15,14 +19,8 @@ function M.from_diagnostic(opts, ret, index_diag, padding, total_chunks)
 
 	local chunks = ret.chunks
 	local need_to_be_under = ret.need_to_be_under
-	local offset = ret.offset
 	local offset_win_col = ret.offset_win_col
-	local source = ret.source
 	local severities = ret.severities
-
-	if opts.options.show_source and source ~= nil then
-		chunks[#chunks] = chunks[#chunks] .. " (" .. source .. ")"
-	end
 
 	for index_chunk = 1, #chunks do
 		local message = utils.trim(chunks[index_chunk])

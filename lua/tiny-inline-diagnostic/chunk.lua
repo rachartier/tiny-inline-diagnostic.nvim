@@ -211,6 +211,11 @@ function M.get_chunks(opts, diags_on_line, diag_index, diag_line, cursor_line, b
 	end
 
 	local diag = diags_on_line[diag_index]
+
+	if opts.options.show_source and diag.source ~= nil then
+		diag.message = diag.message .. " (" .. diag.source .. ")"
+	end
+
 	local chunks = { diag.message }
 	local severities = {}
 
