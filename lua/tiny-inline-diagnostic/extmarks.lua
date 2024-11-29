@@ -67,6 +67,14 @@ local function get_uuid()
 	return uuid_extmark
 end
 
+local function get_relative_position()
+	local col = vim.fn.virtcol("$")
+	local win_row = vim.fn.winline() - 1
+	local leftcol = vim.fn.winsaveview().leftcol
+
+	return { row = win_row, col = col - leftcol }
+end
+
 function M.create_extmarks(opts, event, curline, virt_lines, offset, need_to_be_under, virt_prorioty)
 	local diag_overflow_last_line = false
 	local buf_lines_count = vim.api.nvim_buf_line_count(event.buf)
@@ -76,10 +84,7 @@ function M.create_extmarks(opts, event, curline, virt_lines, offset, need_to_be_
 		diag_overflow_last_line = true
 	end
 
-	local win_col = vim.fn.virtcol({
-		curline + 1,
-		"$",
-	})
+	local win_col = get_relative_position().col
 
 	if need_to_be_under then
 		win_col = 0
@@ -162,7 +167,7 @@ function M.create_extmarks(opts, event, curline, virt_lines, offset, need_to_be_
 			line_hl_group = "TinyInlineDiagnosticVirtualTextBg",
 			virt_text_pos = "eol",
 			virt_text = virt_lines[1],
-			-- virt_text_win_col = win_col + offset,
+			virt_text_win_col = win_col,
 			priority = virt_prorioty,
 			strict = false,
 		})
