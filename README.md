@@ -91,7 +91,7 @@ require("tiny-inline-diagnostic").setup({
 		-- Show all diagnostics on the cursor line.
 		show_all_diags_on_cursorline = false,
 
-    	-- Enable diagnostics on Insert mode. You should also se the `throttle` option to 0, as some artefacts may appear.
+    		-- Enable diagnostics on Insert mode. You should also se the `throttle` option to 0, as some artefacts may appear.
 		enable_on_insert = false,
 
 		overflow = {
@@ -127,9 +127,9 @@ require("tiny-inline-diagnostic").setup({
 			vim.diagnostic.severity.HINT,
 		},
 
-        -- Overwrite events to attach to a buffer. You should not change it, but if the plugin
-        -- does not works in your configuration, you may try to tweak it.
-        overwrite_events = nil,
+        	-- Overwrite events to attach to a buffer. You should not change it, but if the plugin
+        	-- does not works in your configuration, you may try to tweak it.
+        	overwrite_events = nil,
 	},
 })
 ```
