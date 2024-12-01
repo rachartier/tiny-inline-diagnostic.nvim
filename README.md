@@ -123,8 +123,7 @@ require("tiny-inline-diagnostic").setup({
 })
 ```
 
-:warning: **Note**: Overriding `signs` or `blend` tables will override the default values of the preset. If you want to use the default values of the preset, you need to set the `preset` option **ON**LY.
-:warning: **Note**: If you want to use the `nonerdfont` preset, you need to have a NerdFont installed.
+:warning: **Note**: Overriding `signs` or `blend` tables will override the default values of the preset. If you want to use the default values of the preset, you need to set the `preset` option **ONLY**.
 
 If you do not want to use the `preset` option, you can set the your own style with:
 
