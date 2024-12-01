@@ -58,8 +58,9 @@ function M.setup(opts)
 	-- config.options.overflow.position = config.options.overflow.position:lower()
 	config.options.overflow.mode = config.options.overflow.mode:lower()
 	if config.preset then
-		config = vim.tbl_deep_extend("keep", config, presets.build(config.preset))
+		config = vim.tbl_deep_extend("keep", config, presets.build(config.preset:lower()))
 	end
+
 	M.config = config
 
 	hi.setup_highlights(config.blend, config.hi)

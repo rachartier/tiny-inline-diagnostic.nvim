@@ -4,13 +4,13 @@ function M.build(name)
 	if name == "classic" then
 		return {
 			signs = {
-				left = "",
-				right = "",
+				left = " ",
+				right = " ",
 				diag = "●",
-				arrow = " ",
+				arrow = "",
 				up_arrow = "",
-				vertical = "",
-				vertical_end = "",
+				vertical = " │",
+				vertical_end = " └",
 			},
 			blend = {
 				factor = 0,
@@ -39,8 +39,8 @@ function M.build(name)
 				diag = "",
 				arrow = "",
 				up_arrow = "",
-				vertical = "",
-				vertical_end = "",
+				vertical = "  │",
+				vertical_end = "  └",
 			},
 			blend = {
 				factor = 0,
