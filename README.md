@@ -49,15 +49,7 @@ With Lazy.nvim:
 ```lua
 -- Default configuration
 require("tiny-inline-diagnostic").setup({
-	signs = {
-		left = "",
-		right = "",
-		diag = "●",
-		arrow = "    ",
-		up_arrow = "    ",
-		vertical = " │",
-		vertical_end = " └",
-	},
+    preset = "modern", -- Can be: "modern", "classic", "minimal", "ghost", "simple", "nonerdfont"
 	hi = {
 		error = "DiagnosticError",
 		warn = "DiagnosticWarn",
@@ -66,9 +58,6 @@ require("tiny-inline-diagnostic").setup({
 		arrow = "NonText",
 		background = "CursorLine", -- Can be a highlight or a hexadecimal color (#RRGGBB)
 		mixing_color = "None", -- Can be None or a hexadecimal color (#RRGGBB). Used to blend the background color with the diagnostic background color with another color.
-	},
-	blend = {
-		factor = 0.27,
 	},
 	options = {
 		-- Show the source of the diagnostic.
@@ -131,6 +120,30 @@ require("tiny-inline-diagnostic").setup({
         -- does not works in your configuration, you may try to tweak it.
         overwrite_events = nil,
 	},
+})
+```
+
+:warning: **Note**: Overriding `signs` or `blend` tables will override the default values of the preset. If you want to use the default values of the preset, you need to set the `preset` option **ON**LY.
+:warning: **Note**: If you want to use the `nonerdfont` preset, you need to have a NerdFont installed.
+
+If you do not want to use the `preset` option, you can set the your own style with:
+
+```lua
+require("tiny-inline-diagnostic").setup({
+    -- ...
+    signs = {
+        left = "",
+        right = "",
+        diag = "●",
+        arrow = "    ",
+        up_arrow = "    ",
+        vertical = " │",
+        vertical_end = " └",
+    },
+    blend = {
+        factor = 0.22,
+    },
+    -- ...
 })
 ```
 

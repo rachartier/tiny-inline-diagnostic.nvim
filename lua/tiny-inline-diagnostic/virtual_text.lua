@@ -13,7 +13,8 @@ local utils = require("tiny-inline-diagnostic.utils")
 --- @return table, number, boolean: Virtual texts, offset window column, and whether it needs to be under.
 function M.from_diagnostic(opts, ret, index_diag, padding, total_chunks)
 	local cursor_line = vim.api.nvim_win_get_cursor(0)[1] - 1
-	local diag_hi, diag_inv_hi, body_hi = highlights.get_diagnostic_highlights(ret, cursor_line, index_diag)
+	local diag_hi, diag_inv_hi, body_hi =
+		highlights.get_diagnostic_highlights(opts.blend.factor, ret, cursor_line, index_diag)
 
 	local all_virtual_texts = {}
 

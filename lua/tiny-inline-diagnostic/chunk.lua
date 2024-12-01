@@ -45,8 +45,9 @@ function M.get_header_from_chunk(
 			{ opts.signs.left, diag_inv_hi },
 		}
 	else
+		local spaces = math.max(#opts.signs.left - 2, 1)
 		virt_texts = {
-			{ " ", "None" },
+			{ string.rep(" ", spaces), "None" },
 		}
 	end
 

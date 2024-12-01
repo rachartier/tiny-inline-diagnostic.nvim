@@ -2,17 +2,10 @@ local M = {}
 
 local hi = require("tiny-inline-diagnostic.highlights")
 local diag = require("tiny-inline-diagnostic.diagnostic")
+local presets = require("tiny-inline-diagnostic.presets")
 
 local default_config = {
-	signs = {
-		left = "",
-		right = "",
-		diag = "●",
-		arrow = "    ",
-		up_arrow = "    ",
-		vertical = " │",
-		vertical_end = " └",
-	},
+	preset = "modern",
 	hi = {
 		error = "DiagnosticError",
 		warn = "DiagnosticWarn",
@@ -20,10 +13,7 @@ local default_config = {
 		hint = "DiagnosticHint",
 		arrow = "NonText",
 		background = "CursorLine",
-		mixing_color = "None",
-	},
-	blend = {
-		factor = 0.27,
+		mixing_color = "Normal",
 	},
 	options = {
 		show_source = false,
@@ -52,7 +42,6 @@ local default_config = {
 		},
 		overwrite_events = nil,
 	},
-	plugin = {},
 }
 
 M.config = nil
@@ -68,6 +57,9 @@ function M.setup(opts)
 
 	-- config.options.overflow.position = config.options.overflow.position:lower()
 	config.options.overflow.mode = config.options.overflow.mode:lower()
+	if config.preset then
+		config = vim.tbl_deep_extend("keep", config, presets.build(config.preset))
+	end
 	M.config = config
 
 	hi.setup_highlights(config.blend, config.hi)

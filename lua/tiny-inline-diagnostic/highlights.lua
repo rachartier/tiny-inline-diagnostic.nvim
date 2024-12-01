@@ -27,6 +27,7 @@ function M.setup_highlights(blend, default_hi)
 		hint = get_hi(default_hi.hint),
 		ok = get_hi(default_hi.ok),
 		arrow = get_hi(default_hi.arrow),
+		background = get_hi(default_hi.background),
 	}
 
 	if default_hi.background:sub(1, 1) == "#" then
@@ -41,8 +42,10 @@ function M.setup_highlights(blend, default_hi)
 		else
 			colors.mixing_color = "#000000"
 		end
-	else
+	elseif default_hi.mixing_color:sub(1, 1) == "#" then
 		colors.mixing_color = default_hi.mixing_color
+	else
+		colors.mixing_color = get_hi(default_hi.mixing_color).bg
 	end
 
 	local factor = blend.factor
@@ -53,30 +56,38 @@ function M.setup_highlights(blend, default_hi)
 		warn = utils.blend(colors.warn.fg, c, factor),
 		info = utils.blend(colors.info.fg, c, factor),
 		hint = utils.blend(colors.hint.fg, c, factor),
+		background = colors.background,
 	}
 
-	local hi = {
-		TinyInlineDiagnosticVirtualTextBg = { bg = colors.background },
+    --stylua: ignore
+    local hi = {
+        TinyInlineDiagnosticVirtualTextBg = { bg = colors.background },
 
-		TinyInlineDiagnosticVirtualTextError = { bg = blends.error, fg = colors.error.fg, italic = colors.error.italic },
-		TinyInlineDiagnosticVirtualTextWarn = { bg = blends.warn, fg = colors.warn.fg, italic = colors.warn.italic },
-		TinyInlineDiagnosticVirtualTextInfo = { bg = blends.info, fg = colors.info.fg, italic = colors.info.italic },
-		TinyInlineDiagnosticVirtualTextHint = { bg = blends.hint, fg = colors.hint.fg, italic = colors.hint.italic },
-		TinyInlineDiagnosticVirtualTextOk = { bg = blends.hint, fg = colors.hint.fg, italic = colors.ok.italic },
+        TinyInlineDiagnosticVirtualTextErrorCursorLine = { bg = blends.background, fg = colors.error.fg, italic = colors.error.italic },
+        TinyInlineDiagnosticVirtualTextWarnCursorLine = { bg = blends.background, fg = colors.warn.fg, italic = colors.warn.italic },
+        TinyInlineDiagnosticVirtualTextInfoCursorLine = { bg = blends.background, fg = colors.info.fg, italic = colors.info.italic },
+        TinyInlineDiagnosticVirtualTextHintCursorLine = { bg = blends.background, fg = colors.hint.fg, italic = colors.hint.italic },
+        TinyInlineDiagnosticVirtualTextOkCursorLine = { bg = blends.background, fg = colors.hint.fg, italic = colors.hint.italic },
 
-		TinyInlineDiagnosticVirtualTextArrow = { bg = colors.background, fg = colors.arrow.fg },
-		TinyInlineDiagnosticVirtualTextArrowNoBg = { bg = "None", fg = colors.arrow.fg },
+        TinyInlineDiagnosticVirtualTextError = { bg = blends.error, fg = colors.error.fg, italic = colors.error.italic },
+        TinyInlineDiagnosticVirtualTextWarn = { bg = blends.warn, fg = colors.warn.fg, italic = colors.warn.italic },
+        TinyInlineDiagnosticVirtualTextInfo = { bg = blends.info, fg = colors.info.fg, italic = colors.info.italic },
+        TinyInlineDiagnosticVirtualTextHint = { bg = blends.hint, fg = colors.hint.fg, italic = colors.hint.italic },
+        TinyInlineDiagnosticVirtualTextOk = { bg = blends.hint, fg = colors.hint.fg, italic = colors.ok.italic },
 
-		TinyInlineInvDiagnosticVirtualTextError = { fg = blends.error, bg = colors.background },
-		TinyInlineInvDiagnosticVirtualTextWarn = { fg = blends.warn, bg = colors.background },
-		TinyInlineInvDiagnosticVirtualTextInfo = { fg = blends.info, bg = colors.background },
-		TinyInlineInvDiagnosticVirtualTextHint = { fg = blends.hint, bg = colors.background },
+        TinyInlineDiagnosticVirtualTextArrow = { bg = colors.background, fg = colors.arrow.fg },
+        TinyInlineDiagnosticVirtualTextArrowNoBg = { bg = "None", fg = colors.arrow.fg },
 
-		TinyInlineInvDiagnosticVirtualTextErrorNoBg = { fg = blends.error, bg = "None" },
-		TinyInlineInvDiagnosticVirtualTextWarnNoBg = { fg = blends.warn, bg = "None" },
-		TinyInlineInvDiagnosticVirtualTextInfoNoBg = { fg = blends.info, bg = "None" },
-		TinyInlineInvDiagnosticVirtualTextHintNoBg = { fg = blends.hint, bg = "None" },
-	}
+        TinyInlineInvDiagnosticVirtualTextError = { fg = blends.error, bg = colors.background, italic = colors.error.italic },
+        TinyInlineInvDiagnosticVirtualTextWarn = { fg = blends.warn, bg = colors.background, italic = colors.warn.italic },
+        TinyInlineInvDiagnosticVirtualTextInfo = { fg = blends.info, bg = colors.background, italic = colors.info.italic },
+        TinyInlineInvDiagnosticVirtualTextHint = { fg = blends.hint, bg = colors.background, italic = colors.hint.italic },
+
+        TinyInlineInvDiagnosticVirtualTextErrorNoBg = { fg = blends.error, bg = "None", italic = colors.error.italic },
+        TinyInlineInvDiagnosticVirtualTextWarnNoBg = { fg = blends.warn, bg = "None", italic = colors.warn.italic },
+        TinyInlineInvDiagnosticVirtualTextInfoNoBg = { fg = blends.info, bg = "None", italic = colors.info.italic },
+        TinyInlineInvDiagnosticVirtualTextHintNoBg = { fg = blends.hint, bg = "None", italic = colors.hint.italic },
+    }
 
 	-- mix up all background with foreground for each VirtualTextError, Warn, Info, Hint, Ok
 	local to_mix = {
@@ -108,15 +119,20 @@ function M.setup_highlights(blend, default_hi)
 end
 
 --- Function to get diagnostic highlights based on severity and line comparison.
+--- @param blend_factor number - The blend factor to use for the highlights.
 --- @param diag_ret table - The table containing diagnostic information, including severity and line.
 --- @param curline number - The current line number to compare with the diagnostic line.
 --- @param index_diag number - The index of the diagnostic in the list.
 --- @return string, string, string - The highlight group names for the diagnostic and its inverse, and the body highlight group name.
-function M.get_diagnostic_highlights(diag_ret, curline, index_diag)
+function M.get_diagnostic_highlights(blend_factor, diag_ret, curline, index_diag)
 	local severity = diag_ret.severity
 	local diag_line = diag_ret.line
 
 	local diag_hi, diag_inv_hi, body_hi = M.get_diagnostic_highlights_from_severity(severity)
+
+	if index_diag == 1 and blend_factor == 0 then
+		diag_hi = diag_hi .. "CursorLine"
+	end
 
 	if diag_line and diag_line ~= curline or index_diag > 1 or diag_ret.need_to_be_under then
 		diag_inv_hi = diag_inv_hi .. "NoBg"
@@ -148,4 +164,5 @@ function M.get_diagnostic_mixed_highlights_from_severity(severity_a, severity_b)
 
 	return diag_hi, diag_inv_hi
 end
+
 return M
