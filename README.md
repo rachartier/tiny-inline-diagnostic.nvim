@@ -21,6 +21,9 @@ A Neovim plugin that display prettier diagnostic messages. Display one line diag
 ![image](https://github.com/user-attachments/assets/45180d09-8653-4403-a79b-5bee522560e3)
 
 
+### Some presets:
+![image](https://github.com/user-attachments/assets/b728cbd6-b474-46e0-bc6b-b7213a0e1c6f)
+
 
 ## 🛠️ Setup
 
