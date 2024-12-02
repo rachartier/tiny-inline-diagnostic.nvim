@@ -25,7 +25,7 @@ local default_config = {
 	},
 	options = {
 		show_source = false,
-		use_icons_from_diagnostic = true,
+		use_icons_from_diagnostic = false,
 		throttle = 20,
 		softwrap = 30,
 		multiple_diag_under_cursor = true,
