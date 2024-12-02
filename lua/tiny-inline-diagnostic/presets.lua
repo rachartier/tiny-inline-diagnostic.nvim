@@ -76,6 +76,21 @@ function M.build(name)
 				factor = 0.22,
 			},
 		}
+	elseif name == "amongus" then
+		return {
+			signs = {
+				left = "",
+				right = "",
+				diag = "ඞ",
+				arrow = "    ",
+				up_arrow = "    ",
+				vertical = " │",
+				vertical_end = " └",
+			},
+			blend = {
+				factor = 0.22,
+			},
+		}
 	end
 	return {
 		signs = {
