@@ -26,7 +26,7 @@ function M.from_diagnostic(opts, ret, index_diag, padding, total_chunks)
 	for index_chunk = 1, #chunks do
 		local message = utils.trim(chunks[index_chunk])
 
-		local to_add = padding - vim.fn.strdisplaywidth(message) - 1
+		local to_add = padding - vim.fn.strcharlen(message)
 		message = message .. string.rep(" ", to_add)
 
 		if index_chunk == 1 then

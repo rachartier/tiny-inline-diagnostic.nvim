@@ -9,8 +9,8 @@ function M.build(name)
 				diag = "●",
 				arrow = "",
 				up_arrow = "",
-				vertical = "  │",
-				vertical_end = "  └",
+				vertical = " │",
+				vertical_end = " └",
 			},
 			blend = {
 				factor = 0,
@@ -49,8 +49,8 @@ function M.build(name)
 	elseif name == "nonerdfont" then
 		return {
 			signs = {
-				left = "░▒",
-				right = "▒░",
+				left = "░",
+				right = "░",
 				diag = "●",
 				arrow = "   ",
 				up_arrow = "",
@@ -68,6 +68,36 @@ function M.build(name)
 				right = "",
 				diag = "󰊠",
 				arrow = "    ",
+				up_arrow = "    ",
+				vertical = " │",
+				vertical_end = " └",
+			},
+			blend = {
+				factor = 0.22,
+			},
+		}
+	elseif name == "amongus" then
+		return {
+			signs = {
+				left = "",
+				right = "",
+				diag = "ඞ",
+				arrow = "    ",
+				up_arrow = "    ",
+				vertical = " │",
+				vertical_end = " └",
+			},
+			blend = {
+				factor = 0.22,
+			},
+		}
+	elseif name == "powerline" then
+		return {
+			signs = {
+				left = "",
+				right = " ",
+				diag = "●",
+				arrow = "   ",
 				up_arrow = "    ",
 				vertical = " │",
 				vertical_end = " └",
