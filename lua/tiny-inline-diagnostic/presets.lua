@@ -5,12 +5,12 @@ function M.build(name)
 		return {
 			signs = {
 				left = " ",
-				right = " ",
+				right = "",
 				diag = "●",
 				arrow = "",
 				up_arrow = "",
-				vertical = " │",
-				vertical_end = " └",
+				vertical = "  │",
+				vertical_end = "  └",
 			},
 			blend = {
 				factor = 0,
