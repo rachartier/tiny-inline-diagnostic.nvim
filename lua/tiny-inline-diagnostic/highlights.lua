@@ -1,8 +1,41 @@
+---@class HighlightColor
+---@field fg string
+---@field bg string
+---@field italic boolean
+
+---@class BlendOptions
+---@field factor number
+
+---@class DefaultHighlights
+---@field error string
+---@field warn string
+---@field info string
+---@field hint string
+---@field ok string
+---@field arrow string
+---@field background string
+---@field mixing_color string
+
 local M = {}
 
 local utils = require("tiny-inline-diagnostic.utils")
 
-local function get_hi(name)
+-- Constants
+local DIAGNOSTIC_SEVERITIES = {
+	ERROR = 1,
+	WARN = 2,
+	INFO = 3,
+	HINT = 4,
+}
+
+local SEVERITY_NAMES = { "Error", "Warn", "Info", "Hint" }
+local HIGHLIGHT_PREFIX = "TinyInlineDiagnosticVirtualText"
+local INV_HIGHLIGHT_PREFIX = "TinyInlineInvDiagnosticVirtualText"
+
+---Get highlight attributes for a given highlight group
+---@param name string
+---@return HighlightColor
+local function get_highlight(name)
 	local hi = vim.api.nvim_get_hl(0, {
 		name = name,
 		link = false,
@@ -11,158 +44,189 @@ local function get_hi(name)
 	return {
 		fg = utils.int_to_hex(hi.fg),
 		bg = utils.int_to_hex(hi.bg),
-		italic = hi.italic,
+		italic = hi.italic or false,
 	}
 end
 
---- Function to setup highlights for diagnostics.
--- @param blend table - The table of blend options, which includes the blend factor.
--- @param default_hi table - The table of default highlights, which includes the colors for each diagnostic type, the arrow, and the background.
--- @param italics boolean - Whether to use italics for the diagnostics.
-function M.setup_highlights(blend, default_hi)
-	local colors = {
-		error = get_hi(default_hi.error),
-		warn = get_hi(default_hi.warn),
-		info = get_hi(default_hi.info),
-		hint = get_hi(default_hi.hint),
-		ok = get_hi(default_hi.ok),
-		arrow = get_hi(default_hi.arrow),
-		background = get_hi(default_hi.background),
+---Get background color based on configuration
+---@param color string
+---@return string
+local function get_background_color(color)
+	if color:sub(1, 1) == "#" then
+		return color
+	end
+	return get_highlight(color).bg
+end
+
+---Get mixing color based on configuration
+---@param color string
+---@return string
+local function get_mixing_color(color)
+	if color == "None" then
+		return vim.g.background == "light" and "#ffffff" or "#000000"
+	end
+	if color:sub(1, 1) == "#" then
+		return color
+	end
+	return get_highlight(color).bg
+end
+
+---Create diagnostic highlight groups
+---@param colors table<string, HighlightColor>
+---@param blends table<string, string>
+---@return table<string, table>
+local function create_highlight_groups(colors, blends)
+	local hi = {
+		[HIGHLIGHT_PREFIX .. "Bg"] = { bg = colors.background },
 	}
 
-	if default_hi.background:sub(1, 1) == "#" then
-		colors.background = default_hi.background
-	else
-		colors.background = get_hi(default_hi.background).bg
+	-- Create base highlight groups
+	for severity, name in pairs(SEVERITY_NAMES) do
+		-- Cursor line highlights
+		hi[HIGHLIGHT_PREFIX .. name .. "CursorLine"] = {
+			bg = blends.background,
+			fg = colors[string.lower(name)].fg,
+			italic = colors[string.lower(name)].italic,
+		}
+
+		-- Regular highlights
+		hi[HIGHLIGHT_PREFIX .. name] = {
+			bg = blends[string.lower(name)],
+			fg = colors[string.lower(name)].fg,
+			italic = colors[string.lower(name)].italic,
+		}
+
+		-- Inverse highlights with and without background
+		hi[INV_HIGHLIGHT_PREFIX .. name] = {
+			fg = blends[string.lower(name)],
+			bg = colors.background,
+			italic = colors[string.lower(name)].italic,
+		}
+
+		hi[INV_HIGHLIGHT_PREFIX .. name .. "NoBg"] = {
+			fg = blends[string.lower(name)],
+			bg = "None",
+			italic = colors[string.lower(name)].italic,
+		}
 	end
 
-	if default_hi.mixing_color == "None" then
-		if vim.g.background == "light" then
-			colors.mixing_color = "#ffffff"
-		else
-			colors.mixing_color = "#000000"
+	-- Arrow highlights
+	hi[HIGHLIGHT_PREFIX .. "Arrow"] = {
+		bg = colors.background,
+		fg = colors.arrow.fg,
+	}
+	hi[HIGHLIGHT_PREFIX .. "ArrowNoBg"] = {
+		bg = "None",
+		fg = colors.arrow.fg,
+	}
+
+	return hi
+end
+
+---Create mixed highlight groups
+---@param hi table<string, table>
+local function create_mixed_highlights(hi)
+	local base_groups = {
+		HIGHLIGHT_PREFIX .. "Error",
+		HIGHLIGHT_PREFIX .. "Warn",
+		HIGHLIGHT_PREFIX .. "Info",
+		HIGHLIGHT_PREFIX .. "Hint",
+	}
+
+	for _, primary in ipairs(base_groups) do
+		for _, secondary in ipairs(base_groups) do
+			local mixed_name = primary .. "Mix" .. secondary:match("Text(%w+)$")
+			hi[mixed_name] = {
+				fg = hi[primary].fg,
+				bg = hi[secondary].bg,
+				italic = hi[primary].italic,
+			}
 		end
-	elseif default_hi.mixing_color:sub(1, 1) == "#" then
-		colors.mixing_color = default_hi.mixing_color
-	else
-		colors.mixing_color = get_hi(default_hi.mixing_color).bg
 	end
+end
 
-	local factor = blend.factor
-	local c = colors.mixing_color
+---@param blend BlendOptions
+---@param default_hi DefaultHighlights
+function M.setup_highlights(blend, default_hi)
+	-- Get base colors
+	local colors = {
+		error = get_highlight(default_hi.error),
+		warn = get_highlight(default_hi.warn),
+		info = get_highlight(default_hi.info),
+		hint = get_highlight(default_hi.hint),
+		ok = get_highlight(default_hi.ok),
+		arrow = get_highlight(default_hi.arrow),
+	}
 
+	-- Get special colors
+	colors.background = get_background_color(default_hi.background)
+	colors.mixing_color = get_mixing_color(default_hi.mixing_color)
+
+	-- Create blended colors
 	local blends = {
-		error = utils.blend(colors.error.fg, c, factor),
-		warn = utils.blend(colors.warn.fg, c, factor),
-		info = utils.blend(colors.info.fg, c, factor),
-		hint = utils.blend(colors.hint.fg, c, factor),
+		error = utils.blend(colors.error.fg, colors.mixing_color, blend.factor),
+		warn = utils.blend(colors.warn.fg, colors.mixing_color, blend.factor),
+		info = utils.blend(colors.info.fg, colors.mixing_color, blend.factor),
+		hint = utils.blend(colors.hint.fg, colors.mixing_color, blend.factor),
 		background = colors.background,
 	}
 
-    --stylua: ignore
-    local hi = {
-        TinyInlineDiagnosticVirtualTextBg = { bg = colors.background },
+	-- Create highlight groups
+	local hi = create_highlight_groups(colors, blends)
+	create_mixed_highlights(hi)
 
-        TinyInlineDiagnosticVirtualTextErrorCursorLine = { bg = blends.background, fg = colors.error.fg, italic = colors.error.italic },
-        TinyInlineDiagnosticVirtualTextWarnCursorLine = { bg = blends.background, fg = colors.warn.fg, italic = colors.warn.italic },
-        TinyInlineDiagnosticVirtualTextInfoCursorLine = { bg = blends.background, fg = colors.info.fg, italic = colors.info.italic },
-        TinyInlineDiagnosticVirtualTextHintCursorLine = { bg = blends.background, fg = colors.hint.fg, italic = colors.hint.italic },
-        TinyInlineDiagnosticVirtualTextOkCursorLine = { bg = blends.background, fg = colors.hint.fg, italic = colors.hint.italic },
-
-        TinyInlineDiagnosticVirtualTextError = { bg = blends.error, fg = colors.error.fg, italic = colors.error.italic },
-        TinyInlineDiagnosticVirtualTextWarn = { bg = blends.warn, fg = colors.warn.fg, italic = colors.warn.italic },
-        TinyInlineDiagnosticVirtualTextInfo = { bg = blends.info, fg = colors.info.fg, italic = colors.info.italic },
-        TinyInlineDiagnosticVirtualTextHint = { bg = blends.hint, fg = colors.hint.fg, italic = colors.hint.italic },
-        TinyInlineDiagnosticVirtualTextOk = { bg = blends.hint, fg = colors.hint.fg, italic = colors.ok.italic },
-
-        TinyInlineDiagnosticVirtualTextArrow = { bg = colors.background, fg = colors.arrow.fg },
-        TinyInlineDiagnosticVirtualTextArrowNoBg = { bg = "None", fg = colors.arrow.fg },
-
-        TinyInlineInvDiagnosticVirtualTextError = { fg = blends.error, bg = colors.background, italic = colors.error.italic },
-        TinyInlineInvDiagnosticVirtualTextWarn = { fg = blends.warn, bg = colors.background, italic = colors.warn.italic },
-        TinyInlineInvDiagnosticVirtualTextInfo = { fg = blends.info, bg = colors.background, italic = colors.info.italic },
-        TinyInlineInvDiagnosticVirtualTextHint = { fg = blends.hint, bg = colors.background, italic = colors.hint.italic },
-
-        TinyInlineInvDiagnosticVirtualTextErrorNoBg = { fg = blends.error, bg = "None", italic = colors.error.italic },
-        TinyInlineInvDiagnosticVirtualTextWarnNoBg = { fg = blends.warn, bg = "None", italic = colors.warn.italic },
-        TinyInlineInvDiagnosticVirtualTextInfoNoBg = { fg = blends.info, bg = "None", italic = colors.info.italic },
-        TinyInlineInvDiagnosticVirtualTextHintNoBg = { fg = blends.hint, bg = "None", italic = colors.hint.italic },
-    }
-
-	-- mix up all background with foreground for each VirtualTextError, Warn, Info, Hint, Ok
-	local to_mix = {
-		"TinyInlineDiagnosticVirtualTextError",
-		"TinyInlineDiagnosticVirtualTextWarn",
-		"TinyInlineDiagnosticVirtualTextInfo",
-		"TinyInlineDiagnosticVirtualTextHint",
-	}
-
-	local mixed_name = {
-		"MixError",
-		"MixWarn",
-		"MixInfo",
-		"MixHint",
-	}
-
-	for i, name in ipairs(to_mix) do
-		for _, bg_name in ipairs(to_mix) do
-			local fg = hi[name].fg
-			local bg = hi[bg_name].bg
-
-			hi[bg_name .. mixed_name[i]] = { fg = fg, bg = bg, italic = hi[name].italic }
-		end
-	end
-
+	-- Apply highlights
 	for name, opts in pairs(hi) do
 		vim.api.nvim_set_hl(0, name, opts)
 	end
 end
 
---- Function to get diagnostic highlights based on severity and line comparison.
---- @param blend_factor number - The blend factor to use for the highlights.
---- @param diag_ret table - The table containing diagnostic information, including severity and line.
---- @param curline number - The current line number to compare with the diagnostic line.
---- @param index_diag number - The index of the diagnostic in the list.
---- @return string, string, string - The highlight group names for the diagnostic and its inverse, and the body highlight group name.
+---Get diagnostic highlight groups
+---@param blend_factor number
+---@param diag_ret table
+---@param curline number
+---@param index_diag number
+---@return string diag_hi
+---@return string diag_inv_hi
+---@return string body_hi
 function M.get_diagnostic_highlights(blend_factor, diag_ret, curline, index_diag)
-	local severity = diag_ret.severity
-	local diag_line = diag_ret.line
-
-	local diag_hi, diag_inv_hi, body_hi = M.get_diagnostic_highlights_from_severity(severity)
+	local diag_hi, diag_inv_hi, body_hi = M.get_diagnostic_highlights_from_severity(diag_ret.severity)
 
 	if index_diag == 1 and blend_factor == 0 then
 		diag_hi = diag_hi .. "CursorLine"
 	end
 
-	if diag_line and diag_line ~= curline or index_diag > 1 or diag_ret.need_to_be_under then
+	if (diag_ret.line and diag_ret.line ~= curline) or index_diag > 1 or diag_ret.need_to_be_under then
 		diag_inv_hi = diag_inv_hi .. "NoBg"
 	end
 
 	return diag_hi, diag_inv_hi, body_hi
 end
 
+---Get base diagnostic highlight groups from severity
+---@param severity number
+---@return string diag_hi
+---@return string diag_inv_hi
+---@return string body_hi
 function M.get_diagnostic_highlights_from_severity(severity)
-	local diag_type = { "Error", "Warn", "Info", "Hint" }
+	local hi = SEVERITY_NAMES[severity]
+	if not hi then
+		hi = SEVERITY_NAMES[DIAGNOSTIC_SEVERITIES.ERROR]
+	end
 
-	local hi = diag_type[severity]
-
-	local diag_hi = "TinyInlineDiagnosticVirtualText" .. hi
-	local diag_inv_hi = "TinyInlineInvDiagnosticVirtualText" .. hi
-	local body_hi = "TinyInlineInvDiagnosticVirtualText" .. hi .. "NoBg"
-
-	return diag_hi, diag_inv_hi, body_hi
+	return HIGHLIGHT_PREFIX .. hi, INV_HIGHLIGHT_PREFIX .. hi, INV_HIGHLIGHT_PREFIX .. hi .. "NoBg"
 end
 
+---Get mixed diagnostic highlight groups from two severities
+---@param severity_a number
+---@param severity_b number
+---@return string diag_hi
+---@return string diag_inv_hi
 function M.get_diagnostic_mixed_highlights_from_severity(severity_a, severity_b)
-	local diag_type = { "Error", "Warn", "Info", "Hint" }
+	local hi_a = SEVERITY_NAMES[severity_a] or SEVERITY_NAMES[DIAGNOSTIC_SEVERITIES.ERROR]
+	local hi_b = SEVERITY_NAMES[severity_b] or SEVERITY_NAMES[DIAGNOSTIC_SEVERITIES.ERROR]
 
-	local hi_a = diag_type[severity_a]
-	local hi_b = diag_type[severity_b]
-
-	local diag_hi = "TinyInlineDiagnosticVirtualText" .. hi_a .. "Mix" .. hi_b
-	local diag_inv_hi = "TinyInlineInvDiagnosticVirtualText" .. hi_a .. "Mix" .. hi_b
-
-	return diag_hi, diag_inv_hi
+	return HIGHLIGHT_PREFIX .. hi_b .. "Mix" .. hi_a, INV_HIGHLIGHT_PREFIX .. hi_a .. "Mix" .. hi_b
 end
 
 return M
