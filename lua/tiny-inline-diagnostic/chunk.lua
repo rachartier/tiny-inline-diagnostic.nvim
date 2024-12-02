@@ -45,7 +45,7 @@ function M.get_header_from_chunk(
 			{ opts.signs.left, diag_inv_hi },
 		}
 	else
-		local spaces = math.max(#opts.signs.left - 2, 1)
+		local spaces = math.max(vim.fn.strdisplaywidth(opts.signs.left), 1)
 		virt_texts = {
 			{ string.rep(" ", spaces), "None" },
 		}
@@ -78,7 +78,7 @@ function M.get_header_from_chunk(
 	})
 
 	if not need_to_be_under and index_diag > 1 then
-		table.insert(virt_texts, 1, { string.rep(" ", #opts.signs.arrow - 2), diag_inv_hi })
+		table.insert(virt_texts, 1, { string.rep(" ", vim.fn.strcharlen(opts.signs.arrow)), diag_inv_hi })
 	end
 
 	-- if need_to_be_under then
@@ -99,13 +99,13 @@ function M.get_header_from_chunk(
 		else
 			vim.list_extend(virt_texts, {
 				{ " " .. message .. text_after_message, diag_hi },
-				{ string.rep(" ", #opts.signs.right), diag_inv_hi },
+				{ string.rep(" ", vim.fn.strcharlen(opts.signs.right)), diag_inv_hi },
 			})
 		end
 	else
 		vim.list_extend(virt_texts, {
 			{ " " .. message .. text_after_message, diag_hi },
-			{ string.rep(" ", #opts.signs.right), diag_inv_hi },
+			{ string.rep(" ", vim.fn.strcharlen(opts.signs.right)), diag_inv_hi },
 		})
 	end
 
@@ -144,7 +144,8 @@ function M.get_body_from_chunk(
 	}
 
 	if not need_to_be_under then
-		table.insert(chunk_virtual_texts, 1, { string.rep(" ", #opts.signs.arrow - 1), diag_inv_hi })
+		local spaces = math.max(vim.fn.strdisplaywidth(opts.signs.left .. opts.signs.arrow), 1)
+		table.insert(chunk_virtual_texts, 1, { string.rep(" ", spaces), diag_inv_hi })
 	else
 		table.insert(chunk_virtual_texts, 1, { " ", diag_inv_hi })
 	end
