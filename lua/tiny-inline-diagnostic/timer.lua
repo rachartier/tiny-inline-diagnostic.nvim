@@ -5,7 +5,6 @@
 ---@field private timers_by_buffer table<number, Timer>
 local M = {}
 
--- State initialization
 M.timers_by_buffer = {}
 
 ---@class TimerError
@@ -13,14 +12,12 @@ M.timers_by_buffer = {}
 ---@field buffer number|nil
 local TimerError = {}
 
--- Constants
 local ERROR_MESSAGES = {
 	INVALID_BUFFER = "Invalid buffer provided: %d",
 	TIMER_NOT_FOUND = "No timer found for buffer: %d",
 	NIL_TIMER = "Attempting to add nil timer for buffer: %d",
 }
 
--- Private helper functions
 ---@param buf number
 ---@return boolean
 local function is_valid_buffer(buf)
@@ -42,8 +39,6 @@ local function create_error(message, buffer)
 		buffer = buffer,
 	}
 end
-
--- Public API
 
 ---Closes all active timers and cleans up the timer storage
 ---@return boolean success
