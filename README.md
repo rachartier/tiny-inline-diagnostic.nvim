@@ -66,6 +66,9 @@ require("tiny-inline-diagnostic").setup({
 		-- Show the source of the diagnostic.
 		show_source = false,
 
+		-- Use your defined signs in the diagnostic config table.
+		use_icons_from_diagnostic = true,
+
 		-- Throttle the update of the diagnostic when moving cursor, in milliseconds.
 		-- You can increase it if you have performance issues.
 		-- Or set it to 0 to have better visuals.

@@ -229,4 +229,12 @@ function M.get_diagnostic_mixed_highlights_from_severity(severity_a, severity_b)
 	return HIGHLIGHT_PREFIX .. hi_b .. "Mix" .. hi_a, INV_HIGHLIGHT_PREFIX .. hi_a .. "Mix" .. hi_b
 end
 
+---Get diagnostic icon
+---@param severity number
+---@return string
+function M.get_diagnostic_icon(severity)
+	local icon = vim.diagnostic.config().signs.text[severity]
+	return icon
+end
+
 return M

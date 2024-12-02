@@ -64,8 +64,14 @@ function M.get_header_from_chunk(
 				local hl, hl_inv, _ =
 					highlights.get_diagnostic_mixed_highlights_from_severity(severities[#severities], severities[i])
 
+				local icon = opts.signs.diag
+
+				if opts.options.use_icons_from_diagnostic then
+					icon = highlights.get_diagnostic_icon(severities[i])
+				end
+
 				local severity_virt_texts = {
-					{ opts.signs.diag, hl },
+					{ icon, hl },
 				}
 
 				vim.list_extend(virt_texts, severity_virt_texts)
@@ -73,8 +79,14 @@ function M.get_header_from_chunk(
 		end
 	end
 
+	local icon = opts.signs.diag
+
+	if opts.options.use_icons_from_diagnostic then
+		icon = highlights.get_diagnostic_icon(severities[#severities])
+	end
+
 	vim.list_extend(virt_texts, {
-		{ opts.signs.diag, diag_hi },
+		{ icon, diag_hi },
 	})
 
 	if not need_to_be_under and index_diag > 1 then
