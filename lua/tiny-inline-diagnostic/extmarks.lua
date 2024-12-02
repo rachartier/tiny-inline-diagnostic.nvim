@@ -33,6 +33,28 @@ function M.get_extmarks_on_line(bufnr, linenr, col)
 	return extmarks
 end
 
+local function get_uuid()
+	uuid_extmark = uuid_extmark - 1
+
+	if uuid_extmark < 0 then
+		uuid_extmark = 999999999999
+	end
+
+	return uuid_extmark
+end
+
+local function set_extmark(buf, ns, line_hl_group, line, virt_text, win_col, priority, pos)
+	vim.api.nvim_buf_set_extmark(buf, ns, line, 0, {
+		id = get_uuid(),
+		line_hl_group = line_hl_group,
+		virt_text_pos = pos or "eol",
+		virt_text = virt_text,
+		virt_text_win_col = win_col,
+		priority = priority,
+		strict = false,
+	})
+end
+
 function M.handle_other_extmarks(opts, buf, curline, col)
 	local e = M.get_extmarks_on_line(buf, curline, col)
 	local offset = 0
@@ -56,17 +78,6 @@ function M.handle_other_extmarks(opts, buf, curline, col)
 
 	return offset
 end
-
-local function get_uuid()
-	uuid_extmark = uuid_extmark - 1
-
-	if uuid_extmark < 0 then
-		uuid_extmark = 999999999999
-	end
-
-	return uuid_extmark
-end
-
 local function get_relative_position()
 	local col = vim.fn.virtcol("$")
 	local win_row = vim.fn.winline() - 1
@@ -75,7 +86,7 @@ local function get_relative_position()
 	return { row = win_row, col = col - leftcol }
 end
 
-function M.create_extmarks(opts, event, curline, virt_lines, offset, need_to_be_under, virt_prorioty)
+function M.create_extmarks(opts, event, curline, virt_lines, offset, need_to_be_under, virt_priority)
 	local diag_overflow_last_line = false
 	local buf_lines_count = vim.api.nvim_buf_line_count(event.buf)
 
@@ -115,7 +126,7 @@ function M.create_extmarks(opts, event, curline, virt_lines, offset, need_to_be_
 			virt_text_pos = "eol",
 			virt_text = virt_lines[1],
 			virt_lines = v,
-			priority = virt_prorioty,
+			priority = virt_priority,
 			strict = false,
 		})
 		return
@@ -131,7 +142,7 @@ function M.create_extmarks(opts, event, curline, virt_lines, offset, need_to_be_
 			virt_text_pos = "overlay",
 			virt_text_win_col = 0,
 			virt_text = virt_lines[2],
-			priority = virt_prorioty,
+			priority = virt_priority,
 			strict = false,
 		})
 		table.remove(virt_lines, 2)
@@ -143,45 +154,63 @@ function M.create_extmarks(opts, event, curline, virt_lines, offset, need_to_be_
 	end
 
 	if diag_overflow_last_line then
-		local other_virt_lines = {}
-		for i, line in ipairs(virt_lines) do
-			if i > 1 then
-				table.insert(line, 1, { string.rep(" ", win_col + offset), "None" })
-				table.insert(other_virt_lines, line)
-			end
+		local line_count = vim.api.nvim_buf_line_count(event.buf)
+		local virt_lines_count = #virt_lines
+		local existing_line_count = line_count - curline
+		local to_add = (curline + virt_lines_count - 1) - line_count
+
+		set_extmark(event.buf, diagnostic_ns, nil, curline, virt_lines[1], win_col, virt_priority)
+
+		for i = 2, existing_line_count do
+			set_extmark(
+				event.buf,
+				diagnostic_ns,
+				nil,
+				curline + i - 1,
+				virt_lines[i],
+				win_col + offset,
+				virt_priority,
+				"overlay"
+			)
 		end
 
-		vim.api.nvim_buf_set_extmark(event.buf, diagnostic_ns, curline, 0, {
+		local to_add_lines = {}
+		for i = #virt_lines - to_add, virt_lines_count do
+			local line = virt_lines[i]
+			table.insert(line, 1, { string.rep(" ", win_col + offset), "None" })
+			table.insert(to_add_lines, line)
+		end
+
+		vim.api.nvim_buf_set_extmark(event.buf, diagnostic_ns, line_count - 1, 0, {
 			id = get_uuid(),
-			line_hl_group = "TinyInlineDiagnosticVirtualTextBg",
-			virt_text_pos = "overlay",
-			virt_text = virt_lines[1],
-			virt_lines = other_virt_lines,
-			virt_text_win_col = win_col + offset,
-			priority = virt_prorioty,
+			virt_lines_above = false,
+			virt_lines = to_add_lines,
+			priority = virt_priority,
 			strict = false,
 		})
 	else
-		vim.api.nvim_buf_set_extmark(event.buf, diagnostic_ns, curline, 0, {
-			id = get_uuid(),
-			line_hl_group = "TinyInlineDiagnosticVirtualTextBg",
-			virt_text_pos = "eol",
-			virt_text = virt_lines[1],
-			virt_text_win_col = win_col,
-			priority = virt_prorioty,
-			strict = false,
-		})
+		set_extmark(
+			event.buf,
+			diagnostic_ns,
+			"TinyInlineDiagnosticVirtualTextBg",
+			curline,
+			virt_lines[1],
+			win_col,
+			virt_priority
+		)
 
 		for i, line in ipairs(virt_lines) do
 			if i > 1 then
-				vim.api.nvim_buf_set_extmark(event.buf, diagnostic_ns, curline + i - 1, 0, {
-					id = get_uuid(),
-					virt_text_pos = "overlay",
-					virt_text = line,
-					virt_text_win_col = win_col + offset,
-					priority = virt_prorioty,
-					strict = false,
-				})
+				set_extmark(
+					event.buf,
+					diagnostic_ns,
+					nil,
+					curline + i - 1,
+					line,
+					win_col + offset,
+					virt_priority,
+					"overlay"
+				)
 			end
 		end
 	end
