@@ -21,10 +21,6 @@ A Neovim plugin that display prettier diagnostic messages. Display one line diag
 ![image](https://github.com/user-attachments/assets/45180d09-8653-4403-a79b-5bee522560e3)
 
 
-### Some presets:
-![image](https://github.com/user-attachments/assets/b728cbd6-b474-46e0-bc6b-b7213a0e1c6f)
-
-
 ## 🛠️ Setup
 
 - You need to set `vim.diagnostic.config({ virtual_text = false })`, to not have all diagnostics in the buffer displayed.
@@ -148,6 +144,31 @@ require("tiny-inline-diagnostic").setup({
     -- ...
 })
 ```
+## Presets
+### modern
+![image](https://github.com/user-attachments/assets/38460aab-bb4d-4766-9cc6-4315315964c0)
+
+### classic
+![image](https://github.com/user-attachments/assets/add17b8e-a0b3-4ffa-883f-ed3f7f7ac162)
+
+### minimal
+![image](https://github.com/user-attachments/assets/931c75a8-27a7-4691-9ee1-6c9cd145c78d)
+
+### powerline
+![image](https://github.com/user-attachments/assets/717d92b0-db8e-4287-9dcf-bc214ecd1f4b)
+
+### simple
+![image](https://github.com/user-attachments/assets/897e3204-7382-48c5-afc4-77259228d263)
+
+### nonerdfont
+![image](https://github.com/user-attachments/assets/b901f3d7-fab8-44f5-b761-4255aa38acd9)
+
+### ghost
+![image](https://github.com/user-attachments/assets/41f652de-5744-4c1f-a112-d44cda8f6a5a)
+
+### amongus
+![image](https://github.com/user-attachments/assets/780dc83e-43c4-4399-84b1-1a08d48e1e86)
+
 
 ## 💡 Highlights
 
