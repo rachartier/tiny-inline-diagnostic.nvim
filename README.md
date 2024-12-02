@@ -52,7 +52,7 @@ With Lazy.nvim:
 ```lua
 -- Default configuration
 require("tiny-inline-diagnostic").setup({
-    	preset = "modern", -- Can be: "modern", "classic", "minimal", "ghost", "simple", "nonerdfont"
+	preset = "modern", -- Can be: "modern", "classic", "minimal", "ghost", "simple", "nonerdfont"
 	hi = {
 		error = "DiagnosticError",
 		warn = "DiagnosticWarn",
