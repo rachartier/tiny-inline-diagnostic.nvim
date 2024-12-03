@@ -259,7 +259,11 @@ function M.get_chunks(opts, diags_on_line, diag_index, diag_line, cursor_line, b
 			if need_to_be_under then
 				offset = 0
 			else
-				local win_col = vim.fn.virtcol("$")
+				local ok, win_col = pcall(vim.fn.virtcol, "$")
+				if not ok then
+					win_col = 0
+				end
+
 				offset = win_col
 			end
 
