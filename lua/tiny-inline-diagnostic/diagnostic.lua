@@ -152,7 +152,6 @@ end
 
 ---@param buf number
 local function detach_buffer(buf)
-	print("Detaching buffer", buf)
 	timers.close(buf)
 	attached_buffers[buf] = nil
 end
