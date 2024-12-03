@@ -226,6 +226,9 @@ local function setup_buffer_autocmds(autocmd_ns, opts, event, throttled_apply)
 		group = autocmd_ns,
 		pattern = USER_EVENT,
 		callback = function()
+			if not vim.api.nvim_buf_is_valid(event.buf) then
+				detach_buffer(event.buf)
+			end
 			apply_virtual_texts(opts, event)
 		end,
 	})
@@ -235,6 +238,9 @@ local function setup_buffer_autocmds(autocmd_ns, opts, event, throttled_apply)
 		group = autocmd_ns,
 		buffer = event.buf,
 		callback = function()
+			if not vim.api.nvim_buf_is_valid(event.buf) then
+				detach_buffer(event.buf)
+			end
 			detach_buffer(event.buf)
 		end,
 	})
@@ -244,6 +250,9 @@ local function setup_buffer_autocmds(autocmd_ns, opts, event, throttled_apply)
 		group = autocmd_ns,
 		pattern = USER_EVENT_THROTTLED,
 		callback = function()
+			if not vim.api.nvim_buf_is_valid(event.buf) then
+				detach_buffer(event.buf)
+			end
 			throttled_apply()
 		end,
 	})
