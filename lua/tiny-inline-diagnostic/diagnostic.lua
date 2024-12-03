@@ -42,7 +42,7 @@ end
 ---@param opts DiagnosticConfig
 ---@param buf number
 ---@param diagnostics table
----@return table, number
+---@return table
 function M.filter_diags_under_cursor(opts, buf, diagnostics)
 	if
 		not vim.api.nvim_buf_is_valid(buf)
@@ -50,13 +50,13 @@ function M.filter_diags_under_cursor(opts, buf, diagnostics)
 		or not diagnostics
 		or #diagnostics == 0
 	then
-		return {}, 0
+		return {}
 	end
 
 	local cursor_pos = vim.api.nvim_win_get_cursor(0)
 	local curline, curcol = cursor_pos[1] - 1, cursor_pos[2]
 
-	return filter_diags_at_position(opts, diagnostics, curline, curcol), curcol
+	return filter_diags_at_position(opts, diagnostics, curline, curcol)
 end
 
 ---@param opts DiagnosticConfig
@@ -123,26 +123,30 @@ local function apply_virtual_texts(opts, event)
 	extmarks.clear(event.buf)
 
 	for lnum, diags in pairs(visible_diags) do
-		if not diags then
-			goto continue
+		if diags then
+			local diagnostic_pos = { lnum, 0 }
+			local virt_priority = opts.options.virt_texts.priority
+			local virt_lines, offset, need_to_be_under
+
+			if opts.options.multiple_diag_under_cursor and lnum == cursor_line then
+				virt_lines, offset, need_to_be_under =
+					virtual_text_forge.from_diagnostics(opts, diags, diagnostic_pos, event.buf)
+			else
+				local chunks = chunk_utils.get_chunks(opts, diags, 1, diagnostic_pos[1], cursor_line, event.buf)
+				local max_width = chunk_utils.get_max_width_from_chunks(chunks.chunks) - 1
+				virt_lines, offset, need_to_be_under = virtual_text_forge.from_diagnostic(opts, chunks, 1, max_width, 1)
+			end
+
+			extmarks.create_extmarks(
+				opts,
+				event,
+				diagnostic_pos[1],
+				virt_lines,
+				offset,
+				need_to_be_under,
+				virt_priority
+			)
 		end
-
-		local diagnostic_pos = { lnum, 0 }
-		local virt_priority = opts.options.virt_texts.priority
-		local virt_lines, offset, need_to_be_under
-
-		if opts.options.multiple_diag_under_cursor and lnum == cursor_line then
-			virt_lines, offset, need_to_be_under =
-				virtual_text_forge.from_diagnostics(opts, diags, diagnostic_pos, event.buf)
-		else
-			local chunks = chunk_utils.get_chunks(opts, diags, 1, diagnostic_pos[1], cursor_line, event.buf)
-			local max_width = chunk_utils.get_max_width_from_chunks(chunks.chunks) - 1
-			virt_lines, offset, need_to_be_under = virtual_text_forge.from_diagnostic(opts, chunks, 1, max_width, 1)
-		end
-
-		extmarks.create_extmarks(opts, event, diagnostic_pos[1], virt_lines, offset, need_to_be_under, virt_priority)
-
-		::continue::
 	end
 end
 
@@ -202,7 +206,6 @@ end
 
 -- Autocmd setup
 local function setup_buffer_autocmds(autocmd_ns, opts, event, throttled_apply)
-	-- Buffer validation check
 	if not vim.api.nvim_buf_is_valid(event.buf) or attached_buffers[event.buf] then
 		return
 	end
@@ -265,11 +268,6 @@ end
 ---@return boolean success
 ---@return string|nil error
 function M.set_diagnostic_autocmds(opts)
-	-- Validate basics
-	if not opts.options.throttle then
-		return false, "Invalid options configuration"
-	end
-
 	local autocmd_ns = vim.api.nvim_create_augroup(AUGROUP_NAME, { clear = true })
 	timers.set_timers()
 

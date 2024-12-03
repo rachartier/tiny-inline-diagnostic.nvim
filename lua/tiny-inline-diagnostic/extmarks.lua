@@ -56,7 +56,6 @@ local function set_extmark(buf, line, virt_text, win_col, priority, pos)
 	})
 end
 
--- Helper functions for create_extmarks
 local function should_skip_line(curline)
 	local skip = state.skip_lines
 	return skip.count > 0 and curline > skip.start_line and curline < skip.start_line + skip.count
@@ -201,7 +200,6 @@ function M.create_extmarks(opts, event, curline, virt_lines, offset, need_to_be_
 		return
 	end
 
-	-- Update skip lines state
 	state.skip_lines.count = #virt_lines
 	state.skip_lines.start_line = curline
 

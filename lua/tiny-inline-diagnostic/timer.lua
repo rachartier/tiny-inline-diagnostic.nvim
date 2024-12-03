@@ -49,7 +49,6 @@ function M.close_timers()
 
 	for buf, timer in pairs(M.timers_by_buffer) do
 		if is_valid_timer(timer) then
-			-- pcall to handle potential timer closure errors
 			local timer_success, err = pcall(function()
 				timer:close()
 			end)
@@ -78,7 +77,6 @@ function M.close(buf)
 		return false, create_error(string.format(ERROR_MESSAGES.TIMER_NOT_FOUND, buf), buf)
 	end
 
-	-- pcall to handle potential timer closure errors
 	local success, err = pcall(function()
 		timer:close()
 	end)
