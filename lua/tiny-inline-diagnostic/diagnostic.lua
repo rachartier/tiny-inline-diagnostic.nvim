@@ -105,6 +105,11 @@ end
 ---@param opts DiagnosticConfig
 ---@param event table
 local function apply_virtual_texts(opts, event)
+	local current_win = vim.api.nvim_get_current_win()
+	if not vim.api.nvim_win_is_valid(current_win) then
+		return
+	end
+
 	if not (M.enabled and vim.diagnostic.is_enabled() and vim.api.nvim_buf_is_valid(event.buf)) then
 		extmarks.clear(event.buf)
 		return
@@ -238,9 +243,6 @@ local function setup_buffer_autocmds(autocmd_ns, opts, event, throttled_apply)
 		group = autocmd_ns,
 		buffer = event.buf,
 		callback = function()
-			if not vim.api.nvim_buf_is_valid(event.buf) then
-				detach_buffer(event.buf)
-			end
 			detach_buffer(event.buf)
 		end,
 	})

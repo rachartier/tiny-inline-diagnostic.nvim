@@ -28,9 +28,17 @@ end
 
 ---@return {row: number, col: number}
 local function get_window_position()
+	local ok_winline, result_winline = pcall(vim.fn.winline)
+	local ok_virtcol, result_virtcol = pcall(vim.fn.virtcol, "$")
+	local ok_winsaveview, result_winsaveview = pcall(vim.fn.winsaveview)
+
+	if not ok_winline or not ok_virtcol or not ok_winsaveview then
+		return { row = 0, col = 0 }
+	end
+
 	return {
-		row = vim.fn.winline() - 1,
-		col = vim.fn.virtcol("$") - vim.fn.winsaveview().leftcol,
+		row = result_winline - 1,
+		col = result_virtcol - result_winsaveview.leftcol,
 	}
 end
 
