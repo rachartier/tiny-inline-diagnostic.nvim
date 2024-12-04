@@ -203,6 +203,10 @@ function M.create_extmarks(opts, event, curline, virt_lines, offset, need_to_be_
 	local win_col = need_to_be_under and 0 or get_window_position().col
 	local cursor_line = vim.api.nvim_win_get_cursor(0)[1] - 1
 
+	if buf_lines_count == 0 then
+		return
+	end
+
 	-- Handle multiline mode
 	if opts.options.multilines and curline ~= cursor_line then
 		if should_skip_line(curline) then
