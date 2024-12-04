@@ -195,6 +195,10 @@ function M.create_extmarks(opts, event, curline, virt_lines, offset, need_to_be_
 		return
 	end
 
+	if virt_lines == nil or vim.tbl_isempty(virt_lines) then
+		return
+	end
+
 	local buf_lines_count = vim.api.nvim_buf_line_count(event.buf)
 	local win_col = need_to_be_under and 0 or get_window_position().col
 	local cursor_line = vim.api.nvim_win_get_cursor(0)[1] - 1
