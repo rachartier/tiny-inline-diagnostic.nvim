@@ -240,7 +240,7 @@ function M.get_chunks(opts, diags_on_line, diag_index, diag_line, cursor_line, b
 	local other_extmarks_offset = extmarks.handle_other_extmarks(opts, buf, diag_line, line_length)
 
 	if (opts.options.overflow.mode ~= "none" and not opts.options.multilines) or cursor_line == diag_line then
-		if line_length > win_width - opts.options.softwrap then
+		if (line_length + other_extmarks_offset) > win_width - opts.options.softwrap then
 			need_to_be_under = true
 		end
 	end
@@ -267,7 +267,7 @@ function M.get_chunks(opts, diags_on_line, diag_index, diag_line, cursor_line, b
 				offset = win_col
 			end
 
-			chunks = M.get_message_chunks_for_overflow(diag_message, offset + other_extmarks_offset, win_width, opts)
+			chunks = M.get_message_chunks_for_overflow(diag_message, offset, win_width, opts)
 		elseif opts.options.overflow.mode == "none" then
 			chunks = utils.wrap_text(diag_message, 0)
 		elseif opts.options.overflow.mode == "oneline" then

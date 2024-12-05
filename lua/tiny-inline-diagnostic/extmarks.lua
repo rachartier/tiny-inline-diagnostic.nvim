@@ -146,6 +146,30 @@ function M.clear(buf)
 	pcall(vim.api.nvim_buf_clear_namespace, buf, DIAGNOSTIC_NAMESPACE, 0, -1)
 end
 
+--- Count characters of inlay hints on a line
+--- @param buf number
+--- @param linenr number
+local function count_inlay_hints_characters(buf, linenr)
+	local inlay_hints = vim.lsp.inlay_hint.get({
+		bufnr = buf,
+		range = {
+			start = { line = linenr, character = 0 },
+			["end"] = { line = linenr, character = -1 },
+		},
+	})
+	local count = 0
+	for _, hint in ipairs(inlay_hints) do
+		if type(hint.inlay_hint.label) == "string" then
+			count = count + #hint.inlay_hint.label
+		else
+			for _, label in ipairs(hint.inlay_hint.label) do
+				count = count + #label.value
+			end
+		end
+	end
+	return count
+end
+
 ---@param bufnr number
 ---@param linenr number
 ---@param col number
@@ -163,12 +187,12 @@ function M.get_extmarks_on_line(bufnr, linenr, col)
 	return vim.api.nvim_buf_get_extmarks(bufnr, -1, { linenr, col }, { linenr, -1 }, opts)
 end
 
----@param buf number
+---@param bufnr number
 ---@param curline number
 ---@param col number
 ---@return number
-function M.handle_other_extmarks(_, buf, curline, col)
-	local extmarks = M.get_extmarks_on_line(buf, curline, col)
+function M.handle_other_extmarks(_, bufnr, curline, col)
+	local extmarks = M.get_extmarks_on_line(bufnr, curline, col)
 	local offset = 0
 
 	for _, extmark in ipairs(extmarks) do
@@ -178,6 +202,11 @@ function M.handle_other_extmarks(_, buf, curline, col)
 				offset = offset + #detail.virt_text[1][1]
 			end
 		end
+	end
+
+	if vim.lsp.inlay_hint.is_enabled({ bufnr = bufnr }) then
+		local inlay_hints_count = count_inlay_hints_characters(bufnr, curline)
+		offset = offset + inlay_hints_count
 	end
 
 	return offset
