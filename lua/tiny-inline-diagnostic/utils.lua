@@ -100,12 +100,12 @@ end
 
 ---Replaces newlines with spaces
 ---@param s string The string to process
----@return string processed The processed string
+---@return table processed The processed string as table
 function M.remove_newline(s)
 	if type(s) ~= "string" then
 		return ""
 	end
-	return s:gsub("[\n\r]+", " ")
+	return { s:gsub("[\n\r]+", " ") }
 end
 
 ---Wraps text to a specified length
