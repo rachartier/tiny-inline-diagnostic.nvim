@@ -1,126 +1,83 @@
 local M = {}
 
+local default_signs = {
+	left = "",
+	right = "",
+	diag = "●",
+	arrow = "    ",
+	up_arrow = "    ",
+	vertical = " │",
+	vertical_end = " └",
+}
+
+local function create_preset(overrides)
+	local preset = {
+		signs = vim.tbl_extend("force", default_signs, overrides.signs or {}),
+		blend = {
+			factor = overrides.blend and overrides.blend.factor or 0.22,
+		},
+	}
+	return preset
+end
+
 function M.build(name)
-	if name == "classic" then
-		return {
+	local presets = {
+		classic = create_preset({
 			signs = {
-				left = " ",
-				right = "",
 				diag = "●",
-				arrow = "",
-				up_arrow = "",
 				vertical = " │",
 				vertical_end = " └",
 			},
-			blend = {
-				factor = 0,
-			},
-		}
-	elseif name == "simple" then
-		return {
+			blend = { factor = 0 },
+		}),
+		simple = create_preset({
 			signs = {
-				left = " ",
-				right = "",
 				diag = "",
 				arrow = "    ",
 				up_arrow = "    ",
-				vertical = " │",
-				vertical_end = " └",
 			},
-			blend = {
-				factor = 0.22,
-			},
-		}
-	elseif name == "minimal" then
-		return {
+		}),
+		minimal = create_preset({
 			signs = {
-				left = " ",
-				right = "",
 				diag = "",
 				arrow = "",
 				up_arrow = "",
 				vertical = "  │",
 				vertical_end = "  └",
 			},
-			blend = {
-				factor = 0,
-			},
-		}
-	elseif name == "nonerdfont" then
-		return {
+			blend = { factor = 0 },
+		}),
+		nonerdfont = create_preset({
 			signs = {
 				left = "░",
 				right = "░",
 				diag = "●",
 				arrow = "   ",
-				up_arrow = "",
-				vertical = " │",
-				vertical_end = " └",
 			},
-			blend = {
-				factor = 0.22,
-			},
-		}
-	elseif name == "ghost" then
-		return {
+		}),
+		ghost = create_preset({
 			signs = {
 				left = "",
 				right = "",
 				diag = "󰊠",
-				arrow = "    ",
-				up_arrow = "    ",
-				vertical = " │",
-				vertical_end = " └",
 			},
-			blend = {
-				factor = 0.22,
-			},
-		}
-	elseif name == "amongus" then
-		return {
+		}),
+		amongus = create_preset({
 			signs = {
 				left = "",
 				right = "",
 				diag = "ඞ",
-				arrow = "    ",
-				up_arrow = "    ",
-				vertical = " │",
-				vertical_end = " └",
 			},
-			blend = {
-				factor = 0.22,
-			},
-		}
-	elseif name == "powerline" then
-		return {
+		}),
+		powerline = create_preset({
 			signs = {
 				left = "",
 				right = " ",
-				diag = "●",
-				arrow = "   ",
-				up_arrow = "    ",
-				vertical = " │",
-				vertical_end = " └",
 			},
-			blend = {
-				factor = 0.22,
-			},
-		}
-	end
-	return {
-		signs = {
-			left = "",
-			right = "",
-			diag = "●",
-			arrow = "    ",
-			up_arrow = "    ",
-			vertical = " │",
-			vertical_end = " └",
-		},
-		blend = {
-			factor = 0.22,
-		},
+		}),
 	}
+
+	return presets[name] or create_preset({})
 end
 
 return M
