@@ -230,11 +230,25 @@ function M.get_diagnostic_mixed_highlights_from_severity(severity_a, severity_b)
 end
 
 ---Get diagnostic icon
----@param severity number
+---@param severity number|string
 ---@return string
 function M.get_diagnostic_icon(severity)
-	local icon = vim.diagnostic.config().signs.text[severity]
-	return icon
+	local name = vim.diagnostic.severity[severity]:lower()
+	local sign = vim.fn.sign_getdefined("DiagnosticSign" .. name)[1]
+
+	if vim.fn.has("nvim-0.10.0") == 1 then
+		local config = vim.diagnostic.config() or {}
+		if config.signs == nil or type(config.signs) == "boolean" then
+			return sign and sign.text or name:sub(1, 1)
+		end
+		local signs = config.signs or {}
+		if type(signs) == "function" then
+			signs = signs(0, 0)
+		end
+		return type(signs) == "table" and signs.text and signs.text[severity] or sign and sign.text or name:sub(1, 1)
+	end
+
+	return sign and sign.text or name or SEVERITY_NAMES[severity]:sub(1, 1)
 end
 
 return M
