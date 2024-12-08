@@ -150,14 +150,16 @@ end
 --- @param buf number
 --- @param linenr number
 local function count_inlay_hints_characters(buf, linenr)
+	local line_char_count = vim.fn.strchars(vim.api.nvim_buf_get_lines(buf, linenr, linenr + 1, false)[1])
 	local inlay_hints = vim.lsp.inlay_hint.get({
 		bufnr = buf,
 		range = {
 			start = { line = linenr, character = 0 },
-			["end"] = { line = linenr, character = -1 },
+			["end"] = { line = linenr, character = line_char_count },
 		},
 	})
 	local count = 0
+
 	for _, hint in ipairs(inlay_hints) do
 		if type(hint.inlay_hint.label) == "string" then
 			count = count + #hint.inlay_hint.label
