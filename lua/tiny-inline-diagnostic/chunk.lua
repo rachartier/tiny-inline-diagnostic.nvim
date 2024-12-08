@@ -82,13 +82,16 @@ function M.get_header_from_chunk(
 	local icon = opts.signs.diag
 
 	if opts.options.use_icons_from_diagnostic then
-		icon = highlights.get_diagnostic_icon(severities[#severities])
+		if total_chunks == 1 then
+			icon = highlights.get_diagnostic_icon(severities[#severities])
+		else
+			icon = highlights.get_diagnostic_icon(severities[index_diag])
+		end
 	end
 
 	vim.list_extend(virt_texts, {
 		{ icon, diag_hi },
 	})
-
 	if not need_to_be_under and index_diag > 1 then
 		table.insert(virt_texts, 1, { string.rep(" ", vim.fn.strcharlen(opts.signs.arrow)), diag_inv_hi })
 	end
