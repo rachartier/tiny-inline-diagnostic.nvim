@@ -30,19 +30,18 @@ end
 ---@param opts DiagnosticConfig
 ---@param chunk_info ChunkInfo
 ---@param message string
----@param highlights table
+---@param hl table
 ---@param index_diag number
 ---@param total_chunks number
 ---@return table
-local function build_first_chunk(opts, chunk_info, message, highlights, index_diag, total_chunks)
+local function build_first_chunk(opts, chunk_info, message, hl, index_diag, total_chunks)
 	local chunk_header = chunk_utils.get_header_from_chunk(
 		message,
 		index_diag,
-		#chunk_info.chunks,
-		chunk_info.need_to_be_under,
+		chunk_info,
 		opts,
-		highlights.diag_hi,
-		highlights.diag_inv_hi,
+		hl.diag_hi,
+		hl.diag_inv_hi,
 		total_chunks,
 		chunk_info.severities
 	)

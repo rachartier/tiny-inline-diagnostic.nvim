@@ -10,7 +10,6 @@ local hi = require("tiny-inline-diagnostic.highlights")
 local diag = require("tiny-inline-diagnostic.diagnostic")
 local presets = require("tiny-inline-diagnostic.presets")
 
-
 local default_config = {
 	preset = "modern",
 	hi = {
@@ -24,6 +23,7 @@ local default_config = {
 	},
 	options = {
 		show_source = false,
+		add_messages = true,
 		use_icons_from_diagnostic = false,
 		throttle = 20,
 		softwrap = 30,
@@ -43,10 +43,10 @@ local default_config = {
 			priority = 2048,
 		},
 		severity = {
-            vim.diagnostic.severity.ERROR,
-            vim.diagnostic.severity.WARN,
-            vim.diagnostic.severity.INFO,
-            vim.diagnostic.severity.HINT,
+			vim.diagnostic.severity.ERROR,
+			vim.diagnostic.severity.WARN,
+			vim.diagnostic.severity.INFO,
+			vim.diagnostic.severity.HINT,
 		},
 		overwrite_events = nil,
 	},

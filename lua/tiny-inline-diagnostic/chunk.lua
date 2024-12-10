@@ -23,26 +23,17 @@ end
 --- Generate a header for a diagnostic message chunk.
 ---@param message string: The diagnostic message.
 ---@param index_diag number: The index of the diagnostic message.
----@param num_chunks number: The total number of chunks the message is split into.
----@param need_to_be_under boolean: A flag indicating whether the arrow needs to point upwards.
+---@param chunk_info ChunkInfo
 ---@param opts table: The options table, which includes signs for the diagnostic message.
 ---@param diag_hi string: The highlight group for the diagnostic message.
 ---@param diag_inv_hi string: The highlight group for the diagnostic signs.
 ---@param total_chunks number: The total number of chunks.
 ---@param severities table: The severities of the diagnostic messages.
 ---@return table: A table representing the virtual text array for the diagnostic message header.
-function M.get_header_from_chunk(
-	message,
-	index_diag,
-	num_chunks,
-	need_to_be_under,
-	opts,
-	diag_hi,
-	diag_inv_hi,
-	total_chunks,
-	severities
-)
+function M.get_header_from_chunk(message, index_diag, chunk_info, opts, diag_hi, diag_inv_hi, total_chunks, severities)
 	local virt_texts = {}
+	local num_chunks = #chunk_info.chunks
+	local need_to_be_under = chunk_info.need_to_be_under
 
 	if index_diag == 1 then
 		virt_texts = { { opts.signs.left, diag_inv_hi } }
@@ -64,6 +55,10 @@ function M.get_header_from_chunk(
 		table.insert(virt_texts, 1, { string.rep(" ", vim.fn.strcharlen(opts.signs.arrow)), diag_inv_hi })
 	end
 
+	local cursor_line = vim.api.nvim_win_get_cursor(0)[1] - 1
+	if not opts.options.add_messages and cursor_line ~= chunk_info.line then
+		message = ""
+	end
 	M.add_message_text(virt_texts, message, num_chunks, total_chunks, index_diag, opts, diag_hi, diag_inv_hi)
 
 	return virt_texts
@@ -129,7 +124,7 @@ function M.add_message_text(virt_texts, message, num_chunks, total_chunks, index
 
 	if num_chunks == 1 then
 		if total_chunks == 1 or index_diag == total_chunks then
-			vim.list_extend(virt_texts, { { " " .. message .. " ", diag_hi }, { opts.signs.right, diag_inv_hi } })
+			vim.list_extend(virt_texts, { { " " .. message, diag_hi }, { opts.signs.right, diag_inv_hi } })
 		else
 			vim.list_extend(virt_texts, {
 				{ " " .. message .. text_after_message, diag_hi },
