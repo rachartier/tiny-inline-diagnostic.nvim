@@ -124,6 +124,9 @@ function M.add_message_text(virt_texts, message, num_chunks, total_chunks, index
 
 	if num_chunks == 1 then
 		if total_chunks == 1 or index_diag == total_chunks then
+			if message ~= "" then
+				message = message .. " "
+			end
 			vim.list_extend(virt_texts, { { " " .. message, diag_hi }, { opts.signs.right, diag_inv_hi } })
 		else
 			vim.list_extend(virt_texts, {
