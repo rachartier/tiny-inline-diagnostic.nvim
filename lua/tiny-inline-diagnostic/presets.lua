@@ -32,9 +32,9 @@ function M.build(name)
 		}),
 		simple = create_preset({
 			signs = {
+				left = "",
+				right = "",
 				diag = "",
-				arrow = "    ",
-				up_arrow = "    ",
 			},
 		}),
 		minimal = create_preset({

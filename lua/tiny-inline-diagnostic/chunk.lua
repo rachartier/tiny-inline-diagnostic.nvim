@@ -38,7 +38,7 @@ function M.get_header_from_chunk(message, index_diag, chunk_info, opts, diag_hi,
 	if index_diag == 1 then
 		virt_texts = { { opts.signs.left, diag_inv_hi } }
 	else
-		local spaces = math.max(vim.fn.strdisplaywidth(opts.signs.left), 1)
+		local spaces = vim.fn.strdisplaywidth(opts.signs.left)
 		virt_texts = { { string.rep(" ", spaces), "None" } }
 	end
 
