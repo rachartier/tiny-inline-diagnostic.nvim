@@ -11,7 +11,19 @@ local USER_EVENT = "TinyDiagnosticEvent"
 local USER_EVENT_THROTTLED = "TinyDiagnosticEventThrottled"
 
 M.enabled = true
+M.user_toggle_state = true
+
 local attached_buffers = {}
+
+local function enable()
+	M.enabled = true
+	vim.api.nvim_exec_autocmds("User", { pattern = USER_EVENT })
+end
+
+local function disable()
+	M.enabled = false
+	vim.api.nvim_exec_autocmds("User", { pattern = USER_EVENT })
+end
 
 -- Diagnostic filtering functions
 ---@param opts DiagnosticConfig
@@ -110,7 +122,10 @@ local function apply_virtual_texts(opts, event)
 		return
 	end
 
-	if not (M.enabled and vim.diagnostic.is_enabled() and vim.api.nvim_buf_is_valid(event.buf)) then
+	if
+		not M.user_toggle_state
+		or not (M.enabled and vim.diagnostic.is_enabled() and vim.api.nvim_buf_is_valid(event.buf))
+	then
 		extmarks.clear(event.buf)
 		return
 	end
@@ -187,7 +202,7 @@ local function setup_mode_change_autocmds(autocmd_ns, event)
 		pattern = "*:[vV\x16is]*",
 		callback = function()
 			if vim.api.nvim_buf_is_valid(event.buf) then
-				M.disable()
+				disable()
 				extmarks.clear(event.buf)
 			else
 				detach_buffer(event.buf)
@@ -200,7 +215,7 @@ local function setup_mode_change_autocmds(autocmd_ns, event)
 		pattern = "[vV\x16is]*:*",
 		callback = function()
 			if vim.api.nvim_buf_is_valid(event.buf) then
-				M.enable()
+				enable()
 			else
 				detach_buffer(event.buf)
 			end
@@ -310,17 +325,17 @@ function M.set_diagnostic_autocmds(opts)
 end
 
 function M.enable()
-	M.enabled = true
+	M.user_toggle_state = true
 	vim.api.nvim_exec_autocmds("User", { pattern = USER_EVENT })
 end
 
 function M.disable()
-	M.enabled = false
+	M.user_toggle_state = false
 	vim.api.nvim_exec_autocmds("User", { pattern = USER_EVENT })
 end
 
 function M.toggle()
-	M.enabled = not M.enabled
+	M.user_toggle_state = not M.user_toggle_state
 	vim.api.nvim_exec_autocmds("User", { pattern = USER_EVENT })
 end
 
