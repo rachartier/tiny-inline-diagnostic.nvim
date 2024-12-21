@@ -199,23 +199,24 @@ end
 local function setup_mode_change_autocmds(autocmd_ns, event)
 	vim.api.nvim_create_autocmd("ModeChanged", {
 		group = autocmd_ns,
-		pattern = { "*:[vV\x16is]*" },
 		callback = function()
-			if vim.api.nvim_buf_is_valid(event.buf) then
-				disable()
-				extmarks.clear(event.buf)
-			else
-				detach_buffer(event.buf)
-			end
-		end,
-	})
+			local mode = vim.api.nvim_get_mode().mode
 
-	vim.api.nvim_create_autocmd("ModeChanged", {
-		group = autocmd_ns,
-		pattern = "[vV\x16i]*:*",
-		callback = function()
+			local disabled_mode = {
+				"i",
+				"v",
+				"V",
+				"",
+			}
+
 			if vim.api.nvim_buf_is_valid(event.buf) then
-				enable()
+				if vim.tbl_contains(disabled_mode, mode) then
+					disable()
+				else
+					enable()
+				end
+
+				extmarks.clear(event.buf)
 			else
 				detach_buffer(event.buf)
 			end
