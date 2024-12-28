@@ -105,7 +105,8 @@ function M.remove_newline(s)
 	if type(s) ~= "string" then
 		return ""
 	end
-	return { s:gsub("[\n\r]+", " ") }
+	local processed, _ = s:gsub("\n", " ")
+	return { processed }
 end
 
 ---Wraps text to a specified length
