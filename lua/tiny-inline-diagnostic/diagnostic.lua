@@ -88,8 +88,12 @@ end
 local function filter_diagnostics(opts, event, diagnostics)
 	local filtered = filter_by_severity(opts, diagnostics)
 
-	if not opts.options.multilines then
+	if not opts.options.multilines.enabled then
 		return M.filter_diags_under_cursor(opts, event.buf, filtered)
+	end
+
+	if opts.options.multilines.always_show then
+		return filtered
 	end
 
 	local under_cursor = M.filter_diags_under_cursor(opts, event.buf, filtered)

@@ -28,7 +28,10 @@ local default_config = {
 		throttle = 20,
 		softwrap = 30,
 		multiple_diag_under_cursor = true,
-		multilines = false,
+		multilines = {
+			enabled = false,
+			always_show = false,
+		},
 		show_all_diags_on_cursorline = false,
 		enable_on_insert = false,
 		format = nil,
@@ -73,6 +76,13 @@ local function normalize_config(config)
 	if config.preset then
 		local preset = presets.build(config.preset:lower())
 		config = vim.tbl_deep_extend("keep", config, preset)
+	end
+
+	if type(config.options.multilines) == "boolean" then
+		config.options.multilines = vim.tbl_deep_extend("force", default_config.options.multilines, {
+			enabled = config.options.multilines,
+			always_show = default_config.options.multilines.always_show,
+		})
 	end
 
 	return config

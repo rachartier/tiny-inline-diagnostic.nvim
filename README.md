@@ -65,8 +65,8 @@ require("tiny-inline-diagnostic").setup({
 		-- Use your defined signs in the diagnostic config table.
 		use_icons_from_diagnostic = false,
 
-	    	-- Add messages to the diagnostic when multilines is enabled
-	    	add_messages = true,
+        -- Add messages to the diagnostic when multilines is enabled
+        add_messages = true,
 
 		-- Throttle the update of the diagnostic when moving cursor, in milliseconds.
 		-- You can increase it if you have performance issues.
@@ -80,7 +80,24 @@ require("tiny-inline-diagnostic").setup({
 		multiple_diag_under_cursor = false,
 
 		-- Enable diagnostic message on all lines.
-		multilines = false,
+        -- Can either be a boolean or a table with the following options:
+        --  multilines = {
+        -- 		-- Enable the multilines feature
+        -- 		enable = false,
+        --
+        -- 		-- Always show diagnostic messages on all lines
+        --  	always_show = false,
+        --  }
+        -- If it is a boolean set as true, it will enable the feature with the default options:
+        --  multilines = {
+        -- 		enable = true,
+        -- 		always_show = false,
+        -- 	}
+        }
+		multilines = {
+            enabled = false,
+            always_show = false,
+        },
 
 		-- Show all diagnostics on the cursor line.
 		show_all_diags_on_cursorline = false,
