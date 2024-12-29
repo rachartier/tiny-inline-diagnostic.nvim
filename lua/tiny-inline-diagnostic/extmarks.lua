@@ -1,10 +1,11 @@
 local M = {}
 
-local INITIAL_UUID = 999999999999
+local INITIAL_UID = 1
+local MAX_UID = 2 ^ 32 - 1
 local DIAGNOSTIC_NAMESPACE = vim.api.nvim_create_namespace("TinyInlineDiagnostic")
 
 local state = {
-	uuid_counter = INITIAL_UUID,
+	uid_counter = INITIAL_UID,
 	skip_lines = {
 		count = 0,
 		start_line = 0,
@@ -18,12 +19,12 @@ local function is_valid_buffer(buf)
 end
 
 ---@return number
-local function generate_uuid()
-	state.uuid_counter = state.uuid_counter - 1
-	if state.uuid_counter < 0 then
-		state.uuid_counter = INITIAL_UUID
+local function generate_uid()
+	state.uid_counter = state.uid_counter + 1
+	if state.uid_counter > MAX_UID then
+		state.uid_counter = INITIAL_UID
 	end
-	return state.uuid_counter
+	return state.uid_counter
 end
 
 ---@return {row: number, col: number}
@@ -54,7 +55,7 @@ local function set_extmark(buf, line, virt_text, win_col, priority, pos)
 	end
 
 	vim.api.nvim_buf_set_extmark(buf, DIAGNOSTIC_NAMESPACE, line, 0, {
-		id = generate_uuid(),
+		id = generate_uid(),
 		line_hl_group = line == 0 and "TinyInlineDiagnosticVirtualTextBg" or nil,
 		virt_text_pos = pos or "eol",
 		virt_text = virt_text,
@@ -76,7 +77,7 @@ local function create_multiline_extmark(buf, curline, virt_lines, priority)
 	end
 
 	vim.api.nvim_buf_set_extmark(buf, DIAGNOSTIC_NAMESPACE, curline, 0, {
-		id = curline + 1000,
+		id = generate_uid(),
 		virt_text_pos = "eol",
 		virt_text = virt_lines[1],
 		virt_lines = remaining_lines,
@@ -91,7 +92,7 @@ local function handle_under_cursor_case(buf, curline, virt_lines, buf_lines_coun
 	end
 
 	vim.api.nvim_buf_set_extmark(buf, DIAGNOSTIC_NAMESPACE, curline + 1, 0, {
-		id = generate_uuid(),
+		id = generate_uid(),
 		virt_text_pos = "overlay",
 		virt_text_win_col = 0,
 		virt_text = virt_lines[2],
@@ -121,7 +122,7 @@ local function handle_overflow_case(buf, curline, virt_lines, win_col, offset, p
 
 	if #overflow_lines > 0 then
 		vim.api.nvim_buf_set_extmark(buf, DIAGNOSTIC_NAMESPACE, buf_lines_count - 1, 0, {
-			id = generate_uuid(),
+			id = generate_uid(),
 			virt_lines_above = false,
 			virt_lines = overflow_lines,
 			priority = priority,
@@ -216,12 +217,12 @@ end
 
 ---@param opts DiagnosticConfig
 ---@param event table
----@param curline number
+---@param diag_line number
 ---@param virt_lines table
 ---@param offset number
 ---@param need_to_be_under boolean
 ---@param virt_priority number
-function M.create_extmarks(opts, event, curline, virt_lines, offset, need_to_be_under, virt_priority)
+function M.create_extmarks(opts, event, diag_line, virt_lines, offset, need_to_be_under, virt_priority)
 	if not is_valid_buffer(event.buf) then
 		return
 	end
@@ -239,32 +240,35 @@ function M.create_extmarks(opts, event, curline, virt_lines, offset, need_to_be_
 	end
 
 	-- Handle multiline mode
-	if opts.options.multilines and curline ~= cursor_line then
-		if should_skip_line(curline) then
+	if opts.options.multilines and diag_line ~= cursor_line then
+		if should_skip_line(diag_line) then
 			return
 		end
-		create_multiline_extmark(event.buf, curline, virt_lines, virt_priority)
+		create_multiline_extmark(event.buf, diag_line, virt_lines, virt_priority)
+
+		state.skip_lines.count = 0
+		state.skip_lines.start_line = diag_line
 		return
 	end
 
 	state.skip_lines.count = #virt_lines
-	state.skip_lines.start_line = curline
+	state.skip_lines.start_line = diag_line
 
 	-- Handle under-cursor case
 	if need_to_be_under then
-		handle_under_cursor_case(event.buf, curline, virt_lines, buf_lines_count, virt_priority)
+		handle_under_cursor_case(event.buf, diag_line, virt_lines, buf_lines_count, virt_priority)
 		table.remove(virt_lines, 2)
 		win_col = 0
-		if curline < buf_lines_count - 1 then
-			curline = curline + 1
+		if diag_line < buf_lines_count - 1 then
+			diag_line = diag_line + 1
 		end
 	end
 
 	-- Handle overflow case
-	if curline - 1 + #virt_lines > buf_lines_count - 1 then
-		handle_overflow_case(event.buf, curline, virt_lines, win_col, offset, virt_priority, buf_lines_count)
+	if diag_line - 1 + #virt_lines > buf_lines_count - 1 then
+		handle_overflow_case(event.buf, diag_line, virt_lines, win_col, offset, virt_priority, buf_lines_count)
 	else
-		handle_normal_case(event.buf, curline, virt_lines, win_col, offset, virt_priority)
+		handle_normal_case(event.buf, diag_line, virt_lines, win_col, offset, virt_priority)
 	end
 end
 
