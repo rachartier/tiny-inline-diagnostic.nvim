@@ -82,10 +82,10 @@ require("tiny-inline-diagnostic").setup({
 		-- Enable diagnostic message on all lines.
 	        -- Can either be a boolean or a table with the following options:
 	        --  multilines = {
-	        -- 		-- Enable the multilines feature
-	        -- 		enabled = false,
+	        -- 	-- Enable the multilines feature
+	        -- 	enabled = false,
 	        --
-	        -- 		-- Always show diagnostic messages on all lines
+	        -- 	-- Always show diagnostic messages on all lines
 	        --  	always_show = false,
 	        --  }
 		--
