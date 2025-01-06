@@ -143,6 +143,7 @@ local function apply_virtual_texts(opts, event)
 	local filtered_diags = filter_diagnostics(opts, event, diagnostics)
 	local cursor_line = vim.api.nvim_win_get_cursor(0)[1] - 1
 	local visible_diags = get_visible_diagnostics(filtered_diags)
+	local signs_offset = vim.fn.strdisplaywidth(opts.signs.left) + vim.fn.strdisplaywidth(opts.signs.arrow)
 
 	extmarks.clear(event.buf)
 
@@ -167,6 +168,7 @@ local function apply_virtual_texts(opts, event)
 				diagnostic_pos[1],
 				virt_lines,
 				offset,
+				signs_offset,
 				need_to_be_under,
 				virt_priority
 			)

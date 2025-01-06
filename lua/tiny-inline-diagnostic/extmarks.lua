@@ -12,13 +12,10 @@ local state = {
 	},
 }
 
----@param buf number
----@return boolean
 local function is_valid_buffer(buf)
 	return buf and vim.api.nvim_buf_is_valid(buf)
 end
 
----@return number
 local function generate_uid()
 	state.uid_counter = state.uid_counter + 1
 	if state.uid_counter > MAX_UID then
@@ -27,7 +24,6 @@ local function generate_uid()
 	return state.uid_counter
 end
 
----@return {row: number, col: number}
 local function get_window_position()
 	local ok_winline, result_winline = pcall(vim.fn.winline)
 	local ok_virtcol, result_virtcol = pcall(vim.fn.virtcol, "$")
@@ -43,12 +39,6 @@ local function get_window_position()
 	}
 end
 
----@param buf number
----@param line number
----@param virt_text table
----@param win_col number
----@param priority number
----@param pos? string
 local function set_extmark(buf, line, virt_text, win_col, priority, pos)
 	if not is_valid_buffer(buf) then
 		return
@@ -71,10 +61,7 @@ local function should_skip_line(curline)
 end
 
 local function create_multiline_extmark(buf, curline, virt_lines, priority)
-	local remaining_lines = {}
-	for i = 2, #virt_lines do
-		table.insert(remaining_lines, virt_lines[i])
-	end
+	local remaining_lines = { unpack(virt_lines, 2) }
 
 	vim.api.nvim_buf_set_extmark(buf, DIAGNOSTIC_NAMESPACE, curline, 0, {
 		id = generate_uid(),
@@ -86,37 +73,35 @@ local function create_multiline_extmark(buf, curline, virt_lines, priority)
 	})
 end
 
-local function handle_under_cursor_case(buf, curline, virt_lines, buf_lines_count, priority)
-	if curline >= buf_lines_count - 1 then
-		return
-	end
-
-	vim.api.nvim_buf_set_extmark(buf, DIAGNOSTIC_NAMESPACE, curline + 1, 0, {
-		id = generate_uid(),
-		virt_text_pos = "overlay",
-		virt_text_win_col = 0,
-		virt_text = virt_lines[2],
-		priority = priority,
-		strict = false,
-	})
-end
-
-local function handle_overflow_case(buf, curline, virt_lines, win_col, offset, priority, buf_lines_count)
+local function handle_overflow_case(
+	buf,
+	curline,
+	virt_lines,
+	win_col,
+	offset,
+	signs_offset,
+	priority,
+	need_to_be_under,
+	buf_lines_count
+)
 	local existing_lines = buf_lines_count - curline
 	local overflow_lines = {}
+	local start_index = need_to_be_under and 3 or 1
 
-	-- Handle first line
-	set_extmark(buf, curline, virt_lines[1], win_col, priority)
-
-	-- Handle middle lines
-	for i = 2, existing_lines do
-		set_extmark(buf, curline + i - 1, virt_lines[i], win_col + offset, priority, "overlay")
+	if need_to_be_under then
+		signs_offset = 1
+		set_extmark(buf, curline, virt_lines[1], win_col, priority)
 	end
 
-	-- Handle overflow lines
-	for i = buf_lines_count - curline + 1, #virt_lines do
+	for i = start_index, existing_lines do
+		local col_offset = win_col + offset + (i > start_index and signs_offset or 0)
+		set_extmark(buf, curline + i - 1, virt_lines[i], col_offset, priority, "overlay")
+	end
+
+	for i = existing_lines + 1, #virt_lines do
 		local line = vim.deepcopy(virt_lines[i])
-		table.insert(line, 1, { string.rep(" ", win_col + offset), "None" })
+		local col_offset = win_col + offset + (i > start_index and signs_offset or 0)
+		table.insert(line, 1, { string.rep(" ", col_offset), "None" })
 		table.insert(overflow_lines, line)
 	end
 
@@ -131,15 +116,14 @@ local function handle_overflow_case(buf, curline, virt_lines, win_col, offset, p
 	end
 end
 
-local function handle_normal_case(buf, curline, virt_lines, win_col, offset, priority)
+local function handle_normal_case(buf, curline, virt_lines, win_col, offset, signs_offset, priority)
 	set_extmark(buf, curline, virt_lines[1], win_col, priority)
 
 	for i = 2, #virt_lines do
-		set_extmark(buf, curline + i - 1, virt_lines[i], win_col + offset, priority, "overlay")
+		set_extmark(buf, curline + i - 1, virt_lines[i], win_col + offset + signs_offset, priority, "overlay")
 	end
 end
 
----@param buf number
 function M.clear(buf)
 	if not is_valid_buffer(buf) then
 		return
@@ -147,9 +131,6 @@ function M.clear(buf)
 	pcall(vim.api.nvim_buf_clear_namespace, buf, DIAGNOSTIC_NAMESPACE, 0, -1)
 end
 
---- Count characters of inlay hints on a line
---- @param buf number
---- @param linenr number
 local function count_inlay_hints_characters(buf, linenr)
 	local line_char_count = vim.fn.strchars(vim.api.nvim_buf_get_lines(buf, linenr, linenr + 1, false)[1])
 	local inlay_hints = vim.lsp.inlay_hint.get({
@@ -173,10 +154,6 @@ local function count_inlay_hints_characters(buf, linenr)
 	return count
 end
 
----@param bufnr number
----@param linenr number
----@param col number
----@return table
 function M.get_extmarks_on_line(bufnr, linenr, col)
 	if not is_valid_buffer(bufnr) then
 		return {}
@@ -190,11 +167,7 @@ function M.get_extmarks_on_line(bufnr, linenr, col)
 	return vim.api.nvim_buf_get_extmarks(bufnr, -1, { linenr, col }, { linenr, -1 }, opts)
 end
 
----@param bufnr number
----@param curline number
----@param col number
----@return number
-function M.handle_other_extmarks(_, bufnr, curline, col)
+function M.handle_other_extmarks(bufnr, curline, col)
 	local extmarks = M.get_extmarks_on_line(bufnr, curline, col)
 	local offset = 0
 
@@ -215,14 +188,7 @@ function M.handle_other_extmarks(_, bufnr, curline, col)
 	return offset
 end
 
----@param opts DiagnosticConfig
----@param event table
----@param diag_line number
----@param virt_lines table
----@param offset number
----@param need_to_be_under boolean
----@param virt_priority number
-function M.create_extmarks(opts, event, diag_line, virt_lines, offset, need_to_be_under, virt_priority)
+function M.create_extmarks(opts, event, diag_line, virt_lines, offset, signs_offset, need_to_be_under, virt_priority)
 	if not is_valid_buffer(event.buf) then
 		return
 	end
@@ -239,7 +205,6 @@ function M.create_extmarks(opts, event, diag_line, virt_lines, offset, need_to_b
 		return
 	end
 
-	-- Handle multiline mode
 	if opts.options.multilines and diag_line ~= cursor_line then
 		if should_skip_line(diag_line) then
 			return
@@ -254,21 +219,20 @@ function M.create_extmarks(opts, event, diag_line, virt_lines, offset, need_to_b
 	state.skip_lines.count = #virt_lines
 	state.skip_lines.start_line = diag_line
 
-	-- Handle under-cursor case
-	if need_to_be_under then
-		handle_under_cursor_case(event.buf, diag_line, virt_lines, buf_lines_count, virt_priority)
-		table.remove(virt_lines, 2)
-		win_col = 0
-		if diag_line < buf_lines_count - 1 then
-			diag_line = diag_line + 1
-		end
-	end
-
-	-- Handle overflow case
-	if diag_line - 1 + #virt_lines > buf_lines_count - 1 then
-		handle_overflow_case(event.buf, diag_line, virt_lines, win_col, offset, virt_priority, buf_lines_count)
+	if need_to_be_under or diag_line - 1 + #virt_lines > buf_lines_count - 1 then
+		handle_overflow_case(
+			event.buf,
+			diag_line,
+			virt_lines,
+			win_col,
+			offset,
+			signs_offset,
+			virt_priority,
+			need_to_be_under,
+			buf_lines_count
+		)
 	else
-		handle_normal_case(event.buf, diag_line, virt_lines, win_col, offset, virt_priority)
+		handle_normal_case(event.buf, diag_line, virt_lines, win_col, offset, signs_offset, virt_priority)
 	end
 end
 

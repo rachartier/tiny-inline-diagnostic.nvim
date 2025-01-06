@@ -37,9 +37,6 @@ function M.get_header_from_chunk(message, index_diag, chunk_info, opts, diag_hi,
 
 	if index_diag == 1 then
 		virt_texts = { { opts.signs.left, diag_inv_hi } }
-	else
-		local spaces = vim.fn.strdisplaywidth(opts.signs.left)
-		virt_texts = { { string.rep(" ", spaces), "None" } }
 	end
 
 	vim.list_extend(virt_texts, { { " ", diag_hi } })
@@ -50,10 +47,6 @@ function M.get_header_from_chunk(message, index_diag, chunk_info, opts, diag_hi,
 
 	local icon = M.get_diagnostic_icon(opts, severities, index_diag, total_chunks)
 	vim.list_extend(virt_texts, { { icon, diag_hi } })
-
-	if not need_to_be_under and index_diag > 1 then
-		table.insert(virt_texts, 1, { string.rep(" ", vim.fn.strcharlen(opts.signs.arrow)), diag_inv_hi })
-	end
 
 	local cursor_line = vim.api.nvim_win_get_cursor(0)[1] - 1
 	if not opts.options.add_messages and cursor_line ~= chunk_info.line then
@@ -177,13 +170,6 @@ function M.get_body_from_chunk(
 		{ " ", diag_hi },
 	}
 
-	if not need_to_be_under then
-		local spaces = math.max(vim.fn.strdisplaywidth(opts.signs.left .. opts.signs.arrow), 1)
-		table.insert(chunk_virtual_texts, 1, { string.rep(" ", spaces), diag_inv_hi })
-	else
-		table.insert(chunk_virtual_texts, 1, { " ", diag_inv_hi })
-	end
-
 	if is_last then
 		vim.list_extend(chunk_virtual_texts, { { opts.signs.right, diag_inv_hi } })
 	end
@@ -258,7 +244,7 @@ function M.get_chunks(opts, diags_on_line, diag_index, diag_line, cursor_line, b
 		return d.severity
 	end, diags_on_line)
 
-	local other_extmarks_offset = extmarks.handle_other_extmarks(opts, buf, diag_line, line_length)
+	local other_extmarks_offset = extmarks.handle_other_extmarks(buf, diag_line, line_length)
 
 	if (opts.options.overflow.mode ~= "none" and not opts.options.multilines) or cursor_line == diag_line then
 		if (line_length + other_extmarks_offset) > win_width - opts.options.softwrap then
