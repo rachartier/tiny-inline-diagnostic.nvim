@@ -80,24 +80,25 @@ require("tiny-inline-diagnostic").setup({
 		multiple_diag_under_cursor = false,
 
 		-- Enable diagnostic message on all lines.
-        -- Can either be a boolean or a table with the following options:
-        --  multilines = {
-        -- 		-- Enable the multilines feature
-        -- 		enabled = false,
-        --
-        -- 		-- Always show diagnostic messages on all lines
-        --  	always_show = false,
-        --  }
-        -- If it is a boolean set as true, it will enable the feature with the default options:
-        --  multilines = {
-        -- 		enabled = true,
-        -- 		always_show = false,
-        -- 	}
-        }
+	        -- Can either be a boolean or a table with the following options:
+	        --  multilines = {
+	        -- 	-- Enable the multilines feature
+	        -- 	enabled = false,
+	        --
+	        -- 	-- Always show diagnostic messages on all lines
+	        --  	always_show = false,
+	        --  }
+		--
+	        -- If it is a boolean set as true, it will enable the feature with the default options:
+	        --  multilines = {
+	        -- 	enabled = true,
+	        -- 	always_show = false,
+	        -- }
+        
 		multilines = {
-            enabled = false,
-            always_show = false,
-        },
+	            enabled = false,
+	            always_show = false,
+	        },
 
 		-- Show all diagnostics on the cursor line.
 		show_all_diags_on_cursorline = false,
