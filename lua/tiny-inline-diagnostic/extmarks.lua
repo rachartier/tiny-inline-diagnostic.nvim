@@ -89,7 +89,7 @@ local function handle_overflow_case(
 	local start_index = need_to_be_under and 3 or 1
 
 	if need_to_be_under then
-		signs_offset = 1
+		signs_offset = signs_offset == 0 and 0 or 1
 		set_extmark(buf, curline, virt_lines[1], win_col, priority)
 	end
 

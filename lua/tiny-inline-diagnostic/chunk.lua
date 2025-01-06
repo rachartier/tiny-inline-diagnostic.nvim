@@ -124,13 +124,13 @@ function M.add_message_text(virt_texts, message, num_chunks, total_chunks, index
 		else
 			vim.list_extend(virt_texts, {
 				{ " " .. message .. text_after_message, diag_hi },
-				{ string.rep(" ", vim.fn.strcharlen(opts.signs.right)), diag_inv_hi },
+				-- { string.rep(" ", vim.fn.strcharlen(opts.signs.right)), diag_inv_hi },
 			})
 		end
 	else
 		vim.list_extend(virt_texts, {
 			{ " " .. message .. text_after_message, diag_hi },
-			{ string.rep(" ", vim.fn.strcharlen(opts.signs.right)), diag_inv_hi },
+			-- { string.rep(" ", vim.fn.strcharlen(opts.signs.right)), diag_inv_hi },
 		})
 	end
 end

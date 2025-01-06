@@ -39,6 +39,8 @@ function M.build(name)
 		}),
 		minimal = create_preset({
 			signs = {
+				left = "",
+				right = "",
 				diag = "",
 				arrow = "",
 				up_arrow = "",
