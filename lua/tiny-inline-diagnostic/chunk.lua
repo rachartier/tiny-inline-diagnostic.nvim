@@ -196,7 +196,7 @@ function M.get_arrow_from_chunk(opts, diagnostic_line, ret)
 	if need_to_be_under then
 		arrow = opts.signs.up_arrow
 		chunk = {
-			{ " ", "None" },
+			{ "", "None" },
 			{ arrow, hi },
 		}
 	else
