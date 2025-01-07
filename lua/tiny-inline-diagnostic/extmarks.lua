@@ -115,6 +115,7 @@ local function handle_overflow_case(buf, params)
 
 	if params.need_to_be_under then
 		set_extmark(buf, params.curline, params.virt_lines[1], params.win_col, params.priority)
+		set_extmark(buf, params.curline + 1, params.virt_lines[2], params.win_col, params.priority)
 	end
 
 	-- Create extmarks for existing lines
