@@ -139,7 +139,18 @@ end
 ---@param severities table New severity settings
 function M.change_severities(severities)
 	if not M.config then
-		error("Plugin not initialized. Call setup() first.")
+		vim.notify(
+			"Error in tiny-inline-diagnostic.nvim:\n\nPlugin not initialized. Call setup() first.",
+			vim.log.levels.ERROR
+		)
+		return
+	end
+
+	if severities == nil then
+		vim.notify(
+			"Error in tiny-inline-diagnostic.nvim:\n\nSeverities in change_severities function cannot be nil.\n\nYou should provide a table of severities.\nE.g: {\n\tvim.diagnostic.severity.ERROR,\n\tvim.diagnostic.severity.WARN\n}\nTo only show errors and warnings.",
+			vim.log.levels.ERROR
+		)
 		return
 	end
 
