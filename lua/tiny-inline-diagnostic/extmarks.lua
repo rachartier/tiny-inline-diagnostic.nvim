@@ -114,7 +114,7 @@ local function handle_overflow_case(buf, params)
 	local signs_offset = params.need_to_be_under and (params.signs_offset == 0 and 0 or 1) or params.signs_offset
 
 	if params.need_to_be_under then
-		set_extmark(buf, params.curline, params.virt_lines[1], params.win_col, params.priority)
+		-- set_extmark(buf, params.curline, params.virt_lines[1], params.win_col, params.priority)
 		set_extmark(buf, params.curline + 1, params.virt_lines[2], params.win_col, params.priority)
 	end
 

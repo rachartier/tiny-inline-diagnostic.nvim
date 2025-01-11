@@ -1,4 +1,4 @@
-*tiny-inline-diagnostic.nvim.txt*For Neovim >= 0.10.0Last change: 2025 January 06
+*tiny-inline-diagnostic.nvim.txt*For Neovim >= 0.10.0Last change: 2025 January 10
 
 ==============================================================================
 Table of Contents              *tiny-inline-diagnostic.nvim-table-of-contents*
@@ -78,8 +78,8 @@ OPTIONS      *tiny-inline-diagnostic.nvim-tiny-inline-diagnostic.nvim-options*
             -- Use your defined signs in the diagnostic config table.
             use_icons_from_diagnostic = false,
     
-            -- Add messages to the diagnostic when multilines is enabled
-            add_messages = true,
+                -- Add messages to the diagnostic when multilines is enabled
+                add_messages = true,
     
             -- Throttle the update of the diagnostic when moving cursor, in milliseconds.
             -- You can increase it if you have performance issues.
