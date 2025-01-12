@@ -6,19 +6,7 @@ A Neovim plugin that display prettier diagnostic messages. Display one line diag
 
 ### Multilines enabled
 
-![tinyinline_demo_1](https://github.com/user-attachments/assets/9dfc75c6-6382-4c05-89d8-defea930ac43)
-
-
-
-### Overflow handling enabled
-
-![tinyinline_demo_2](https://github.com/user-attachments/assets/e629659c-0925-4031-a046-bffdd57f9a9c)
-
-
-
-### Break line enabled
-
-![image](https://github.com/user-attachments/assets/45180d09-8653-4403-a79b-5bee522560e3)
+![tiny_inline_demo_3](https://github.com/user-attachments/assets/5c0c8147-e483-4628-93fb-d1df3589f29d)
 
 
 ## 🛠️ Setup
