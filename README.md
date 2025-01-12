@@ -48,101 +48,115 @@ With Lazy.nvim:
 ```lua
 -- Default configuration
 require("tiny-inline-diagnostic").setup({
-	preset = "modern", -- Can be: "modern", "classic", "minimal", "powerline", ghost", "simple", "nonerdfont", "amongus"
-	hi = {
-		error = "DiagnosticError",
-		warn = "DiagnosticWarn",
-		info = "DiagnosticInfo",
-		hint = "DiagnosticHint",
-		arrow = "NonText",
-		background = "CursorLine", -- Can be a highlight or a hexadecimal color (#RRGGBB)
-		mixing_color = "None", -- Can be None or a hexadecimal color (#RRGGBB). Used to blend the background color with the diagnostic background color with another color.
-	},
-	options = {
-		-- Show the source of the diagnostic.
-		show_source = false,
+    -- Style preset for diagnostic messages
+    -- Available options:
+    -- "modern", "classic", "minimal", "powerline",
+    -- "ghost", "simple", "nonerdfont", "amongus"
+    preset = "modern",
 
-		-- Use your defined signs in the diagnostic config table.
-		use_icons_from_diagnostic = false,
+    hi = {
+        error = "DiagnosticError", -- Highlight group for error messages
+        warn = "DiagnosticWarn", -- Highlight group for warning messages
+        info = "DiagnosticInfo", -- Highlight group for informational messages
+        hint = "DiagnosticHint", -- Highlight group for hint or suggestion messages
+        arrow = "NonText", -- Highlight group for diagnostic arrows
 
-        	-- Add messages to the diagnostic when multilines is enabled
-        	add_messages = true,
+        -- Background color for diagnostics
+        -- Can be a highlight group or a hexadecimal color (#RRGGBB)
+        background = "CursorLine",
 
-		-- Throttle the update of the diagnostic when moving cursor, in milliseconds.
-		-- You can increase it if you have performance issues.
-		-- Or set it to 0 to have better visuals.
-		throttle = 20,
+        -- Color blending option for the diagnostic background
+        -- Use "None" or a hexadecimal color (#RRGGBB) to blend with another color
+        mixing_color = "None",
+    },
 
-		-- The minimum length of the message, otherwise it will be on a new line.
-		softwrap = 30,
+    options = {
+        -- Display the source of the diagnostic (e.g., basedpyright, vsserver, lua_ls etc.)
+        show_source = false,
 
-		-- If multiple diagnostics are under the cursor, display all of them.
-		multiple_diag_under_cursor = false,
+        -- Use icons defined in the diagnostic configuration
+        use_icons_from_diagnostic = false,
 
-		-- Enable diagnostic message on all lines.
-	        -- Can either be a boolean or a table with the following options:
-	        --  multilines = {
-	        -- 	-- Enable the multilines feature
-	        -- 	enabled = false,
-	        --
-	        -- 	-- Always show diagnostic messages on all lines
-	        --  	always_show = false,
-	        --  }
-		--
-	        -- If it is a boolean set as true, it will enable the feature with the default options:
-	        --  multilines = {
-	        -- 	enabled = true,
-	        -- 	always_show = false,
-	        -- }
-        
-		multilines = {
-	            enabled = false,
-	            always_show = false,
-	        },
+        -- Add messages to diagnostics when multiline diagnostics are enabled
+        -- If set to false, only signs will be displayed
+        add_messages = true,
 
-		-- Show all diagnostics on the cursor line.
-		show_all_diags_on_cursorline = false,
+        -- Time (in milliseconds) to throttle updates while moving the cursor
+        -- Increase this value for better performance if your computer is slow
+        -- or set to 0 for immediate updates and better visual
+        throttle = 20,
 
-		-- Enable diagnostics on Insert mode. You should also se the `throttle` option to 0, as some artefacts may appear.
-		enable_on_insert = false,
+        -- Minimum message length before wrapping to a new line
+        softwrap = 30,
 
-		overflow = {
-			-- Manage the overflow of the message.
-			--    - wrap: when the message is too long, it is then displayed on multiple lines.
-			--    - none: the message will not be truncated.
-			--    - oneline: message will be displayed entirely on one line.
-			mode = "wrap",
-		},
+        -- Show all diagnostics under the cursor if multiple diagnostics exist on the same line
+        -- If set to false, only the diagnostics under the cursor will be displayed
+        multiple_diag_under_cursor = false,
 
-		-- Format the diagnostic message.
-		-- Example:
-		-- format = function(diagnostic)
-		--     return diagnostic.message .. " [" .. diagnostic.source .. "]"
-		-- end,
-		format = nil,
+        -- Configuration for multiline diagnostics
+        multilines = {
+            -- Enable multiline diagnostic messages
+            enabled = false,
 
-		--- Enable it if you want to always have message with `after` characters length.
-		break_line = {
-			enabled = false,
-			after = 30,
-		},
+            -- Always show messages on all lines for multiline diagnostics
+            always_show = false,
+        },
 
-		virt_texts = {
-			priority = 2048,
-		},
+        -- Display all diagnostic messages on the cursor line
+        show_all_diags_on_cursorline = false,
 
-		-- Filter by severity.
-		severity = {
-			vim.diagnostic.severity.ERROR,
-			vim.diagnostic.severity.WARN,
-			vim.diagnostic.severity.INFO,
-			vim.diagnostic.severity.HINT,
-		},
+        -- Enable diagnostics in Insert mode
+        -- If enabled, it is better to set the `throttle` option to 0 to avoid visual artifacts
+        enable_on_insert = false,
 
-		-- Overwrite events to attach to a buffer. You should not change it, but if the plugin
-		-- does not works in your configuration, you may try to tweak it.
-		overwrite_events = nil,
-	},
+        overflow = {
+            -- Manage how diagnostic messages handle overflow
+            -- Options:
+            -- "wrap" - Split long messages into multiple lines
+            -- "none" - Do not truncate messages
+            -- "oneline" - Keep the message on a single line, even if it's long
+            mode = "wrap",
+        },
+
+        -- Configuration for breaking long messages into separate lines
+        break_line = {
+            -- Enable the feature to break messages after a specific length
+            enabled = false,
+
+            -- Number of characters after which to break the line
+            after = 30,
+        },
+
+        -- Custom format function for diagnostic messages
+        -- Example:
+        -- format = function(diagnostic)
+        --     return diagnostic.message .. " [" .. diagnostic.source .. "]"
+        -- end
+        format = nil,
+
+
+        virt_texts = {
+            -- Priority for virtual text display
+            priority = 2048,
+        },
+
+        -- Filter diagnostics by severity
+        -- Available severities:
+        -- vim.diagnostic.severity.ERROR
+        -- vim.diagnostic.severity.WARN
+        -- vim.diagnostic.severity.INFO
+        -- vim.diagnostic.severity.HINT
+        severity = {
+            vim.diagnostic.severity.ERROR,
+            vim.diagnostic.severity.WARN,
+            vim.diagnostic.severity.INFO,
+            vim.diagnostic.severity.HINT,
+        },
+
+        -- Events to attach diagnostics to buffers
+        -- You should not change this unless the plugin does not work with your configuration
+        overwrite_events = nil,
+    },
 })
 ```
 
