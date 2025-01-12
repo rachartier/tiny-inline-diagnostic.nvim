@@ -6,13 +6,11 @@ local virtual_text_forge = require("tiny-inline-diagnostic.virtual_text")
 local extmarks = require("tiny-inline-diagnostic.extmarks")
 local timers = require("tiny-inline-diagnostic.timer")
 
--- Constants
 local AUGROUP_NAME = "TinyInlineDiagnosticAutocmds"
 local USER_EVENT = "TinyDiagnosticEvent"
 local USER_EVENT_THROTTLED = "TinyDiagnosticEventThrottled"
-local DISABLED_MODES = { "i", "v", "V", "" }
+local DISABLED_MODES = { "i", "v", "V" }
 
--- State
 M.enabled = true
 M.user_toggle_state = true
 local attached_buffers = {}
@@ -21,7 +19,6 @@ local attached_buffers = {}
 ---@field line number
 ---@field col number
 
--- Core enable/disable functions
 local function enable()
 	M.enabled = true
 	vim.api.nvim_exec_autocmds("User", { pattern = USER_EVENT })
@@ -229,11 +226,10 @@ local function setup_mode_change_autocmds(autocmd_ns, event)
 
 			if vim.tbl_contains(DISABLED_MODES, mode) then
 				disable()
+				extmarks.clear(event.buf)
 			else
 				enable()
 			end
-
-			extmarks.clear(event.buf)
 		end,
 	})
 end
