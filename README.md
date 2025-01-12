@@ -94,6 +94,16 @@ require("tiny-inline-diagnostic").setup({
         multiple_diag_under_cursor = false,
 
         -- Configuration for multiline diagnostics
+        -- Can either be a boolean or a table with the following options:
+        --  multilines = {
+        --      enabled = false,
+        --      always_show = false,
+        -- }
+        -- If it set as true, it will enable the feature with this options:
+        --  multilines = {
+        --      enabled = true,
+        --      always_show = false,
+        -- }
         multilines = {
             -- Enable multiline diagnostic messages
             enabled = false,
