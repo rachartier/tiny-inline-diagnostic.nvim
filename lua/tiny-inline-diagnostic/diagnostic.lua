@@ -9,7 +9,7 @@ local timers = require("tiny-inline-diagnostic.timer")
 local AUGROUP_NAME = "TinyInlineDiagnosticAutocmds"
 local USER_EVENT = "TinyDiagnosticEvent"
 local USER_EVENT_THROTTLED = "TinyDiagnosticEventThrottled"
-local DISABLED_MODES = { "i", "v", "V" }
+local DISABLED_MODES = {}
 
 M.enabled = true
 M.user_toggle_state = true
@@ -321,6 +321,16 @@ function M.set_diagnostic_autocmds(opts)
 				return
 			end
 
+			if not opts.options.enable_on_select then
+				table.insert(DISABLED_MODES, "s")
+			end
+
+			if not opts.options.enable_on_insert then
+				table.insert(DISABLED_MODES, "i")
+				table.insert(DISABLED_MODES, "v")
+				table.insert(DISABLED_MODES, "V")
+			end
+
 			local throttled_fn, timer = utils.throttle(function()
 				if vim.api.nvim_buf_is_valid(event.buf) then
 					apply_virtual_texts(opts, event)
@@ -331,10 +341,7 @@ function M.set_diagnostic_autocmds(opts)
 
 			setup_buffer_autocmds(autocmd_ns, opts, event, throttled_fn)
 			setup_cursor_autocmds(autocmd_ns, opts, event, throttled_fn)
-
-			if not opts.options.enable_on_insert then
-				setup_mode_change_autocmds(autocmd_ns, event)
-			end
+			setup_mode_change_autocmds(autocmd_ns, event)
 		end,
 		desc = "Setup diagnostic display system",
 	})

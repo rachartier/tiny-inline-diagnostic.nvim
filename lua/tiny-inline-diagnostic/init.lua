@@ -34,6 +34,7 @@ local default_config = {
 		},
 		show_all_diags_on_cursorline = false,
 		enable_on_insert = false,
+		enable_select = false,
 		format = nil,
 		overflow = {
 			mode = "wrap",
