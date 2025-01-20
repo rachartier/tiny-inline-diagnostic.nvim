@@ -54,6 +54,7 @@ local default_config = {
 		},
 		overwrite_events = nil,
 	},
+	disabled_ft = {},
 }
 
 M.config = nil

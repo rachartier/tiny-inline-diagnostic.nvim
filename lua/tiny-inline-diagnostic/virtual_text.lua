@@ -1,6 +1,7 @@
 ---@class DiagnosticConfig
 ---@field blend { factor: number }
 ---@field options table
+---@field disabled_ft table
 
 ---@class ChunkInfo
 ---@field chunks string[]
