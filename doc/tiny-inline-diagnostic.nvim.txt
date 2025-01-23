@@ -1,4 +1,4 @@
-*tiny-inline-diagnostic.nvim.txt*For Neovim >= 0.10.0Last change: 2025 January 12
+*tiny-inline-diagnostic.nvim.txt*For Neovim >= 0.10.0Last change: 2025 January 20
 
 ==============================================================================
 Table of Contents              *tiny-inline-diagnostic.nvim-table-of-contents*
@@ -51,6 +51,7 @@ With Lazy.nvim:
         priority = 1000, -- needs to be loaded in first
         config = function()
             require('tiny-inline-diagnostic').setup()
+            vim.diagnostic.config({ virtual_text = false }) -- Only if needed in your configuration, if you already have native LSP diagnostics
         end
     }
 <
@@ -132,6 +133,9 @@ OPTIONS      *tiny-inline-diagnostic.nvim-tiny-inline-diagnostic.nvim-options*
             -- If enabled, it is better to set the `throttle` option to 0 to avoid visual artifacts
             enable_on_insert = false,
     
+            -- Enable diagnostics in Select mode (e.g when auto inserting with Blink)
+            enable_on_select = false,
+    
             overflow = {
                 -- Manage how diagnostic messages handle overflow
                 -- Options:
@@ -180,6 +184,7 @@ OPTIONS      *tiny-inline-diagnostic.nvim-tiny-inline-diagnostic.nvim-options*
             -- You should not change this unless the plugin does not work with your configuration
             overwrite_events = nil,
         },
+        disabled_ft = {} -- List of filetypes to disable the plugin
     })
 <
 

@@ -340,6 +340,10 @@ function M.set_diagnostic_autocmds(opts)
 				table.insert(DISABLED_MODES, "V")
 			end
 
+			if vim.tbl_contains(opts.disabled_ft, vim.bo[event.buf].filetype) then
+				return
+			end
+
 			local throttled_fn, timer = utils.throttle(function()
 				if vim.api.nvim_buf_is_valid(event.buf) then
 					apply_virtual_texts(opts, event)

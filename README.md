@@ -39,6 +39,7 @@ With Lazy.nvim:
     priority = 1000, -- needs to be loaded in first
     config = function()
         require('tiny-inline-diagnostic').setup()
+        vim.diagnostic.config({ virtual_text = false }) -- Only if needed in your configuration, if you already have native LSP diagnostics
     end
 }
 ```
@@ -170,6 +171,7 @@ require("tiny-inline-diagnostic").setup({
         -- You should not change this unless the plugin does not work with your configuration
         overwrite_events = nil,
     },
+    disabled_ft = {} -- List of filetypes to disable the plugin
 })
 ```
 
