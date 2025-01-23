@@ -155,18 +155,13 @@ local function apply_virtual_texts(opts, event)
 	extmarks.clear(event.buf)
 
 	local diags_dims = {}
-
-	for lnum, diags in pairs(visible_diags) do
-		if diags then
-			table.insert(diags_dims, { lnum, #diags })
-		end
-	end
+	local to_render = {}
+	local virt_priority = opts.options.virt_texts.priority
 
 	-- Create new extmarks
 	for lnum, diags in pairs(visible_diags) do
 		if diags then
 			local diagnostic_pos = { lnum, 0 }
-			local virt_priority = opts.options.virt_texts.priority
 			local virt_lines, offset, need_to_be_under
 
 			if opts.options.multiple_diag_under_cursor and lnum == cursor_line then
@@ -178,18 +173,33 @@ local function apply_virtual_texts(opts, event)
 				virt_lines, offset, need_to_be_under = virtual_text_forge.from_diagnostic(opts, chunks, 1, max_width, 1)
 			end
 
-			extmarks.create_extmarks(
-				opts,
-				event,
-				diagnostic_pos[1],
-				diags_dims,
-				virt_lines,
-				offset,
-				signs_offset,
-				need_to_be_under,
-				virt_priority
-			)
+			table.insert(diags_dims, { lnum, #virt_lines })
+			table.insert(to_render, {
+				virt_lines = virt_lines,
+				offset = offset,
+				need_to_be_under = need_to_be_under,
+				diagnostic_pos = diagnostic_pos,
+			})
 		end
+	end
+
+	for _, data in ipairs(to_render) do
+		local virt_lines = data.virt_lines
+		local offset = data.offset
+		local need_to_be_under = data.need_to_be_under
+		local diagnostic_pos = data.diagnostic_pos
+
+		extmarks.create_extmarks(
+			opts,
+			event,
+			diagnostic_pos[1],
+			diags_dims,
+			virt_lines,
+			offset,
+			signs_offset,
+			need_to_be_under,
+			virt_priority
+		)
 	end
 end
 

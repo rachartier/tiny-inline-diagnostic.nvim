@@ -77,7 +77,7 @@ end
 ---Check if line should be skipped
 ---@param diag_line number
 ---@return boolean
-local function should_skip_line(cursor_line, diag_line, diags_dims)
+local function should_skip_line(cursor_line, diag_line, diags_dims, virt_lines_count)
 	for _, dims in ipairs(diags_dims) do
 		if diag_line ~= dims[1] then
 			if cursor_line == dims[1] then
@@ -269,7 +269,7 @@ function M.create_extmarks(
 
 	-- Handle multiline extmarks
 	if opts.options.multilines and diag_line ~= cursor_line then
-		if should_skip_line(cursor_line, diag_line, diags_dims) then
+		if should_skip_line(cursor_line, diag_line, diags_dims, #virt_lines) then
 			return
 		end
 
