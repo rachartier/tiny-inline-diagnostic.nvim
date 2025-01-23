@@ -9,10 +9,6 @@ local DIAGNOSTIC_NAMESPACE = vim.api.nvim_create_namespace("TinyInlineDiagnostic
 ---@field skip_lines table
 local state = {
 	uid_counter = INITIAL_UID,
-	skip_lines = {
-		count = 0,
-		start_line = 0,
-	},
 }
 
 ---@class WindowPosition
@@ -79,11 +75,20 @@ local function set_extmark(buf, line, virt_text, win_col, priority, pos)
 end
 
 ---Check if line should be skipped
----@param curline number
+---@param diag_line number
 ---@return boolean
-local function should_skip_line(curline)
-	local skip = state.skip_lines
-	return skip.count > 0 and curline > skip.start_line and curline < skip.start_line + skip.count
+local function should_skip_line(cursor_line, diag_line, diags_dims)
+	for _, dims in ipairs(diags_dims) do
+		if diag_line ~= dims[1] then
+			if cursor_line == dims[1] then
+				if diag_line > dims[1] and diag_line < dims[1] + dims[2] then
+					return true
+				end
+			end
+		end
+	end
+
+	return false
 end
 
 ---Create a multiline extmark
@@ -239,7 +244,17 @@ end
 ---@param signs_offset number
 ---@param need_to_be_under boolean
 ---@param virt_priority number
-function M.create_extmarks(opts, event, diag_line, virt_lines, offset, signs_offset, need_to_be_under, virt_priority)
+function M.create_extmarks(
+	opts,
+	event,
+	diag_line,
+	diags_dims,
+	virt_lines,
+	offset,
+	signs_offset,
+	need_to_be_under,
+	virt_priority
+)
 	if not is_valid_buffer(event.buf) or not virt_lines or vim.tbl_isempty(virt_lines) then
 		return
 	end
@@ -254,18 +269,14 @@ function M.create_extmarks(opts, event, diag_line, virt_lines, offset, signs_off
 
 	-- Handle multiline extmarks
 	if opts.options.multilines and diag_line ~= cursor_line then
-		if should_skip_line(diag_line) then
+		if should_skip_line(cursor_line, diag_line, diags_dims) then
 			return
 		end
+
 		create_multiline_extmark(event.buf, diag_line, virt_lines, virt_priority)
-		state.skip_lines = { count = 0, start_line = diag_line }
+
 		return
 	end
-
-	state.skip_lines = {
-		count = #virt_lines,
-		start_line = diag_line,
-	}
 
 	if need_to_be_under or diag_line - 1 + #virt_lines > buf_lines_count - 1 then
 		handle_overflow_case(event.buf, {

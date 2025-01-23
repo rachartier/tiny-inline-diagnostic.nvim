@@ -154,6 +154,14 @@ local function apply_virtual_texts(opts, event)
 	-- Clear existing extmarks
 	extmarks.clear(event.buf)
 
+	local diags_dims = {}
+
+	for lnum, diags in pairs(visible_diags) do
+		if diags then
+			table.insert(diags_dims, { lnum, #diags })
+		end
+	end
+
 	-- Create new extmarks
 	for lnum, diags in pairs(visible_diags) do
 		if diags then
@@ -174,6 +182,7 @@ local function apply_virtual_texts(opts, event)
 				opts,
 				event,
 				diagnostic_pos[1],
+				diags_dims,
 				virt_lines,
 				offset,
 				signs_offset,
