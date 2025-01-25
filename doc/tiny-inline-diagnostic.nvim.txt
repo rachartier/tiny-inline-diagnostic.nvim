@@ -259,7 +259,7 @@ TinyInlineInvDiagnosticVirtualTextWarn - TinyInlineInvDiagnosticVirtualTextInfo
 API              *tiny-inline-diagnostic.nvim-tiny-inline-diagnostic.nvim-api*
 
 - `require("tiny-inline-diagnostic").change(blend, highlights)`change the colors of the diagnostic. You need to refer to `setup` to see the structure of the `blend` and `highlights` options.
-- `require("tiny-inline-diagnostic").get_diagnostic_under_cursor(bufnr)`get the diagnostic under the cursor, useful if you want to display the diagnostic in a statusline.
+- `require("tiny-inline-diagnostic").get_diagnostic_under_cursor()`get the diagnostic under the cursor, useful if you want to display the diagnostic in a statusline.
 - `require("tiny-inline-diagnostic").enable()`enable the diagnostic.
 - `require("tiny-inline-diagnostic").disable()`disable the diagnostic.
 - `require("tiny-inline-diagnostic").toggle()`toggle the diagnostic, on/off.
