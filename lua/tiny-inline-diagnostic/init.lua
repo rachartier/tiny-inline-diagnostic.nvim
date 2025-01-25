@@ -159,4 +159,8 @@ function M.change_severities(severities)
 	M.config.options.severity = severities
 end
 
+function M.get_diagnostic_under_cursor()
+	return diag.get_diagnostic_under_cursor()
+end
+
 return M
