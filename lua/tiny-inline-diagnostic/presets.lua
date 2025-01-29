@@ -20,7 +20,7 @@ local function create_preset(overrides)
 	return preset
 end
 
-function M.build(name)
+function M.build(name, transparent_bg)
 	local presets = {
 		classic = create_preset({
 			signs = {
@@ -79,7 +79,14 @@ function M.build(name)
 		}),
 	}
 
-	return presets[name] or create_preset({})
+	local preset = presets[name] or create_preset({})
+
+	if transparent_bg then
+		preset.signs.left = ""
+		preset.signs.right = ""
+	end
+
+	return preset
 end
 
 return M

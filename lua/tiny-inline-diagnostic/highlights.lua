@@ -75,7 +75,7 @@ end
 ---@param colors table<string, HighlightColor>
 ---@param blends table<string, string>
 ---@return table<string, table>
-local function create_highlight_groups(colors, blends)
+local function create_highlight_groups(colors, blends, transparent)
 	local hi = {
 		[HIGHLIGHT_PREFIX .. "Bg"] = { bg = colors.background },
 	}
@@ -84,14 +84,14 @@ local function create_highlight_groups(colors, blends)
 	for severity, name in pairs(SEVERITY_NAMES) do
 		-- Cursor line highlights
 		hi[HIGHLIGHT_PREFIX .. name .. "CursorLine"] = {
-			bg = blends.background,
+			bg = transparent and "None" or colors.background,
 			fg = colors[string.lower(name)].fg,
 			italic = colors[string.lower(name)].italic,
 		}
 
 		-- Regular highlights
 		hi[HIGHLIGHT_PREFIX .. name] = {
-			bg = blends[string.lower(name)],
+			bg = transparent and "None" or blends[string.lower(name)],
 			fg = colors[string.lower(name)].fg,
 			italic = colors[string.lower(name)].italic,
 		}
@@ -99,7 +99,7 @@ local function create_highlight_groups(colors, blends)
 		-- Inverse highlights with and without background
 		hi[INV_HIGHLIGHT_PREFIX .. name] = {
 			fg = blends[string.lower(name)],
-			bg = colors.background,
+			bg = transparent and "None" or colors.background,
 			italic = colors[string.lower(name)].italic,
 		}
 
@@ -147,7 +147,7 @@ end
 
 ---@param blend BlendOptions
 ---@param default_hi DefaultHighlights
-function M.setup_highlights(blend, default_hi)
+function M.setup_highlights(blend, default_hi, transparent)
 	-- Get base colors
 	local colors = {
 		error = get_highlight(default_hi.error),
@@ -157,6 +157,10 @@ function M.setup_highlights(blend, default_hi)
 		ok = get_highlight(default_hi.ok),
 		arrow = get_highlight(default_hi.arrow),
 	}
+
+	if not transparent then
+		transparent = false
+	end
 
 	-- Get special colors
 	colors.background = get_background_color(default_hi.background)
@@ -172,7 +176,8 @@ function M.setup_highlights(blend, default_hi)
 	}
 
 	-- Create highlight groups
-	local hi = create_highlight_groups(colors, blends)
+	local hi = create_highlight_groups(colors, blends, transparent)
+
 	create_mixed_highlights(hi)
 
 	-- Apply highlights

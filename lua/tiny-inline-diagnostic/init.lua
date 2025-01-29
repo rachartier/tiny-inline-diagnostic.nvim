@@ -12,6 +12,7 @@ local presets = require("tiny-inline-diagnostic.presets")
 
 local default_config = {
 	preset = "modern",
+	transparent_bg = false,
 	hi = {
 		error = "DiagnosticError",
 		warn = "DiagnosticWarn",
@@ -64,7 +65,7 @@ local function setup_colorscheme_handler(config)
 	vim.api.nvim_create_autocmd("ColorScheme", {
 		pattern = "*",
 		callback = function()
-			hi.setup_highlights(config.blend, config.hi)
+			hi.setup_highlights(config.blend, config.hi, config.transparent_bg)
 		end,
 	})
 end
@@ -76,7 +77,7 @@ local function normalize_config(config)
 	end
 
 	if config.preset then
-		local preset = presets.build(config.preset:lower())
+		local preset = presets.build(config.preset:lower(), config.transparent_bg)
 		config = vim.tbl_deep_extend("keep", config, preset)
 	end
 
@@ -99,7 +100,7 @@ function M.setup(opts)
 
 	M.config = config
 
-	hi.setup_highlights(config.blend, config.hi)
+	hi.setup_highlights(config.blend, config.hi, config.transparent_bg)
 
 	setup_colorscheme_handler(config)
 	diag.set_diagnostic_autocmds(config)
@@ -119,7 +120,7 @@ function M.change(blend, highlights)
 		hi = highlights or M.config.hi,
 	})
 
-	hi.setup_highlights(config.blend, config.hi)
+	hi.setup_highlights(config.blend, config.hi, config.transparent_bg)
 end
 
 --- Enable the diagnostic display.
