@@ -27,6 +27,8 @@ function M.build(name, transparent_bg)
 				diag = "●",
 				vertical = " │",
 				vertical_end = " └",
+				left = "",
+				right = "",
 			},
 			blend = { factor = 0 },
 		}),
