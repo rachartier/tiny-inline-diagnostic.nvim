@@ -86,6 +86,7 @@ function M.build(name, transparent_bg)
 	if transparent_bg then
 		preset.signs.left = ""
 		preset.signs.right = ""
+		preset.blend.factor = 0
 	end
 
 	return preset

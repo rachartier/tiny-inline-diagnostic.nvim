@@ -84,7 +84,7 @@ local function create_highlight_groups(colors, blends, transparent)
 	for severity, name in pairs(SEVERITY_NAMES) do
 		-- Cursor line highlights
 		hi[HIGHLIGHT_PREFIX .. name .. "CursorLine"] = {
-			bg = transparent and "None" or colors.background,
+			bg = colors.background,
 			fg = colors[string.lower(name)].fg,
 			italic = colors[string.lower(name)].italic,
 		}

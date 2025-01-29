@@ -55,6 +55,8 @@ require("tiny-inline-diagnostic").setup({
     -- "ghost", "simple", "nonerdfont", "amongus"
     preset = "modern",
 
+    transparent_bg = false, -- Set the background of the diagnostic to transparent
+
     hi = {
         error = "DiagnosticError", -- Highlight group for error messages
         warn = "DiagnosticWarn", -- Highlight group for warning messages
