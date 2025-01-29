@@ -162,6 +162,10 @@ function M.setup_highlights(blend, default_hi, transparent)
 		transparent = false
 	end
 
+	if blend.factor == 0 then
+		transparent = true
+	end
+
 	-- Get special colors
 	colors.background = get_background_color(default_hi.background)
 	colors.mixing_color = get_mixing_color(default_hi.mixing_color)
