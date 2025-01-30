@@ -48,14 +48,11 @@ local function filter_diags_at_position(opts, diagnostics, line, col)
 		return #diags_on_line > 0 and diags_on_line or {}
 	end
 
-	if not opts.options.multiple_diag_under_cursor then
-		local current_pos_diags = vim.tbl_filter(function(diag)
-			return diag.lnum == line and col >= diag.col and col <= diag.end_col
-		end, diagnostics)
-		return #current_pos_diags > 0 and current_pos_diags or diags_on_line
-	end
+	local current_pos_diags = vim.tbl_filter(function(diag)
+		return diag.lnum == line and col >= diag.col and col <= diag.end_col
+	end, diagnostics)
 
-	return diags_on_line
+	return #current_pos_diags > 0 and current_pos_diags or diags_on_line
 end
 
 ---@param opts DiagnosticConfig
@@ -164,7 +161,7 @@ local function apply_virtual_texts(opts, event)
 			local diagnostic_pos = { lnum, 0 }
 			local virt_lines, offset, need_to_be_under
 
-			if opts.options.multiple_diag_under_cursor and lnum == cursor_line then
+			if lnum == cursor_line then
 				virt_lines, offset, need_to_be_under =
 					virtual_text_forge.from_diagnostics(opts, diags, diagnostic_pos, event.buf)
 			else

@@ -92,10 +92,6 @@ require("tiny-inline-diagnostic").setup({
         -- Minimum message length before wrapping to a new line
         softwrap = 30,
 
-        -- Show all diagnostics under the cursor if multiple diagnostics exist on the same line
-        -- If set to false, only the diagnostics under the cursor will be displayed
-        multiple_diag_under_cursor = false,
-
         -- Configuration for multiline diagnostics
         -- Can either be a boolean or a table with the following options:
         --  multilines = {
