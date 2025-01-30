@@ -89,6 +89,10 @@ end
 local function filter_diagnostics(opts, event, diagnostics)
 	local filtered = filter_by_severity(opts, diagnostics)
 
+	table.sort(filtered, function(a, b)
+		return a.severity < b.severity
+	end)
+
 	if not opts.options.multilines.enabled then
 		return M.filter_diags_under_cursor(opts, event.buf, filtered)
 	end

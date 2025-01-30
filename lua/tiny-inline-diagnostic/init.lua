@@ -28,7 +28,6 @@ local default_config = {
 		use_icons_from_diagnostic = false,
 		throttle = 20,
 		softwrap = 30,
-		multiple_diag_under_cursor = false,
 		multilines = {
 			enabled = false,
 			always_show = false,
