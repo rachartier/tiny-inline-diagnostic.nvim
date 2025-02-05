@@ -295,6 +295,7 @@ function M.handle_overflow_modes(opts, diag_message, need_to_be_under, win_width
 			local ok, win_col = pcall(vim.fn.virtcol, "$")
 			offset = ok and win_col or 0
 		end
+		offset = (opts.options.overflow.padding or 0) + offset
 		chunks = M.get_message_chunks_for_overflow(diag_message, offset, win_width, opts)
 	elseif opts.options.overflow.mode == "none" then
 		chunks = utils.wrap_text(diag_message, 0)
