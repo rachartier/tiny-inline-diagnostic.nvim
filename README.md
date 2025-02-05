@@ -128,6 +128,11 @@ require("tiny-inline-diagnostic").setup({
             -- "none" - Do not truncate messages
             -- "oneline" - Keep the message on a single line, even if it's long
             mode = "wrap",
+
+            -- Trigger wrapping to occur this many characters earlier when mode == "wrap".
+            -- Increase this value appropriately if you notice that the last few characters
+            -- of wrapped diagnostics are sometimes obscured.
+            padding = 0,
         },
 
         -- Configuration for breaking long messages into separate lines
