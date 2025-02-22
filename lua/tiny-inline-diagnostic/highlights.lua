@@ -96,6 +96,12 @@ local function create_highlight_groups(colors, blends, transparent)
 			italic = colors[string.lower(name)].italic,
 		}
 
+		hi[HIGHLIGHT_PREFIX .. name .. "NoBg"] = {
+			fg = colors[string.lower(name)].fg,
+			bg = "None",
+			italic = colors[string.lower(name)].italic,
+		}
+
 		-- Inverse highlights with and without background
 		hi[INV_HIGHLIGHT_PREFIX .. name] = {
 			fg = blends[string.lower(name)],

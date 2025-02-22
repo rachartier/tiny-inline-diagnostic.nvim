@@ -80,6 +80,9 @@ require("tiny-inline-diagnostic").setup({
         -- Use icons defined in the diagnostic configuration
         use_icons_from_diagnostic = false,
 
+        -- Set the arrow icon to the same color as the first diagnostic severity
+        set_arrow_to_diag_color = false,
+
         -- Add messages to diagnostics when multiline diagnostics are enabled
         -- If set to false, only signs will be displayed
         add_messages = true,

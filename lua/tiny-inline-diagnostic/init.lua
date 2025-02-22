@@ -25,6 +25,7 @@ local default_config = {
 	options = {
 		show_source = false,
 		add_messages = true,
+		set_arrow_to_diag_color = true,
 		use_icons_from_diagnostic = false,
 		throttle = 20,
 		softwrap = 30,

@@ -49,7 +49,7 @@ local function build_first_chunk(opts, chunk_info, message, hl, index_diag, tota
 
 	if index_diag == 1 then
 		local cursor_line = vim.api.nvim_win_get_cursor(0)[1] - 1
-		local chunk_arrow = chunk_utils.get_arrow_from_chunk(opts, cursor_line, chunk_info)
+		local chunk_arrow = chunk_utils.get_arrow_from_chunk(opts, cursor_line, chunk_info, hl.diag_hi)
 
 		if type(chunk_arrow[1]) == "table" then
 			return { chunk_arrow, chunk_header }

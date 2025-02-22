@@ -181,16 +181,25 @@ end
 ---@param opts table: The options table.
 ---@param diagnostic_line number: The line number of the diagnostic message.
 ---@param ret table: The return table containing diagnostic information.
+---@param hl_diag_hi string: The highlight group for the diagnostic message.
 ---@return table: A table representing the virtual text array for the arrow.
-function M.get_arrow_from_chunk(opts, diagnostic_line, ret)
+function M.get_arrow_from_chunk(opts, diagnostic_line, ret, hl_diag_hi)
 	local arrow = opts.signs.arrow
 	local need_to_be_under = ret.need_to_be_under
 
 	local chunk = {}
+
 	local hi = "TinyInlineDiagnosticVirtualTextArrow"
+	if opts.options.set_arrow_to_diag_color then
+		hi = hl_diag_hi .. "CursorLine"
+	end
 
 	if diagnostic_line ~= ret.line or ret.need_to_be_under then
 		hi = "TinyInlineDiagnosticVirtualTextArrowNoBg"
+
+		if opts.options.set_arrow_to_diag_color then
+			hi = hl_diag_hi .. "NoBg"
+		end
 	end
 
 	if need_to_be_under then
