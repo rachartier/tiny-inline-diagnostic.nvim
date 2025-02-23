@@ -13,6 +13,7 @@ local default_signs = {
 local function create_preset(overrides)
 	local preset = {
 		signs = vim.tbl_extend("force", default_signs, overrides.signs or {}),
+		options = vim.tbl_extend("force", {}, overrides.options or {}),
 		blend = {
 			factor = overrides.blend and overrides.blend.factor or 0.22,
 		},
@@ -75,8 +76,13 @@ function M.build(name, transparent_bg)
 		}),
 		powerline = create_preset({
 			signs = {
-				left = "",
+				arrow = "",
+				up_arrow = "",
 				right = " ",
+				left = "",
+			},
+			options = {
+				set_arrow_to_diag_color = true,
 			},
 		}),
 	}

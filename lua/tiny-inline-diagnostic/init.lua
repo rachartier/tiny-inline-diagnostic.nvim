@@ -78,7 +78,7 @@ local function normalize_config(config)
 
 	if config.preset then
 		local preset = presets.build(config.preset:lower(), config.transparent_bg)
-		config = vim.tbl_deep_extend("keep", config, preset)
+		config = vim.tbl_deep_extend("force", config, preset)
 	end
 
 	if type(config.options.multilines) == "boolean" then
