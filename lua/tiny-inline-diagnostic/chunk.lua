@@ -191,14 +191,14 @@ function M.get_arrow_from_chunk(opts, diagnostic_line, ret, hl_diag_hi)
 
 	local hi = "TinyInlineDiagnosticVirtualTextArrow"
 	if opts.options.set_arrow_to_diag_color then
-		hi = hl_diag_hi .. "CursorLine"
+		hi = hl_diag_hi
 	end
 
 	if diagnostic_line ~= ret.line or ret.need_to_be_under then
 		hi = "TinyInlineDiagnosticVirtualTextArrowNoBg"
 
 		if opts.options.set_arrow_to_diag_color then
-			hi = hl_diag_hi .. "NoBg"
+			hi = hl_diag_hi
 		end
 	end
 
