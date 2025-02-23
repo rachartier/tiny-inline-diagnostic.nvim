@@ -150,7 +150,6 @@ local function apply_virtual_texts(opts, event)
 	local filtered_diags = filter_diagnostics(opts, event, diagnostics)
 	local cursor_line = vim.api.nvim_win_get_cursor(0)[1] - 1
 	local visible_diags = get_visible_diagnostics(filtered_diags)
-	local signs_offset = vim.fn.strdisplaywidth(opts.signs.left) + vim.fn.strdisplaywidth(opts.signs.arrow)
 
 	-- Clear existing extmarks
 	extmarks.clear(event.buf)
@@ -189,6 +188,13 @@ local function apply_virtual_texts(opts, event)
 		local offset = data.offset
 		local need_to_be_under = data.need_to_be_under
 		local diagnostic_pos = data.diagnostic_pos
+		local signs_offset = 0
+
+		if need_to_be_under then
+			signs_offset = vim.fn.strdisplaywidth(opts.signs.left)
+		else
+			signs_offset = vim.fn.strdisplaywidth(opts.signs.left) + vim.fn.strdisplaywidth(opts.signs.arrow)
+		end
 
 		extmarks.create_extmarks(
 			opts,
