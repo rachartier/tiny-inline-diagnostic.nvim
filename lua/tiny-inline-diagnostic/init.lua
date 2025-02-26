@@ -76,7 +76,10 @@ local function normalize_config(config)
 		config.options.overflow.mode = config.options.overflow.mode:lower()
 	end
 
-	if config.preset then
+	if config.signs then
+		local preset = presets.build(config.preset or "modern", config.transparent_bg)
+		config = vim.tbl_deep_extend("keep", config, preset)
+	elseif config.preset then
 		local preset = presets.build(config.preset:lower(), config.transparent_bg)
 		config = vim.tbl_deep_extend("force", config, preset)
 	end

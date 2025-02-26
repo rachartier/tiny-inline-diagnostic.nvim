@@ -76,7 +76,7 @@ function M.build(name, transparent_bg)
 		}),
 		powerline = create_preset({
 			signs = {
-				arrow = "",
+				arrow = "   ",
 				up_arrow = "",
 				right = " ",
 				left = "",
