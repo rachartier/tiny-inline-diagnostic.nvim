@@ -23,7 +23,7 @@ local utils = require("tiny-inline-diagnostic.utils")
 ---@return string
 local function format_chunk_message(message, padding)
 	local trimmed = utils.trim(message)
-	local padding_needed = padding - vim.fn.strcharlen(trimmed)
+	local padding_needed = padding - vim.fn.strdisplaywidth(trimmed)
 	return trimmed .. string.rep(" ", math.max(0, padding_needed))
 end
 
