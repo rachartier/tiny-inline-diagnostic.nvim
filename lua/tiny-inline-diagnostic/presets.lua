@@ -31,7 +31,6 @@ function M.build(name, transparent_bg)
 				left = "",
 				right = "",
 			},
-			blend = { factor = 0 },
 		}),
 		simple = create_preset({
 			signs = {
