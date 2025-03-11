@@ -67,9 +67,9 @@ local function set_extmark(buf, line, virt_text, win_col, priority, pos)
 		strict = false,
 	}
 
-	if line == 0 then
-		extmark_opts.line_hl_group = "TinyInlineDiagnosticVirtualTextBg"
-	end
+	-- if line == 0 then
+	-- 	extmark_opts.line_hl_group = "TinyInlineDiagnosticVirtualTextBg"
+	-- end
 
 	vim.api.nvim_buf_set_extmark(buf, DIAGNOSTIC_NAMESPACE, line, 0, extmark_opts)
 end
