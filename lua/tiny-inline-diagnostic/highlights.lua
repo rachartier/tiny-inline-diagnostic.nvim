@@ -84,7 +84,7 @@ local function create_highlight_groups(colors, blends, transparent)
 	for severity, name in pairs(SEVERITY_NAMES) do
 		-- Cursor line highlights
 		hi[HIGHLIGHT_PREFIX .. name .. "CursorLine"] = {
-			bg = colors.background,
+			bg = colors.cursor_line.bg,
 			fg = colors[string.lower(name)].fg,
 			italic = colors[string.lower(name)].italic,
 		}
@@ -162,6 +162,7 @@ function M.setup_highlights(blend, default_hi, transparent)
 		hint = get_highlight(default_hi.hint),
 		ok = get_highlight(default_hi.ok),
 		arrow = get_highlight(default_hi.arrow),
+		cursor_line = get_highlight("CursorLine"),
 	}
 
 	if not transparent then
@@ -207,7 +208,7 @@ end
 function M.get_diagnostic_highlights(blend_factor, diag_ret, curline, index_diag)
 	local diag_hi, diag_inv_hi, body_hi = M.get_diagnostic_highlights_from_severity(diag_ret.severity)
 
-	if index_diag == 1 and blend_factor == 0 then
+	if (diag_ret.line and diag_ret.line == curline) and index_diag == 1 and blend_factor == 0 then
 		diag_hi = diag_hi .. "CursorLine"
 	end
 
