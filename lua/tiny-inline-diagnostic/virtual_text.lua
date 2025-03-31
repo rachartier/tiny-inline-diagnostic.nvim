@@ -79,7 +79,10 @@ function M.from_diagnostic(opts, ret, index_diag, padding, total_chunks)
 
 	-- Process each chunk
 	for index_chunk, chunk in ipairs(ret.chunks) do
-		local message = format_chunk_message(chunk, padding)
+		local message = utils.trim(chunk)
+		if #ret.chunks > 1 then
+			message = format_chunk_message(chunk, padding)
+		end
 
 		if index_chunk == 1 then
 			local first_chunks = build_first_chunk(
