@@ -153,7 +153,7 @@ end
 
 ---@param blend BlendOptions
 ---@param default_hi DefaultHighlights
-function M.setup_highlights(blend, default_hi, transparent)
+function M.setup_highlights(blend, default_hi, transparent_bg, transparent_cursorline)
 	-- Get base colors
 	local colors = {
 		error = get_highlight(default_hi.error),
@@ -162,15 +162,15 @@ function M.setup_highlights(blend, default_hi, transparent)
 		hint = get_highlight(default_hi.hint),
 		ok = get_highlight(default_hi.ok),
 		arrow = get_highlight(default_hi.arrow),
-		cursor_line = get_highlight("CursorLine"),
+		cursor_line = transparent_cursorline and { bg = "None" } or get_highlight("CursorLine"),
 	}
 
-	if not transparent then
-		transparent = false
+	if not transparent_bg then
+		transparent_bg = false
 	end
 
 	if blend.factor == 0 then
-		transparent = true
+		transparent_bg = true
 	end
 
 	-- Get special colors
@@ -187,7 +187,7 @@ function M.setup_highlights(blend, default_hi, transparent)
 	}
 
 	-- Create highlight groups
-	local hi = create_highlight_groups(colors, blends, transparent)
+	local hi = create_highlight_groups(colors, blends, transparent_bg)
 
 	create_mixed_highlights(hi)
 
