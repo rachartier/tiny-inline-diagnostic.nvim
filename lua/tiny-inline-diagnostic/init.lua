@@ -24,7 +24,10 @@ local default_config = {
 		mixing_color = "Normal",
 	},
 	options = {
-		show_source = false,
+		show_source = {
+			enabled = false,
+			if_many = false,
+		},
 		add_messages = true,
 		set_arrow_to_diag_color = false,
 		use_icons_from_diagnostic = false,

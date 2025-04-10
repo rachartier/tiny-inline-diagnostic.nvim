@@ -76,7 +76,10 @@ require("tiny-inline-diagnostic").setup({
 
     options = {
         -- Display the source of the diagnostic (e.g., basedpyright, vsserver, lua_ls etc.)
-        show_source = false,
+	show_source = {
+	    enabled = false,
+	    if_many = false,
+	},
 
         -- Use icons defined in the diagnostic configuration
         use_icons_from_diagnostic = false,
