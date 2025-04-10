@@ -244,7 +244,26 @@ function M.get_chunks(opts, diags_on_line, diag_index, diag_line, cursor_line, b
 
 	local diag = diags_on_line[diag_index]
 
-	if opts.options.show_source and diag.source then
+	local show_source = false
+	if type(opts.options.show_source) == "table" then
+		if opts.options.show_source.enabled then
+			if opts.options.show_source.if_many then
+				local sources = {}
+				for _, d in ipairs(diags_on_line) do
+					if d.source then
+						sources[d.source] = true
+					end
+				end
+				show_source = vim.tbl_count(sources) > 1
+			else
+				show_source = true
+			end
+		end
+	elseif opts.options.show_source then
+		show_source = true
+	end
+
+	if show_source and diag.source then
 		diag.message = diag.message .. " (" .. diag.source .. ")"
 	end
 
