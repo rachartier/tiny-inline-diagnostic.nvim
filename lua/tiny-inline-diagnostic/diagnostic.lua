@@ -23,13 +23,18 @@ local diagnostics_cache = {}
 ---@field col number
 
 local function enable()
-	M.enabled = true
-	vim.api.nvim_exec_autocmds("User", { pattern = USER_EVENT })
+	-- Prevents calling `enable` even if it's not needed
+	if not M.enabled then
+		M.enabled = true
+		vim.api.nvim_exec_autocmds("User", { pattern = USER_EVENT })
+	end
 end
 
 local function disable()
-	M.enabled = false
-	vim.api.nvim_exec_autocmds("User", { pattern = USER_EVENT })
+	if M.enabled then
+		M.enabled = false
+		vim.api.nvim_exec_autocmds("User", { pattern = USER_EVENT })
+	end
 end
 
 -- Diagnostic filtering functions
