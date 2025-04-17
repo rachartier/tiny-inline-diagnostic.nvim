@@ -1,4 +1,4 @@
-*tiny-inline-diagnostic.nvim.txt*For Neovim >= 0.10.0Last change: 2025 January 25
+*tiny-inline-diagnostic.nvim.txt*For Neovim >= 0.10.0Last change: 2025 April 17
 
 ==============================================================================
 Table of Contents              *tiny-inline-diagnostic.nvim-table-of-contents*
@@ -68,6 +68,9 @@ OPTIONS      *tiny-inline-diagnostic.nvim-tiny-inline-diagnostic.nvim-options*
         -- "ghost", "simple", "nonerdfont", "amongus"
         preset = "modern",
     
+        transparent_bg = false, -- Set the background of the diagnostic to transparent
+        transparent_cursorline = false, -- Set the background of the cursorline to transparent (only one the first diagnostic)
+    
         hi = {
             error = "DiagnosticError", -- Highlight group for error messages
             warn = "DiagnosticWarn", -- Highlight group for warning messages
@@ -86,13 +89,16 @@ OPTIONS      *tiny-inline-diagnostic.nvim-tiny-inline-diagnostic.nvim-options*
     
         options = {
             -- Display the source of the diagnostic (e.g., basedpyright, vsserver, lua_ls etc.)
-	    show_source = {
-		    enabled = false,
-		    if_many = false,
-	    },
+        show_source = {
+            enabled = false,
+            if_many = false,
+        },
     
             -- Use icons defined in the diagnostic configuration
             use_icons_from_diagnostic = false,
+    
+            -- Set the arrow icon to the same color as the first diagnostic severity
+            set_arrow_to_diag_color = false,
     
             -- Add messages to diagnostics when multiline diagnostics are enabled
             -- If set to false, only signs will be displayed
@@ -105,10 +111,6 @@ OPTIONS      *tiny-inline-diagnostic.nvim-tiny-inline-diagnostic.nvim-options*
     
             -- Minimum message length before wrapping to a new line
             softwrap = 30,
-    
-            -- Show all diagnostics under the cursor if multiple diagnostics exist on the same line
-            -- If set to false, only the diagnostics under the cursor will be displayed
-            multiple_diag_under_cursor = false,
     
             -- Configuration for multiline diagnostics
             -- Can either be a boolean or a table with the following options:
@@ -146,6 +148,11 @@ OPTIONS      *tiny-inline-diagnostic.nvim-tiny-inline-diagnostic.nvim-options*
                 -- "none" - Do not truncate messages
                 -- "oneline" - Keep the message on a single line, even if it's long
                 mode = "wrap",
+    
+                -- Trigger wrapping to occur this many characters earlier when mode == "wrap".
+                -- Increase this value appropriately if you notice that the last few characters
+                -- of wrapped diagnostics are sometimes obscured.
+                padding = 0,
             },
     
             -- Configuration for breaking long messages into separate lines
