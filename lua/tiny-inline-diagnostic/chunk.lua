@@ -263,11 +263,12 @@ function M.get_chunks(opts, diags_on_line, diag_index, diag_line, cursor_line, b
 		show_source = true
 	end
 
+	local diag_message = diag.message
 	if show_source and diag.source then
-		diag.message = diag.message .. " (" .. diag.source .. ")"
+		diag_message = diag_message .. " (" .. diag.source .. ")"
 	end
 
-	local chunks = { diag.message }
+	local chunks = { diag_message }
 	local severities = vim.tbl_map(function(d)
 		return d.severity
 	end, diags_on_line)
@@ -280,7 +281,6 @@ function M.get_chunks(opts, diags_on_line, diag_index, diag_line, cursor_line, b
 		end
 	end
 
-	local diag_message = diag.message
 
 	if opts.options.format and diag_message then
 		diag_message = opts.options.format(diag)

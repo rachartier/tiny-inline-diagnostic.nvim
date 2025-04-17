@@ -15,18 +15,27 @@ M.enabled = true
 M.user_toggle_state = true
 local attached_buffers = {}
 
+---Buffer number => diagnostics
+---@type table<number, any>
+local diagnostics_cache = {}
+
 ---@class DiagnosticPosition
 ---@field line number
 ---@field col number
 
 local function enable()
-	M.enabled = true
-	vim.api.nvim_exec_autocmds("User", { pattern = USER_EVENT })
+	-- Prevents calling `enable` even if it's not needed
+	if not M.enabled then
+		M.enabled = true
+		vim.api.nvim_exec_autocmds("User", { pattern = USER_EVENT })
+	end
 end
 
 local function disable()
-	M.enabled = false
-	vim.api.nvim_exec_autocmds("User", { pattern = USER_EVENT })
+	if M.enabled then
+		M.enabled = false
+		vim.api.nvim_exec_autocmds("User", { pattern = USER_EVENT })
+	end
 end
 
 -- Diagnostic filtering functions
@@ -87,22 +96,16 @@ end
 ---@param diagnostics table
 ---@return table
 local function filter_diagnostics(opts, event, diagnostics)
-	local filtered = filter_by_severity(opts, diagnostics)
-
-	table.sort(filtered, function(a, b)
-		return a.severity < b.severity
-	end)
-
 	if not opts.options.multilines.enabled then
-		return M.filter_diags_under_cursor(opts, event.buf, filtered)
+		return M.filter_diags_under_cursor(opts, event.buf, diagnostics)
 	end
 
 	if opts.options.multilines.always_show then
-		return filtered
+		return diagnostics
 	end
 
-	local under_cursor = M.filter_diags_under_cursor(opts, event.buf, filtered)
-	return not vim.tbl_isempty(under_cursor) and under_cursor or filtered
+	local under_cursor = M.filter_diags_under_cursor(opts, event.buf, diagnostics)
+	return not vim.tbl_isempty(under_cursor) and under_cursor or diagnostics
 end
 
 ---@param diagnostics table
@@ -123,6 +126,53 @@ local function get_visible_diagnostics(diagnostics)
 end
 
 ---@param opts DiagnosticConfig
+---@param bufnr number
+---@param diagnostics table
+local function update_diagnostics_cache(opts, bufnr, diagnostics)
+	if vim.tbl_isempty(diagnostics) then
+		-- The event doesn't contain the associated namespace of the diagnostics, 
+		-- meaning we can't know which namespace was cleared. We thus have to get 
+		-- the diagnostics through normal means.
+		local diags = vim.diagnostic.get(bufnr)
+		table.sort(diags, function(a, b)
+			return a.severity < b.severity
+		end)
+		diagnostics_cache[bufnr] = diags
+		return
+	end
+
+	local diag_buf = diagnostics_cache[bufnr] or {}
+
+	-- Do the upfront work of filtering and sorting
+	diagnostics = filter_by_severity(opts, diagnostics)
+
+	-- Find the sources of the incoming diagnostics.
+	-- It's almost always a single source, but you never know.
+	local sources = {}
+	for _, diag in ipairs(diagnostics) do
+		if not vim.tbl_contains(sources, diag.source) then
+			table.insert(sources, diag.source)
+		end
+	end
+
+	-- Clear the diagnostics that are from the incoming source
+	diag_buf = vim.tbl_filter(function(diag)
+		return not vim.tbl_contains(sources, diag.source)
+	end, diag_buf)
+
+	-- Insert and sort the results
+	for _, diag in pairs(diagnostics) do
+		table.insert(diag_buf, diag)
+	end
+
+	table.sort(diag_buf, function(a, b)
+		return a.severity < b.severity
+	end)
+
+	diagnostics_cache[bufnr] = diag_buf
+end
+
+---@param opts DiagnosticConfig
 ---@param event table
 local function apply_virtual_texts(opts, event)
 	-- Validate window and state
@@ -139,9 +189,9 @@ local function apply_virtual_texts(opts, event)
 		return
 	end
 
-	-- Get and validate diagnostics
-	local ok, diagnostics = pcall(vim.diagnostic.get, event.buf)
-	if not ok or vim.tbl_isempty(diagnostics) then
+	-- Get diagnostics and clear them if needed
+	local diagnostics = diagnostics_cache[event.buf] or {}
+	if vim.tbl_isempty(diagnostics) then
 		extmarks.clear(event.buf)
 		return
 	end
@@ -214,6 +264,7 @@ end
 local function detach_buffer(buf)
 	timers.close(buf)
 	attached_buffers[buf] = nil
+	diagnostics_cache[buf] = nil
 end
 
 ---@param autocmd_ns number
@@ -274,8 +325,9 @@ local function setup_buffer_autocmds(autocmd_ns, opts, event, throttled_apply)
 	-- Setup diagnostic change events
 	vim.api.nvim_create_autocmd("DiagnosticChanged", {
 		group = autocmd_ns,
-		callback = function()
-			if vim.api.nvim_buf_is_valid(event.buf) then
+		callback = function(args)
+			if vim.api.nvim_buf_is_valid(args.buf) then
+				update_diagnostics_cache(opts, args.buf, args.data.diagnostics)
 				vim.api.nvim_exec_autocmds("User", { pattern = USER_EVENT })
 			end
 		end,
