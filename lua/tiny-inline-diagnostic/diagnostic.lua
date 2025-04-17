@@ -15,6 +15,9 @@ M.enabled = true
 M.user_toggle_state = true
 local attached_buffers = {}
 
+-- @type table<number, any>
+local diagnostics_cache = {}
+
 ---@class DiagnosticPosition
 ---@field line number
 ---@field col number
@@ -87,22 +90,16 @@ end
 ---@param diagnostics table
 ---@return table
 local function filter_diagnostics(opts, event, diagnostics)
-	local filtered = filter_by_severity(opts, diagnostics)
-
-	table.sort(filtered, function(a, b)
-		return a.severity < b.severity
-	end)
-
 	if not opts.options.multilines.enabled then
-		return M.filter_diags_under_cursor(opts, event.buf, filtered)
+		return M.filter_diags_under_cursor(opts, event.buf, diagnostics)
 	end
 
 	if opts.options.multilines.always_show then
-		return filtered
+		return diagnostics
 	end
 
-	local under_cursor = M.filter_diags_under_cursor(opts, event.buf, filtered)
-	return not vim.tbl_isempty(under_cursor) and under_cursor or filtered
+	local under_cursor = M.filter_diags_under_cursor(opts, event.buf, diagnostics)
+	return not vim.tbl_isempty(under_cursor) and under_cursor or diagnostics
 end
 
 ---@param diagnostics table
@@ -120,6 +117,15 @@ local function get_visible_diagnostics(diagnostics)
 	end
 
 	return visible_diags
+end
+
+local function update_diagnostics_cache(opts, bufnr, diagnostics)
+	-- Do the upfront work of filtering and sorting
+	diagnostics = filter_by_severity(opts, diagnostics)
+	table.sort(diagnostics, function(a, b)
+		return a.severity < b.severity
+	end)
+	diagnostics_cache[bufnr] = diagnostics
 end
 
 ---@param opts DiagnosticConfig
@@ -214,6 +220,7 @@ end
 local function detach_buffer(buf)
 	timers.close(buf)
 	attached_buffers[buf] = nil
+	diagnostics_cache[buf] = nil
 end
 
 ---@param autocmd_ns number
@@ -274,8 +281,9 @@ local function setup_buffer_autocmds(autocmd_ns, opts, event, throttled_apply)
 	-- Setup diagnostic change events
 	vim.api.nvim_create_autocmd("DiagnosticChanged", {
 		group = autocmd_ns,
-		callback = function()
-			if vim.api.nvim_buf_is_valid(event.buf) then
+		callback = function(args)
+			if vim.api.nvim_buf_is_valid(args.buf) then
+				update_diagnostics_cache(opts, args.buf, args.data.diagnostics)
 				vim.api.nvim_exec_autocmds("User", { pattern = USER_EVENT })
 			end
 		end,
