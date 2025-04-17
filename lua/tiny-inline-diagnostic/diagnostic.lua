@@ -70,10 +70,10 @@ end
 ---@return table
 function M.filter_diags_under_cursor(opts, buf, diagnostics)
 	if
-		not vim.api.nvim_buf_is_valid(buf)
-		or vim.api.nvim_get_current_buf() ~= buf
-		or not diagnostics
-		or #diagnostics == 0
+	    not vim.api.nvim_buf_is_valid(buf)
+	    or vim.api.nvim_get_current_buf() ~= buf
+	    or not diagnostics
+	    or #diagnostics == 0
 	then
 		return {}
 	end
@@ -92,19 +92,19 @@ local function filter_by_severity(opts, diagnostics)
 end
 
 ---@param opts DiagnosticConfig
----@param event table
+---@param bufnr number
 ---@param diagnostics table
 ---@return table
-local function filter_diagnostics(opts, event, diagnostics)
+local function filter_diagnostics(opts, bufnr, diagnostics)
 	if not opts.options.multilines.enabled then
-		return M.filter_diags_under_cursor(opts, event.buf, diagnostics)
+		return M.filter_diags_under_cursor(opts, bufnr, diagnostics)
 	end
 
 	if opts.options.multilines.always_show then
 		return diagnostics
 	end
 
-	local under_cursor = M.filter_diags_under_cursor(opts, event.buf, diagnostics)
+	local under_cursor = M.filter_diags_under_cursor(opts, bufnr, diagnostics)
 	return not vim.tbl_isempty(under_cursor) and under_cursor or diagnostics
 end
 
@@ -173,8 +173,8 @@ local function update_diagnostics_cache(opts, bufnr, diagnostics)
 end
 
 ---@param opts DiagnosticConfig
----@param event table
-local function apply_virtual_texts(opts, event)
+---@param bufnr number
+local function apply_virtual_texts(opts, bufnr)
 	-- Validate window and state
 	local current_win = vim.api.nvim_get_current_win()
 	if not vim.api.nvim_win_is_valid(current_win) then
@@ -182,27 +182,27 @@ local function apply_virtual_texts(opts, event)
 	end
 
 	if
-		not M.user_toggle_state
-		or not (M.enabled and vim.diagnostic.is_enabled() and vim.api.nvim_buf_is_valid(event.buf))
+	    not M.user_toggle_state
+	    or not (M.enabled and vim.diagnostic.is_enabled() and vim.api.nvim_buf_is_valid(bufnr))
 	then
-		extmarks.clear(event.buf)
+		extmarks.clear(bufnr)
 		return
 	end
 
 	-- Get diagnostics and clear them if needed
-	local diagnostics = diagnostics_cache[event.buf] or {}
+	local diagnostics = diagnostics_cache[bufnr] or {}
 	if vim.tbl_isempty(diagnostics) then
-		extmarks.clear(event.buf)
+		extmarks.clear(bufnr)
 		return
 	end
 
 	-- Process diagnostics
-	local filtered_diags = filter_diagnostics(opts, event, diagnostics)
+	local filtered_diags = filter_diagnostics(opts, bufnr, diagnostics)
 	local cursor_line = vim.api.nvim_win_get_cursor(0)[1] - 1
 	local visible_diags = get_visible_diagnostics(filtered_diags)
 
 	-- Clear existing extmarks
-	extmarks.clear(event.buf)
+	extmarks.clear(bufnr)
 
 	local diags_dims = {}
 	local to_render = {}
@@ -216,11 +216,13 @@ local function apply_virtual_texts(opts, event)
 
 			if lnum == cursor_line then
 				virt_lines, offset, need_to_be_under =
-					virtual_text_forge.from_diagnostics(opts, diags, diagnostic_pos, event.buf)
+				    virtual_text_forge.from_diagnostics(opts, diags, diagnostic_pos, bufnr)
 			else
-				local chunks = chunk_utils.get_chunks(opts, diags, 1, diagnostic_pos[1], cursor_line, event.buf)
+				local chunks = chunk_utils.get_chunks(opts, diags, 1, diagnostic_pos[1], cursor_line,
+					bufnr)
 				local max_width = chunk_utils.get_max_width_from_chunks(chunks.chunks)
-				virt_lines, offset, need_to_be_under = virtual_text_forge.from_diagnostic(opts, chunks, 1, max_width, 1)
+				virt_lines, offset, need_to_be_under = virtual_text_forge.from_diagnostic(opts, chunks, 1,
+					max_width, 1)
 			end
 
 			table.insert(diags_dims, { lnum, #virt_lines })
@@ -248,7 +250,7 @@ local function apply_virtual_texts(opts, event)
 
 		extmarks.create_extmarks(
 			opts,
-			event,
+			bufnr,
 			diagnostic_pos[1],
 			diags_dims,
 			virt_lines,
@@ -269,17 +271,17 @@ end
 
 ---@param autocmd_ns number
 ---@param opts DiagnosticConfig
----@param event table
----@param throttle_apply function
-local function setup_cursor_autocmds(autocmd_ns, opts, event, throttle_apply)
+---@param bufnr number
+---@param throttle_apply fun(bufnr: number): nil
+local function setup_cursor_autocmds(autocmd_ns, opts, bufnr, throttle_apply)
 	local events = opts.options.enable_on_insert and { "CursorMoved", "CursorMovedI" } or { "CursorMoved" }
 
 	vim.api.nvim_create_autocmd(events, {
 		group = autocmd_ns,
-		buffer = event.buf,
-		callback = function()
+		buffer = bufnr,
+		callback = function(event)
 			if vim.api.nvim_buf_is_valid(event.buf) then
-				throttle_apply()
+				throttle_apply(event.buf)
 			else
 				detach_buffer(event.buf)
 			end
@@ -289,11 +291,12 @@ local function setup_cursor_autocmds(autocmd_ns, opts, event, throttle_apply)
 end
 
 ---@param autocmd_ns number
----@param event table
-local function setup_mode_change_autocmds(autocmd_ns, event)
+---@param bufnr number
+local function setup_mode_change_autocmds(autocmd_ns, bufnr)
 	vim.api.nvim_create_autocmd("ModeChanged", {
 		group = autocmd_ns,
-		callback = function()
+		buffer = bufnr,
+		callback = function(event)
 			local mode = vim.api.nvim_get_mode().mode
 
 			if not vim.api.nvim_buf_is_valid(event.buf) then
@@ -313,18 +316,19 @@ end
 
 ---@param autocmd_ns number
 ---@param opts DiagnosticConfig
----@param event table
----@param throttled_apply function
-local function setup_buffer_autocmds(autocmd_ns, opts, event, throttled_apply)
-	if not vim.api.nvim_buf_is_valid(event.buf) or attached_buffers[event.buf] then
+---@param bufnr number
+---@param throttled_apply fun(bufnr: number): nil
+local function setup_buffer_autocmds(autocmd_ns, opts, bufnr, throttled_apply)
+	if not vim.api.nvim_buf_is_valid(bufnr) or attached_buffers[bufnr] then
 		return
 	end
 
-	attached_buffers[event.buf] = true
+	attached_buffers[bufnr] = true
 
 	-- Setup diagnostic change events
 	vim.api.nvim_create_autocmd("DiagnosticChanged", {
 		group = autocmd_ns,
+		buffer = bufnr,
 		callback = function(args)
 			if vim.api.nvim_buf_is_valid(args.buf) then
 				update_diagnostics_cache(opts, args.buf, args.data.diagnostics)
@@ -338,19 +342,19 @@ local function setup_buffer_autocmds(autocmd_ns, opts, event, throttled_apply)
 		group = autocmd_ns,
 		pattern = USER_EVENT,
 		callback = function()
-			if not vim.api.nvim_buf_is_valid(event.buf) then
-				detach_buffer(event.buf)
+			if not vim.api.nvim_buf_is_valid(bufnr) then
+				detach_buffer(bufnr)
 				return
 			end
-			apply_virtual_texts(opts, event)
+			apply_virtual_texts(opts, bufnr)
 		end,
 	})
 
 	-- Setup buffer cleanup events
 	vim.api.nvim_create_autocmd({ "LspDetach", "BufDelete", "BufUnload", "BufWipeout" }, {
 		group = autocmd_ns,
-		buffer = event.buf,
-		callback = function()
+		buffer = bufnr,
+		callback = function(event)
 			detach_buffer(event.buf)
 		end,
 	})
@@ -360,19 +364,19 @@ local function setup_buffer_autocmds(autocmd_ns, opts, event, throttled_apply)
 		group = autocmd_ns,
 		pattern = USER_EVENT_THROTTLED,
 		callback = function()
-			if not vim.api.nvim_buf_is_valid(event.buf) then
-				detach_buffer(event.buf)
+			if not vim.api.nvim_buf_is_valid(bufnr) then
+				detach_buffer(bufnr)
 				return
 			end
-			throttled_apply()
+			throttled_apply(bufnr)
 		end,
 	})
 
 	-- Setup window resize handling
 	vim.api.nvim_create_autocmd("VimResized", {
 		group = autocmd_ns,
-		buffer = event.buf,
-		callback = function()
+		buffer = bufnr,
+		callback = function(event)
 			if vim.api.nvim_buf_is_valid(event.buf) then
 				vim.api.nvim_exec_autocmds("User", { pattern = USER_EVENT })
 			else
@@ -393,37 +397,38 @@ function M.set_diagnostic_autocmds(opts)
 
 	local events = opts.options.overwrite_events or { "LspAttach" }
 
+	if not opts.options.enable_on_select then
+		table.insert(DISABLED_MODES, "s")
+	end
+
+	if not opts.options.enable_on_insert then
+		table.insert(DISABLED_MODES, "i")
+		table.insert(DISABLED_MODES, "v")
+		table.insert(DISABLED_MODES, "V")
+	end
+
 	vim.api.nvim_create_autocmd(events, {
 		callback = function(event)
 			if not vim.api.nvim_buf_is_valid(event.buf) then
 				return
 			end
 
-			if not opts.options.enable_on_select then
-				table.insert(DISABLED_MODES, "s")
-			end
-
-			if not opts.options.enable_on_insert then
-				table.insert(DISABLED_MODES, "i")
-				table.insert(DISABLED_MODES, "v")
-				table.insert(DISABLED_MODES, "V")
-			end
-
 			if vim.tbl_contains(opts.disabled_ft, vim.bo[event.buf].filetype) then
 				return
 			end
 
-			local throttled_fn, timer = utils.throttle(function()
-				if vim.api.nvim_buf_is_valid(event.buf) then
-					apply_virtual_texts(opts, event)
+			---@type fun(bufnr: number): nil
+			local throttled_fn, timer = utils.throttle(function(bufnr)
+				if vim.api.nvim_buf_is_valid(bufnr) then
+					apply_virtual_texts(opts, bufnr)
 				end
 			end, opts.options.throttle)
 
 			timers.add(event.buf, timer)
 
-			setup_buffer_autocmds(autocmd_ns, opts, event, throttled_fn)
-			setup_cursor_autocmds(autocmd_ns, opts, event, throttled_fn)
-			setup_mode_change_autocmds(autocmd_ns, event)
+			setup_buffer_autocmds(autocmd_ns, opts, event.buf, throttled_fn)
+			setup_cursor_autocmds(autocmd_ns, opts, event.buf, throttled_fn)
+			setup_mode_change_autocmds(autocmd_ns, event.buf)
 		end,
 		desc = "Setup diagnostic display system",
 	})
