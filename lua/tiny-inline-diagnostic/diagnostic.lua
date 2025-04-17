@@ -15,12 +15,8 @@ M.enabled = true
 M.user_toggle_state = true
 local attached_buffers = {}
 
----We store the diagnostics by buffer and then by source.
----Without that, because we're using the diagnostics from the
----`DiagnosticChanged` event, we would overwrite the diagnostics
----of the other sources.
----Buffer number => diagnotic source => diagnostic
----@type table<number, table<string, any>>
+---Buffer number => diagnostics
+---@type table<number, any>
 local diagnostics_cache = {}
 
 ---@class DiagnosticPosition
@@ -133,31 +129,35 @@ end
 ---@param bufnr number
 ---@param diagnostics table
 local function update_diagnostics_cache(opts, bufnr, diagnostics)
+	local diag_buf = diagnostics_cache[bufnr] or {}
+
 	-- Do the upfront work of filtering and sorting
 	diagnostics = filter_by_severity(opts, diagnostics)
-	local per_source = utils.group_by(diagnostics, "source")
-	if not diagnostics_cache[bufnr] then
-		diagnostics_cache[bufnr] = {}
-	end
-	for source, source_diags in pairs(per_source) do
-		table.sort(source_diags, function(a, b)
-			return a.severity < b.severity
-		end)
-		diagnostics_cache[bufnr][source] = source_diags
-	end
-end
 
----Return all the diagnostics of the buffer.
----@param bufnr number
----@return table
-local function get_diagnostics(bufnr)
-	local all_diags = {}
-	for _, diags in pairs(diagnostics_cache[bufnr] or {}) do
-		for _, diag in ipairs(diags or {}) do
-			table.insert(all_diags, diag)
+	-- Find the sources of the incoming diagnostics.
+	-- It's almost always a single source, but you never know.
+	local sources = {}
+	for _, diag in ipairs(diagnostics) do
+		if not vim.tbl_contains(sources, diag.source) then
+			table.insert(sources, diag.source)
 		end
 	end
-	return all_diags
+
+	-- Clear the diagnostics that are from the incoming source
+	diag_buf = vim.tbl_filter(function(diag)
+		return not vim.tbl_contains(sources, diag.source)
+	end, diag_buf)
+
+	-- Insert and sort the results
+	for _, diag in pairs(diagnostics) do
+		table.insert(diag_buf, diag)
+	end
+
+	table.sort(diag_buf, function(a, b)
+		return a.severity < b.severity
+	end)
+
+	diagnostics_cache[bufnr] = diag_buf
 end
 
 ---@param opts DiagnosticConfig
@@ -178,8 +178,8 @@ local function apply_virtual_texts(opts, event)
 	end
 
 	-- Get diagnostics and clear them if needed
-	local diagnostics = get_diagnostics(event.buf)
-	if diagnostics == nil or vim.tbl_isempty(diagnostics) then
+	local diagnostics = diagnostics_cache[event.buf] or {}
+	if vim.tbl_isempty(diagnostics) then
 		extmarks.clear(event.buf)
 		return
 	end
