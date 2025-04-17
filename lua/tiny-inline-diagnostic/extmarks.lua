@@ -237,7 +237,7 @@ end
 
 ---Create extmarks
 ---@param opts table
----@param event table
+---@param bufnr number
 ---@param diag_line number
 ---@param virt_lines table
 ---@param offset number
@@ -246,7 +246,7 @@ end
 ---@param virt_priority number
 function M.create_extmarks(
 	opts,
-	event,
+	bufnr,
 	diag_line,
 	diags_dims,
 	virt_lines,
@@ -255,11 +255,11 @@ function M.create_extmarks(
 	need_to_be_under,
 	virt_priority
 )
-	if not is_valid_buffer(event.buf) or not virt_lines or vim.tbl_isempty(virt_lines) then
+	if not is_valid_buffer(bufnr) or not virt_lines or vim.tbl_isempty(virt_lines) then
 		return
 	end
 
-	local buf_lines_count = vim.api.nvim_buf_line_count(event.buf)
+	local buf_lines_count = vim.api.nvim_buf_line_count(bufnr)
 	if buf_lines_count == 0 then
 		return
 	end
@@ -273,13 +273,13 @@ function M.create_extmarks(
 			return
 		end
 
-		create_multiline_extmark(event.buf, diag_line, virt_lines, virt_priority)
+		create_multiline_extmark(bufnr, diag_line, virt_lines, virt_priority)
 
 		return
 	end
 
 	if need_to_be_under or diag_line - 1 + #virt_lines > buf_lines_count - 1 then
-		handle_overflow_case(event.buf, {
+		handle_overflow_case(bufnr, {
 			curline = diag_line,
 			virt_lines = virt_lines,
 			win_col = win_col,
@@ -293,7 +293,7 @@ function M.create_extmarks(
 		for i = 1, #virt_lines do
 			local col_offset = i == 1 and win_col or (win_col + offset + signs_offset)
 			set_extmark(
-				event.buf,
+				bufnr,
 				diag_line + i - 1,
 				virt_lines[i],
 				col_offset,
