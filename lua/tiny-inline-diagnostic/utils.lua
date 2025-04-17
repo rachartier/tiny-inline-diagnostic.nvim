@@ -178,4 +178,22 @@ function M.fast_uuid()
 	return math.random(1, UUID_MAX)
 end
 
+-- Table utilities
+---Group the elements of a table by a key
+---@param tbl table The table to group by
+---@param key string The key function to use for grouping
+---@return table grouped The grouped table
+function M.group_by(tbl, key)
+	local result = {};
+	for _, v in ipairs(tbl) do
+		if not result[v[key]] then
+			result[v[key]] = {};
+		end
+
+		table.insert(result[v[key]], v);
+	end
+
+	return result
+end
+
 return M

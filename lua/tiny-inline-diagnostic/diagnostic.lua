@@ -15,7 +15,12 @@ M.enabled = true
 M.user_toggle_state = true
 local attached_buffers = {}
 
--- @type table<number, any>
+---We store the diagnostics by buffer and then by source.
+---Without that, because we're using the diagnostics from the
+---`DiagnosticChanged` event, we would overwrite the diagnostics
+---of the other sources.
+---Buffer number => diagnotic source => diagnostic
+---@type table<number, table<string, any>>
 local diagnostics_cache = {}
 
 ---@class DiagnosticPosition
@@ -124,13 +129,35 @@ local function get_visible_diagnostics(diagnostics)
 	return visible_diags
 end
 
+---@param opts DiagnosticConfig
+---@param bufnr number
+---@param diagnostics table
 local function update_diagnostics_cache(opts, bufnr, diagnostics)
 	-- Do the upfront work of filtering and sorting
 	diagnostics = filter_by_severity(opts, diagnostics)
-	table.sort(diagnostics, function(a, b)
-		return a.severity < b.severity
-	end)
-	diagnostics_cache[bufnr] = diagnostics
+	local per_source = utils.group_by(diagnostics, "source")
+	if not diagnostics_cache[bufnr] then
+		diagnostics_cache[bufnr] = {}
+	end
+	for source, source_diags in pairs(per_source) do
+		table.sort(source_diags, function(a, b)
+			return a.severity < b.severity
+		end)
+		diagnostics_cache[bufnr][source] = source_diags
+	end
+end
+
+---Return all the diagnostics of the buffer.
+---@param bufnr number
+---@return table
+local function get_diagnostics(bufnr)
+	local all_diags = {}
+	for _, diags in pairs(diagnostics_cache[bufnr] or {}) do
+		for _, diag in ipairs(diags or {}) do
+			table.insert(all_diags, diag)
+		end
+	end
+	return all_diags
 end
 
 ---@param opts DiagnosticConfig
@@ -150,9 +177,9 @@ local function apply_virtual_texts(opts, event)
 		return
 	end
 
-	-- Get and validate diagnostics
-	local ok, diagnostics = pcall(vim.diagnostic.get, event.buf)
-	if not ok or vim.tbl_isempty(diagnostics) then
+	-- Get diagnostics and clear them if needed
+	local diagnostics = get_diagnostics(event.buf)
+	if diagnostics == nil or vim.tbl_isempty(diagnostics) then
 		extmarks.clear(event.buf)
 		return
 	end
