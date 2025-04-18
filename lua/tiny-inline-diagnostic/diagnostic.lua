@@ -146,18 +146,20 @@ local function update_diagnostics_cache(opts, bufnr, diagnostics)
 	-- Do the upfront work of filtering and sorting
 	diagnostics = filter_by_severity(opts, diagnostics)
 
-	-- Find the sources of the incoming diagnostics.
-	-- It's almost always a single source, but you never know.
-	local sources = {}
+	-- Find the namespaces of the incoming diagnostics.
+	-- Use the namespace and not the source because the event is triggered per namespace,
+	-- while the source field can be unreliable (e.g. Deno LSP seems to switch between 
+	-- deno and deno-ts).
+	local namespaces = {}
 	for _, diag in ipairs(diagnostics) do
-		if not vim.tbl_contains(sources, diag.source) then
-			table.insert(sources, diag.source)
+		if not vim.tbl_contains(namespaces, diag.namespace) then
+			table.insert(namespaces, diag.namespace)
 		end
 	end
 
 	-- Clear the diagnostics that are from the incoming source
 	diag_buf = vim.tbl_filter(function(diag)
-		return not vim.tbl_contains(sources, diag.source)
+		return not vim.tbl_contains(namespaces, diag.namespace)
 	end, diag_buf)
 
 	-- Insert and sort the results
