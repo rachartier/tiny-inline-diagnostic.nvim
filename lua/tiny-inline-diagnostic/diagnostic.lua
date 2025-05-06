@@ -194,7 +194,7 @@ local function apply_virtual_texts(opts, bufnr)
 	local mode = vim.api.nvim_get_mode().mode
 	if M.enabled and vim.tbl_contains(DISABLED_MODES, mode) then
 		disable()
-		extmarks.clear(event.buf)
+		extmarks.clear(bufnr)
 		return
 	end
 
