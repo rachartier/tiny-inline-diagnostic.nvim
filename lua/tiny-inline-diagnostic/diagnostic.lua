@@ -70,10 +70,10 @@ end
 ---@return table
 function M.filter_diags_under_cursor(opts, buf, diagnostics)
 	if
-	    not vim.api.nvim_buf_is_valid(buf)
-	    or vim.api.nvim_get_current_buf() ~= buf
-	    or not diagnostics
-	    or #diagnostics == 0
+		not vim.api.nvim_buf_is_valid(buf)
+		or vim.api.nvim_get_current_buf() ~= buf
+		or not diagnostics
+		or #diagnostics == 0
 	then
 		return {}
 	end
@@ -130,8 +130,8 @@ end
 ---@param diagnostics table
 local function update_diagnostics_cache(opts, bufnr, diagnostics)
 	if vim.tbl_isempty(diagnostics) then
-		-- The event doesn't contain the associated namespace of the diagnostics, 
-		-- meaning we can't know which namespace was cleared. We thus have to get 
+		-- The event doesn't contain the associated namespace of the diagnostics,
+		-- meaning we can't know which namespace was cleared. We thus have to get
 		-- the diagnostics through normal means.
 		local diags = vim.diagnostic.get(bufnr)
 		table.sort(diags, function(a, b)
@@ -148,7 +148,7 @@ local function update_diagnostics_cache(opts, bufnr, diagnostics)
 
 	-- Find the namespaces of the incoming diagnostics.
 	-- Use the namespace and not the source because the event is triggered per namespace,
-	-- while the source field can be unreliable (e.g. Deno LSP seems to switch between 
+	-- while the source field can be unreliable (e.g. Deno LSP seems to switch between
 	-- deno and deno-ts).
 	local namespaces = {}
 	for _, diag in ipairs(diagnostics) do
@@ -184,10 +184,17 @@ local function apply_virtual_texts(opts, bufnr)
 	end
 
 	if
-	    not M.user_toggle_state
-	    or not (M.enabled and vim.diagnostic.is_enabled() and vim.api.nvim_buf_is_valid(bufnr))
+		not M.user_toggle_state
+		or not (M.enabled and vim.diagnostic.is_enabled() and vim.api.nvim_buf_is_valid(bufnr))
 	then
 		extmarks.clear(bufnr)
+		return
+	end
+
+	local mode = vim.api.nvim_get_mode().mode
+	if M.enabled and vim.tbl_contains(DISABLED_MODES, mode) then
+		disable()
+		extmarks.clear(event.buf)
 		return
 	end
 
@@ -218,13 +225,11 @@ local function apply_virtual_texts(opts, bufnr)
 
 			if lnum == cursor_line then
 				virt_lines, offset, need_to_be_under =
-				    virtual_text_forge.from_diagnostics(opts, diags, diagnostic_pos, bufnr)
+					virtual_text_forge.from_diagnostics(opts, diags, diagnostic_pos, bufnr)
 			else
-				local chunks = chunk_utils.get_chunks(opts, diags, 1, diagnostic_pos[1], cursor_line,
-					bufnr)
+				local chunks = chunk_utils.get_chunks(opts, diags, 1, diagnostic_pos[1], cursor_line, bufnr)
 				local max_width = chunk_utils.get_max_width_from_chunks(chunks.chunks)
-				virt_lines, offset, need_to_be_under = virtual_text_forge.from_diagnostic(opts, chunks, 1,
-					max_width, 1)
+				virt_lines, offset, need_to_be_under = virtual_text_forge.from_diagnostic(opts, chunks, 1, max_width, 1)
 			end
 
 			table.insert(diags_dims, { lnum, #virt_lines })

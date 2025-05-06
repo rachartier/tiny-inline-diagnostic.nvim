@@ -281,7 +281,6 @@ function M.get_chunks(opts, diags_on_line, diag_index, diag_line, cursor_line, b
 		end
 	end
 
-
 	if opts.options.format and diag_message then
 		diag_message = opts.options.format(diag)
 	end
