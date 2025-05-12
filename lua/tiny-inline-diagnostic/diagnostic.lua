@@ -311,7 +311,9 @@ local function setup_mode_change_autocmds(autocmd_ns, bufnr)
 				return
 			end
 
-			if vim.tbl_contains(DISABLED_MODES, mode) then
+			if vim.iter(DISABLED_MODES):any(function(m)
+				return string.find(mode, m) ~= nil
+			end) then
 				disable()
 				extmarks.clear(event.buf)
 			else
