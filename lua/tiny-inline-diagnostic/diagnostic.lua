@@ -129,7 +129,7 @@ end
 ---@param bufnr number
 ---@param diagnostics table
 local function update_diagnostics_cache(opts, bufnr, diagnostics)
-	if vim.tbl_isempty(diagnostics) then
+	if not diagnostics or vim.tbl_isempty(diagnostics) then
 		-- The event doesn't contain the associated namespace of the diagnostics,
 		-- meaning we can't know which namespace was cleared. We thus have to get
 		-- the diagnostics through normal means.
