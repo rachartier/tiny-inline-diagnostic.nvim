@@ -99,10 +99,16 @@ end
 local function create_multiline_extmark(buf, curline, virt_lines, priority)
 	local remaining_lines = { unpack(virt_lines, 2) }
 
+  local virt_lines_trimmed = {}
+  for i, t in ipairs(virt_lines[1]) do
+    local ktrimmed = t[1]:gsub('%s+', ' ')
+    virt_lines_trimmed[i] = {ktrimmed, t[2]}
+  end
+
 	vim.api.nvim_buf_set_extmark(buf, DIAGNOSTIC_NAMESPACE, curline, 0, {
 		id = generate_uid(),
 		virt_text_pos = "eol",
-		virt_text = virt_lines[1],
+		virt_text = virt_lines_trimmed,
 		virt_lines = remaining_lines,
 		priority = priority,
 		strict = false,
