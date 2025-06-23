@@ -36,6 +36,7 @@ local default_config = {
     multilines = {
       enabled = false,
       always_show = false,
+      trim_whitespaces = true,
     },
     show_all_diags_on_cursorline = false,
     enable_on_insert = false,

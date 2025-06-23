@@ -113,7 +113,7 @@ end
 ---@param text string|nil The text to wrap
 ---@param max_length number The maximum line length
 ---@return string[] lines Array of wrapped lines
-function M.wrap_text(text, max_length)
+function M.wrap_text(text, max_length, trim_whitespaces)
   if not text then
     return {}
   end
@@ -124,9 +124,13 @@ function M.wrap_text(text, max_length)
   local lines = {}
   local split_lines = M.split_lines(text)
 
-  for i, split_line in ipairs(split_lines) do
+  for _, split_line in ipairs(split_lines) do
     local current_line = ""
-    for word in split_line:gmatch("%S+") do
+    local pattern = "%S+"
+
+    local beginning_whitespace = trim_whitespaces and "" or split_line:match("^%s*")
+
+    for word in split_line:gmatch(pattern) do
       local potential_line = current_line ~= "" and (current_line .. " " .. word) or word
 
       if #potential_line <= max_length then
@@ -139,7 +143,7 @@ function M.wrap_text(text, max_length)
       end
     end
     if current_line ~= "" then
-      table.insert(lines, current_line)
+      table.insert(lines, beginning_whitespace .. current_line)
     end
   end
 
