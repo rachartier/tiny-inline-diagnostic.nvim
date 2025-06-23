@@ -112,6 +112,7 @@ end
 ---Wraps text to a specified length
 ---@param text string|nil The text to wrap
 ---@param max_length number The maximum line length
+---@param trim_whitespaces boolean Whether to trim leading whitespace
 ---@return string[] lines Array of wrapped lines
 function M.wrap_text(text, max_length, trim_whitespaces)
   if not text then
@@ -127,24 +128,49 @@ function M.wrap_text(text, max_length, trim_whitespaces)
   for _, split_line in ipairs(split_lines) do
     local current_line = ""
     local pattern = "%S+"
+    local beginning_whitespace = trim_whitespaces and "" or split_line:match("^%s*") or ""
 
-    local beginning_whitespace = trim_whitespaces and "" or split_line:match("^%s*")
+    -- Handle empty lines
+    if split_line:match("^%s*$") then
+      table.insert(lines, split_line)
+      goto continue
+    end
+
+    local words = {}
+    local start_pos = 1
 
     for word in split_line:gmatch(pattern) do
-      local potential_line = current_line ~= "" and (current_line .. " " .. word) or word
+      local word_start, word_end = split_line:find(word, start_pos, true)
+      table.insert(words, {
+        text = word,
+        leading_space = split_line:sub(start_pos, word_start - 1),
+      })
+      start_pos = word_end + 1
+    end
+
+    local first_word = true
+    for _, word_info in ipairs(words) do
+      local space_to_add = first_word and beginning_whitespace
+        or (trim_whitespaces and " " or word_info.leading_space)
+      local potential_line = current_line .. space_to_add .. word_info.text
 
       if #potential_line <= max_length then
         current_line = potential_line
+        first_word = false
       else
         if current_line ~= "" then
           table.insert(lines, current_line)
         end
-        current_line = word
+        current_line = (trim_whitespaces and "" or beginning_whitespace) .. word_info.text
+        first_word = false
       end
     end
+
     if current_line ~= "" then
-      table.insert(lines, beginning_whitespace .. current_line)
+      table.insert(lines, current_line)
     end
+
+    ::continue::
   end
 
   return lines
