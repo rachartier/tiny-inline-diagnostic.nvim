@@ -116,6 +116,12 @@ require("tiny-inline-diagnostic").setup({
 
             -- Always show messages on all lines for multiline diagnostics
             always_show = false,
+
+            -- Trim whitespaces from the start/end of each line
+            trim_whitespaces = false,
+
+            -- Replace tabs with spaces in multiline diagnostics
+            tabstop = 4,
         },
 
         -- Display all diagnostic messages on the cursor line

@@ -114,13 +114,15 @@ end
 ---@param max_length number The maximum line length
 ---@param trim_whitespaces boolean Whether to trim leading whitespace
 ---@return string[] lines Array of wrapped lines
-function M.wrap_text(text, max_length, trim_whitespaces)
+function M.wrap_text(text, max_length, trim_whitespaces, tabstop)
   if not text then
     return {}
   end
   if max_length <= 0 then
     return M.split_lines(text)
   end
+
+  text = text:gsub("\t", string.rep(" ", tabstop))
 
   local lines = {}
   local split_lines = M.split_lines(text)

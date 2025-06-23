@@ -260,7 +260,12 @@ function M.get_message_chunks_for_overflow(message, offset, win_width, opts)
     + #opts.signs.diag
     + 4
   local distance = win_width - offset - signs_total_text_len
-  return utils.wrap_text(message, distance, opts.options.multilines.trim_whitespaces)
+  return utils.wrap_text(
+    message,
+    distance,
+    opts.options.multilines.trim_whitespaces,
+    opts.options.multilines.tabstop
+  )
 end
 
 --- Get the chunks for a diagnostic message.
@@ -356,7 +361,8 @@ function M.handle_overflow_modes(opts, diag_message, need_to_be_under, win_width
     chunks = utils.wrap_text(
       diag_message,
       opts.options.break_line.after,
-      opts.options.multilines.trim_whitespaces
+      opts.options.multilines.trim_whitespaces,
+      opts.options.multilines.tabstop
     )
   elseif opts.options.overflow.mode == "wrap" then
     if need_to_be_under then
@@ -368,7 +374,12 @@ function M.handle_overflow_modes(opts, diag_message, need_to_be_under, win_width
     offset = (opts.options.overflow.padding or 0) + offset
     chunks = M.get_message_chunks_for_overflow(diag_message, offset, win_width, opts)
   elseif opts.options.overflow.mode == "none" then
-    chunks = utils.wrap_text(diag_message, 0, opts.options.multilines.trim_whitespaces)
+    chunks = utils.wrap_text(
+      diag_message,
+      0,
+      opts.options.multilines.trim_whitespaces,
+      opts.options.multilines.tabstop
+    )
   elseif opts.options.overflow.mode == "oneline" then
     chunks = utils.remove_newline(diag_message)
   end
