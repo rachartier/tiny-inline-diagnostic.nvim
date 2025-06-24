@@ -101,7 +101,7 @@ local function create_multiline_extmark(buf, curline, virt_lines, priority)
 
   local virt_lines_trimmed = {}
   for i, t in ipairs(virt_lines[1]) do
-    local ktrimmed = t[1]:gsub("%s+", " ")
+    local ktrimmed = i == 1 and t[1] or t[1]:gsub("%s+", " ") -- Skip the arrow
     virt_lines_trimmed[i] = { ktrimmed, t[2] }
   end
 
