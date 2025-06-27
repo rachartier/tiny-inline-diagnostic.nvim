@@ -253,7 +253,7 @@ end
 ---@param severity number|string
 ---@return string
 function M.get_diagnostic_icon(severity)
-  local name = vim.diagnostic.severity[severity]:lower()
+  local name = vim.diagnostic.severity[severity]:lower():gsub("^%l", string.upper)
   local sign = vim.fn.sign_getdefined("DiagnosticSign" .. name)[1]
 
   if vim.fn.has("nvim-0.10.0") == 1 then
