@@ -291,9 +291,7 @@ local function setup_cursor_autocmds(autocmd_ns, opts, bufnr, throttle_apply)
     buffer = bufnr,
     callback = function(event)
       if vim.api.nvim_buf_is_valid(event.buf) then
-        vim.schedule(function()
-          throttle_apply(event.buf)
-        end)
+        throttle_apply(event.buf)
       else
         detach_buffer(event.buf)
       end
