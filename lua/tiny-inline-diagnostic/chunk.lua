@@ -42,7 +42,6 @@ function M.get_header_from_chunk(
 )
   local virt_texts = {}
   local num_chunks = #chunk_info.chunks
-  local need_to_be_under = chunk_info.need_to_be_under
 
   if index_diag == 1 then
     virt_texts = { { opts.signs.left, diag_inv_hi } }

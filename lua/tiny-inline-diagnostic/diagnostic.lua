@@ -307,20 +307,16 @@ local function setup_mode_change_autocmds(autocmd_ns, bufnr)
     group = autocmd_ns,
     buffer = bufnr,
     callback = function(event)
-      local mode = vim.api.nvim_get_mode().mode
+      local mode = vim.fn.mode()
 
       if not vim.api.nvim_buf_is_valid(event.buf) then
         detach_buffer(event.buf)
         return
       end
 
-      if
-        vim.iter(DISABLED_MODES):any(function(m)
-          return string.find(mode, m) ~= nil
-        end)
-      then
+      if vim.tbl_contains(DISABLED_MODES, mode) then
         disable()
-        extmarks.clear(event.buf)
+        extmarks.clear(bufnr)
       else
         enable()
       end
