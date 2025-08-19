@@ -289,18 +289,28 @@ API              *tiny-inline-diagnostic.nvim-tiny-inline-diagnostic.nvim-api*
 
 TROUBLESHOOTING*tiny-inline-diagnostic.nvim-tiny-inline-diagnostic.nvim-troubleshooting*
 
-**Colors appear incorrect** Configure colors with the `hi` option. If
-background is missing, set `blend.mixing_color` to blend with your background.
 
-**All diagnostics still displayed** Set `vim.diagnostic.config({ virtual_text =
-false })` to disable default virtual text.
+COLORS APPEAR INCORRECT ~
 
-**Diagnostics unreadable on light backgrounds** Set `vim.g.background =
-"light"` for white diagnostic backgrounds (doesn’t work with custom
-`hi.mixing_color`).
+Configure colors with the `hi` option. If background is missing, set
+`blend.mixing_color` to blend with your background.
 
-**Other plugins display first (e.g., GitBlame)** Increase `virt_texts.priority`
-to a higher value.
+
+ALL DIAGNOSTICS STILL DISPLAYED ~
+
+Set `vim.diagnostic.config({ virtual_text = false })` to disable default
+virtual text.
+
+
+DIAGNOSTICS UNREADABLE ON LIGHT BACKGROUNDS ~
+
+Set `vim.g.background = "light"` for white diagnostic backgrounds (doesn’t
+work with custom `hi.mixing_color`).
+
+
+OTHER PLUGINS DISPLAY FIRST (E.G., GITBLAME) ~
+
+Increase `virt_texts.priority` to a higher value.
 
 ==============================================================================
 2. Links                                   *tiny-inline-diagnostic.nvim-links*
