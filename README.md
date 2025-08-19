@@ -1,8 +1,8 @@
-#  📦 tiny-inline-diagnostic.nvim
+# 📦 tiny-inline-diagnostic.nvim
 
 A Neovim plugin that display prettier diagnostic messages. Display one line diagnostic messages where the cursor is, with icons and colors.
 
-## 🖼️ Images
+## Examples
 
 ### Multilines enabled
 
@@ -21,49 +21,56 @@ A Neovim plugin that display prettier diagnostic messages. Display one line diag
 ![image](https://github.com/user-attachments/assets/45180d09-8653-4403-a79b-5bee522560e3)
 
 
-## 🛠️ Setup
+## Installation
 
-- You need to set `vim.diagnostic.config({ virtual_text = false })`, to not have all diagnostics in the buffer displayed.
-
-## 📥 Installation
 
 > [!NOTE]
-> Only works with Neovim >= 0.10
+> Requires Neovim >= 0.10
 
-With Lazy.nvim:
+### Lazy.nvim:
 
 ```lua
 {
     "rachartier/tiny-inline-diagnostic.nvim",
-    event = "VeryLazy", -- Or `LspAttach`
-    priority = 1000, -- needs to be loaded in first
+    event = "VeryLazy",
+    priority = 1000,
     config = function()
         require('tiny-inline-diagnostic').setup()
-        vim.diagnostic.config({ virtual_text = false }) -- Only if needed in your configuration, if you already have native LSP diagnostics
+        vim.diagnostic.config({ virtual_text = false }) -- Disable default virtual text
     end
 }
 ```
 
-## ⚙️ Options
+## Configuration
 
 ```lua
--- Default configuration
 require("tiny-inline-diagnostic").setup({
     -- Style preset for diagnostic messages
-    -- Available options:
-    -- "modern", "classic", "minimal", "powerline",
-    -- "ghost", "simple", "nonerdfont", "amongus"
+    -- Available options: "modern", "classic", "minimal", "powerline", "ghost", "simple", "nonerdfont", "amongus"
     preset = "modern",
 
-    transparent_bg = false, -- Set the background of the diagnostic to transparent
-    transparent_cursorline = false, -- Set the background of the cursorline to transparent (only one the first diagnostic)
+    -- Set the background of the diagnostic to transparent
+    transparent_bg = false,
+
+    -- Set the background of the cursorline to transparent (only for the first diagnostic)
+    -- Default is true in the source code, not false as in the old README
+    transparent_cursorline = true,
 
     hi = {
-        error = "DiagnosticError", -- Highlight group for error messages
-        warn = "DiagnosticWarn", -- Highlight group for warning messages
-        info = "DiagnosticInfo", -- Highlight group for informational messages
-        hint = "DiagnosticHint", -- Highlight group for hint or suggestion messages
-        arrow = "NonText", -- Highlight group for diagnostic arrows
+        -- Highlight group for error messages
+        error = "DiagnosticError",
+
+        -- Highlight group for warning messages
+        warn = "DiagnosticWarn",
+
+        -- Highlight group for informational messages
+        info = "DiagnosticInfo",
+
+        -- Highlight group for hint or suggestion messages
+        hint = "DiagnosticHint",
+
+        -- Highlight group for diagnostic arrows
+        arrow = "NonText",
 
         -- Background color for diagnostics
         -- Can be a highlight group or a hexadecimal color (#RRGGBB)
@@ -71,17 +78,19 @@ require("tiny-inline-diagnostic").setup({
 
         -- Color blending option for the diagnostic background
         -- Use "None" or a hexadecimal color (#RRGGBB) to blend with another color
-        mixing_color = "None",
+        -- Default is "Normal" in the source code
+        mixing_color = "Normal",
     },
 
     options = {
         -- Display the source of the diagnostic (e.g., basedpyright, vsserver, lua_ls etc.)
-	show_source = {
-	    enabled = false,
-	    if_many = false,
-	},
+        show_source = {
+            enabled = false,
+            -- Show source only when multiple sources exist for the same diagnostic
+            if_many = false,
+        },
 
-        -- Use icons defined in the diagnostic configuration
+        -- Use icons defined in the diagnostic configuration instead of preset icons
         use_icons_from_diagnostic = false,
 
         -- Set the arrow icon to the same color as the first diagnostic severity
@@ -92,24 +101,15 @@ require("tiny-inline-diagnostic").setup({
         add_messages = true,
 
         -- Time (in milliseconds) to throttle updates while moving the cursor
-        -- Increase this value for better performance if your computer is slow
-        -- or set to 0 for immediate updates and better visual
+        -- Increase this value for better performance on slow computers
+        -- Set to 0 for immediate updates and better visual feedback
         throttle = 20,
 
         -- Minimum message length before wrapping to a new line
         softwrap = 30,
 
         -- Configuration for multiline diagnostics
-        -- Can either be a boolean or a table with the following options:
-        --  multilines = {
-        --      enabled = false,
-        --      always_show = false,
-        -- }
-        -- If it set as true, it will enable the feature with this options:
-        --  multilines = {
-        --      enabled = true,
-        --      always_show = false,
-        -- }
+        -- Can be a boolean or a table with detailed options
         multilines = {
             -- Enable multiline diagnostic messages
             enabled = false,
@@ -120,37 +120,36 @@ require("tiny-inline-diagnostic").setup({
             -- Trim whitespaces from the start/end of each line
             trim_whitespaces = false,
 
-            -- Replace tabs with spaces in multiline diagnostics
+            -- Replace tabs with this many spaces in multiline diagnostics
             tabstop = 4,
         },
 
-        -- Display all diagnostic messages on the cursor line
+        -- Display all diagnostic messages on the cursor line, not just those under cursor
         show_all_diags_on_cursorline = false,
 
         -- Enable diagnostics in Insert mode
-        -- If enabled, it is better to set the `throttle` option to 0 to avoid visual artifacts
+        -- If enabled, consider setting throttle to 0 to avoid visual artifacts
         enable_on_insert = false,
 
-		-- Enable diagnostics in Select mode (e.g when auto inserting with Blink)
+        -- Enable diagnostics in Select mode (e.g., when auto-completing with Blink)
         enable_on_select = false,
 
+        -- Manage how diagnostic messages handle overflow
         overflow = {
-            -- Manage how diagnostic messages handle overflow
-            -- Options:
+            -- Overflow handling mode:
             -- "wrap" - Split long messages into multiple lines
             -- "none" - Do not truncate messages
             -- "oneline" - Keep the message on a single line, even if it's long
             mode = "wrap",
 
-            -- Trigger wrapping to occur this many characters earlier when mode == "wrap".
-            -- Increase this value appropriately if you notice that the last few characters
-            -- of wrapped diagnostics are sometimes obscured.
+            -- Trigger wrapping this many characters earlier when mode == "wrap"
+            -- Increase if the last few characters of wrapped diagnostics are obscured
             padding = 0,
         },
 
         -- Configuration for breaking long messages into separate lines
         break_line = {
-            -- Enable the feature to break messages after a specific length
+            -- Enable breaking messages after a specific length
             enabled = false,
 
             -- Number of characters after which to break the line
@@ -158,24 +157,19 @@ require("tiny-inline-diagnostic").setup({
         },
 
         -- Custom format function for diagnostic messages
-        -- Example:
-        -- format = function(diagnostic)
-        --     return diagnostic.message .. " [" .. diagnostic.source .. "]"
-        -- end
+        -- Function receives a diagnostic object and should return a string
+        -- Example: function(diagnostic) return diagnostic.message .. " [" .. diagnostic.source .. "]" end
         format = nil,
 
-
+        -- Virtual text display configuration
         virt_texts = {
-            -- Priority for virtual text display
+            -- Priority for virtual text display (higher values appear on top)
+            -- Increase if other plugins (like GitBlame) override diagnostics
             priority = 2048,
         },
 
-        -- Filter diagnostics by severity
-        -- Available severities:
-        -- vim.diagnostic.severity.ERROR
-        -- vim.diagnostic.severity.WARN
-        -- vim.diagnostic.severity.INFO
-        -- vim.diagnostic.severity.HINT
+        -- Filter diagnostics by severity levels
+        -- Available severities: vim.diagnostic.severity.ERROR, WARN, INFO, HINT
         severity = {
             vim.diagnostic.severity.ERROR,
             vim.diagnostic.severity.WARN,
@@ -184,36 +178,40 @@ require("tiny-inline-diagnostic").setup({
         },
 
         -- Events to attach diagnostics to buffers
-        -- You should not change this unless the plugin does not work with your configuration
+        -- Default: { "LspAttach" }
+        -- Only change if the plugin doesn't work with your configuration
         overwrite_events = nil,
     },
-    disabled_ft = {} -- List of filetypes to disable the plugin
+
+    -- List of filetypes to disable the plugin for
+    disabled_ft = {}
 })
 ```
 
-:warning: **Note**: Overriding `signs` or `blend` tables will override the default values of the preset. If you want to use the default values of the preset, you need to set the `preset` option **ONLY**.
+### Custom styling
 
-If you do not want to use the `preset` option, you can set the your own style with:
+Override default preset styling by providing `signs` and `blend` tables:
 
 ```lua
 require("tiny-inline-diagnostic").setup({
-    -- ...
     signs = {
-        left = "",
-        right = "",
-        diag = "●",
-        arrow = "    ",
-        up_arrow = "    ",
-        vertical = " │",
-        vertical_end = " └",
+        left = "",       -- Left border character
+        right = "",      -- Right border character
+        diag = "●",       -- Diagnostic indicator character
+        arrow = "    ",   -- Arrow pointing to diagnostic
+        up_arrow = "    ", -- Upward arrow for multiline
+        vertical = " │",   -- Vertical line for multiline
+        vertical_end = " └", -- End of vertical line for multiline
     },
     blend = {
-        factor = 0.22,
+        factor = 0.22,    -- Transparency factor (0.0 = transparent, 1.0 = opaque)
     },
-    -- ...
 })
 ```
-## Presets
+
+Note: Overriding `signs` or `blend` tables will replace preset defaults. To use preset defaults, only set the `preset` option.
+
+## Available presets
 ### modern
 ![image](https://github.com/user-attachments/assets/38460aab-bb4d-4766-9cc6-4315315964c0)
 
@@ -239,39 +237,54 @@ require("tiny-inline-diagnostic").setup({
 ![image](https://github.com/user-attachments/assets/780dc83e-43c4-4399-84b1-1a08d48e1e86)
 
 
-## 💡 Highlights
+## Highlight groups
 
+Main highlight groups:
 - TinyInlineDiagnosticVirtualTextError
 - TinyInlineDiagnosticVirtualTextWarn
 - TinyInlineDiagnosticVirtualTextInfo
 - TinyInlineDiagnosticVirtualTextHint
 - TinyInlineDiagnosticVirtualTextArrow
 
-`Inv` is used for left and right signs.
+Inverted groups for left/right signs:
 - TinyInlineInvDiagnosticVirtualTextError
 - TinyInlineInvDiagnosticVirtualTextWarn
 - TinyInlineInvDiagnosticVirtualTextInfo
 - TinyInlineInvDiagnosticVirtualTextHint
 
-## 📚 API
+## API
 
-- `require("tiny-inline-diagnostic").change(blend, highlights)`: change the colors of the diagnostic. You need to refer to `setup` to see the structure of the `blend` and `highlights` options.
-- `require("tiny-inline-diagnostic").get_diagnostic_under_cursor()`: get the diagnostic under the cursor, useful if you want to display the diagnostic in a statusline.
-- `require("tiny-inline-diagnostic").enable()`: enable the diagnostic.
-- `require("tiny-inline-diagnostic").disable()`: disable the diagnostic.
-- `require("tiny-inline-diagnostic").toggle()`: toggle the diagnostic, on/off.
-- `require("tiny-inline-diagnostic").change_severities(severities)`: change the severity of the diagnostic. `severities` is an array of severity, like `vim.diagnostic.severity.ERROR`.
+```lua
+local diag = require("tiny-inline-diagnostic")
 
+-- Change colors dynamically
+diag.change(blend_config, highlight_config)
 
-## ❓ FAQ:
+-- Get diagnostic under cursor (useful for statusline)
+local diagnostic = diag.get_diagnostic_under_cursor()
 
+-- Control plugin state
+diag.enable()
+diag.disable()
+diag.toggle()
 
-- **Q**: My colors are bad
-    - You can change the colors with the `hi` option.
-    - If you have no background color, you should try to set `blend.mixing_color` to a color that will blend with the background color.
-- **Q**: All diagnostics are still displayed
-    - You need to set `vim.diagnostic.config({ virtual_text = false })` to remove all the others diagnostics.
-- **Q**: Diagnostics are not readable on a light background
-    - You can either set `vim.g.background = "light"` to use white diagnostics background. Will not work if `hi.mixing_color` is set
-- **Q**: `GitBlame` (or other) is displayed first
-    - You need to modify the `virt_texts.priority` option to a higher value.
+-- Filter by severity
+diag.change_severities({
+    vim.diagnostic.severity.ERROR,
+    vim.diagnostic.severity.WARN
+})
+```
+
+## Troubleshooting
+
+**Colors appear incorrect**
+Configure colors with the `hi` option. If background is missing, set `blend.mixing_color` to blend with your background.
+
+**All diagnostics still displayed**
+Set `vim.diagnostic.config({ virtual_text = false })` to disable default virtual text.
+
+**Diagnostics unreadable on light backgrounds**
+Set `vim.g.background = "light"` for white diagnostic backgrounds (doesn't work with custom `hi.mixing_color`).
+
+**Other plugins display first (e.g., GitBlame)**
+Increase `virt_texts.priority` to a higher value.
