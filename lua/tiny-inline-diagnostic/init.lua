@@ -1,6 +1,9 @@
 ---@class PluginConfig
 ---@field preset string
 ---@field hi table
+---
+---
+---
 ---@field options table
 ---@field blend table
 
@@ -41,7 +44,7 @@ local default_config = {
     },
     show_all_diags_on_cursorline = false,
     enable_on_insert = false,
-    enable_select = false,
+    enable_on_select = false,
     format = nil,
     overflow = {
       mode = "wrap",
