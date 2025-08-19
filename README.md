@@ -277,14 +277,17 @@ diag.change_severities({
 
 ## Troubleshooting
 
-**Colors appear incorrect**
+### Colors appear incorrect
+
 Configure colors with the `hi` option. If background is missing, set `blend.mixing_color` to blend with your background.
 
-**All diagnostics still displayed**
+### All diagnostics still displayed
+
 Set `vim.diagnostic.config({ virtual_text = false })` to disable default virtual text.
 
-**Diagnostics unreadable on light backgrounds**
+### Diagnostics unreadable on light backgrounds
+
 Set `vim.g.background = "light"` for white diagnostic backgrounds (doesn't work with custom `hi.mixing_color`).
 
-**Other plugins display first (e.g., GitBlame)**
+### Other plugins display first (e.g., GitBlame)
 Increase `virt_texts.priority` to a higher value.
