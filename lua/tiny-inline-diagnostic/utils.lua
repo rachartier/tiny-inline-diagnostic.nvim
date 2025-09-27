@@ -187,13 +187,20 @@ function M.throttle(fn, ms)
 
   ---@param ... any
   local function throttled(...)
-    if not running then
-      timer:start(ms, 0, function()
-        timer:stop()
-        running = false
+    if not running and timer then
+      local success = pcall(function()
+        timer:start(ms, 0, function()
+          if timer then
+            timer:stop()
+          end
+          running = false
+        end)
       end)
-      running = true
-      pcall(vim.schedule_wrap(fn), select(1, ...))
+
+      if success then
+        running = true
+        pcall(vim.schedule_wrap(fn), select(1, ...))
+      end
     end
   end
 
