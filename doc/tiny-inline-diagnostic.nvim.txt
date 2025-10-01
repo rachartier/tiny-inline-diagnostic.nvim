@@ -8,6 +8,7 @@ Table of Contents              *tiny-inline-diagnostic.nvim-table-of-contents*
   - Installation|tiny-inline-diagnostic.nvim-tiny-inline-diagnostic.nvim-installation|
   - Configuration|tiny-inline-diagnostic.nvim-tiny-inline-diagnostic.nvim-configuration|
   - Available presets|tiny-inline-diagnostic.nvim-tiny-inline-diagnostic.nvim-available-presets|
+  - Integrations with other plugins|tiny-inline-diagnostic.nvim-tiny-inline-diagnostic.nvim-integrations-with-other-plugins|
   - Highlight groups|tiny-inline-diagnostic.nvim-tiny-inline-diagnostic.nvim-highlight-groups|
   - API          |tiny-inline-diagnostic.nvim-tiny-inline-diagnostic.nvim-api|
   - Troubleshooting|tiny-inline-diagnostic.nvim-tiny-inline-diagnostic.nvim-troubleshooting|
@@ -252,6 +253,49 @@ GHOST ~
 AMONGUS ~
 
 
+INTEGRATIONS WITH OTHER PLUGINS*tiny-inline-diagnostic.nvim-tiny-inline-diagnostic.nvim-integrations-with-other-plugins*
+
+sidekick.nvim ~
+
+>lua
+    local tiny_diags_disabled_by_nes = false
+    
+    return {
+      {
+        "folke/sidekick.nvim",
+        enabled = true,
+        lazy = true,
+        opts = {
+          nes = {
+            enabled = true,
+          },
+        },
+        config = function(_, opts)
+          require("sidekick").setup(opts)
+    
+          vim.api.nvim_create_autocmd("User", {
+            pattern = "SidekickNesHide",
+            callback = function()
+              if tiny_diags_disabled_by_nes then
+                tiny_diags_disabled_by_nes = false
+                require("tiny-inline-diagnostic").enable()
+              end
+            end,
+          })
+    
+          vim.api.nvim_create_autocmd("User", {
+            pattern = "SidekickNesShow",
+            callback = function()
+              tiny_diags_disabled_by_nes = true
+              require("tiny-inline-diagnostic").disable()
+            end,
+          })
+        end,
+      },
+    }
+<
+
+
 HIGHLIGHT GROUPS*tiny-inline-diagnostic.nvim-tiny-inline-diagnostic.nvim-highlight-groups*
 
 Main highlight groups: - TinyInlineDiagnosticVirtualTextError -
@@ -311,47 +355,6 @@ work with custom `hi.mixing_color`).
 OTHER PLUGINS DISPLAY FIRST (E.G., GITBLAME) ~
 
 Increase `virt_texts.priority` to a higher value.
-
-
-USING WITH SIDEKICKS.NVIM ~
-
->lua
-    local tiny_diags_disabled_by_nes = false
-    
-    return {
-      {
-        "folke/sidekick.nvim",
-        enabled = true,
-        lazy = true,
-        opts = {
-          nes = {
-            enabled = true,
-          },
-        },
-        config = function(_, opts)
-          require("sidekick").setup(opts)
-    
-          vim.api.nvim_create_autocmd("User", {
-            pattern = "SidekickNesHide",
-            callback = function()
-              if tiny_diags_disabled_by_nes then
-                tiny_diags_disabled_by_nes = false
-                require("tiny-inline-diagnostic").enable()
-              end
-            end,
-          })
-    
-          vim.api.nvim_create_autocmd("User", {
-            pattern = "SidekickNesShow",
-            callback = function()
-              tiny_diags_disabled_by_nes = true
-              require("tiny-inline-diagnostic").disable()
-            end,
-          })
-        end,
-      },
-    }
-<
 
 ==============================================================================
 2. Links                                   *tiny-inline-diagnostic.nvim-links*
