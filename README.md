@@ -237,6 +237,50 @@ Note: Overriding `signs` or `blend` tables will replace preset defaults. To use 
 ![image](https://github.com/user-attachments/assets/780dc83e-43c4-4399-84b1-1a08d48e1e86)
 
 
+## Integrations with other plugins
+<details>
+<summary>sidekick.nvim</summary>
+
+```lua
+local tiny_diags_disabled_by_nes = false
+
+return {
+  {
+    "folke/sidekick.nvim",
+    enabled = true,
+    lazy = true,
+    opts = {
+      nes = {
+        enabled = true,
+      },
+    },
+    config = function(_, opts)
+      require("sidekick").setup(opts)
+
+      vim.api.nvim_create_autocmd("User", {
+        pattern = "SidekickNesHide",
+        callback = function()
+          if tiny_diags_disabled_by_nes then
+            tiny_diags_disabled_by_nes = false
+            require("tiny-inline-diagnostic").enable()
+          end
+        end,
+      })
+
+      vim.api.nvim_create_autocmd("User", {
+        pattern = "SidekickNesShow",
+        callback = function()
+          tiny_diags_disabled_by_nes = true
+          require("tiny-inline-diagnostic").disable()
+        end,
+      })
+    end,
+  },
+}
+```
+
+</details>
+
 ## Highlight groups
 
 Main highlight groups:
@@ -291,43 +335,3 @@ Set `vim.g.background = "light"` for white diagnostic backgrounds (doesn't work 
 
 ### Other plugins display first (e.g., GitBlame)
 Increase `virt_texts.priority` to a higher value.
-
-### Using with `sidekicks.nvim`
-
-```lua
-local tiny_diags_disabled_by_nes = false
-
-return {
-  {
-    "folke/sidekick.nvim",
-    enabled = true,
-    lazy = true,
-    opts = {
-      nes = {
-        enabled = true,
-      },
-    },
-    config = function(_, opts)
-      require("sidekick").setup(opts)
-
-      vim.api.nvim_create_autocmd("User", {
-        pattern = "SidekickNesHide",
-        callback = function()
-          if tiny_diags_disabled_by_nes then
-            tiny_diags_disabled_by_nes = false
-            require("tiny-inline-diagnostic").enable()
-          end
-        end,
-      })
-
-      vim.api.nvim_create_autocmd("User", {
-        pattern = "SidekickNesShow",
-        callback = function()
-          tiny_diags_disabled_by_nes = true
-          require("tiny-inline-diagnostic").disable()
-        end,
-      })
-    end,
-  },
-}
-```
