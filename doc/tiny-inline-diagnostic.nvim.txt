@@ -1,4 +1,4 @@
-*tiny-inline-diagnostic.nvim.txt*For Neovim >= 0.10.0Last change: 2025 October 01
+*tiny-inline-diagnostic.nvim.txt*For Neovim >= 0.10.0Last change: 2025 October 14
 
 ==============================================================================
 Table of Contents              *tiny-inline-diagnostic.nvim-table-of-contents*
@@ -329,6 +329,19 @@ API              *tiny-inline-diagnostic.nvim-tiny-inline-diagnostic.nvim-api*
         vim.diagnostic.severity.WARN
     })
 <
+
+
+DISABLING WHEN OPENING DIAGNOSTIC’S FLOAT WINDOW ~
+
+>lua
+    vim.diagnostic.open_float = require("tiny-inline-diagnostic.override").open_float
+<
+
+You can simply override `vim.diagnostic.open_float` to disable
+tiny-inline-diagnostic using the provided function. It will automatically
+re-enable once the float is closed. This hook is NOT a rewrite of
+`vim.diagnostic.open_float`, it just disables tiny-inline-diagnostic before
+calling the original function.
 
 
 TROUBLESHOOTING*tiny-inline-diagnostic.nvim-tiny-inline-diagnostic.nvim-troubleshooting*
