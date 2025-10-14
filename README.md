@@ -319,6 +319,16 @@ diag.change_severities({
 })
 ```
 
+
+### Disabling when opening diagnostic's float window
+
+```lua
+vim.diagnostic.open_float = require("tiny-inline-diagnostic.override").open_float
+```
+
+You can simply override `vim.diagnostic.open_float` to disable tiny-inline-diagnostic using the provided function. It will automatically re-enable once the float is closed.
+This hook is NOT a rewrite of `vim.diagnostic.open_float`, it just disables tiny-inline-diagnostic before calling the original function.
+
 ## Troubleshooting
 
 ### Colors appear incorrect

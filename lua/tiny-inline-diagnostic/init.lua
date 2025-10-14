@@ -62,6 +62,7 @@ local default_config = {
       vim.diagnostic.severity.INFO,
       vim.diagnostic.severity.HINT,
     },
+    override_open_float = false,
     overwrite_events = nil,
   },
   disabled_ft = {},
