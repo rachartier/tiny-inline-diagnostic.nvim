@@ -34,8 +34,9 @@ end
 ---@param hl table
 ---@param index_diag number
 ---@param total_chunks number
+---@param diag_count number
 ---@return table
-local function build_first_chunk(opts, chunk_info, message, hl, index_diag, total_chunks)
+local function build_first_chunk(opts, chunk_info, message, hl, index_diag, total_chunks, diag_count)
   local chunk_header = chunk_utils.get_header_from_chunk(
     message,
     index_diag,
@@ -44,7 +45,8 @@ local function build_first_chunk(opts, chunk_info, message, hl, index_diag, tota
     hl.diag_hi,
     hl.diag_inv_hi,
     total_chunks,
-    chunk_info.severities
+    chunk_info.severities,
+    diag_count
   )
 
   if index_diag == 1 then
@@ -69,8 +71,9 @@ end
 --- @param index_diag number Index of the current diagnostic.
 --- @param padding number Padding to align the text.
 --- @param total_chunks number Total number of chunks.
+--- @param diag_count number Number of diagnostics on the line.
 --- @return table, number, boolean Virtual texts, offset window column, and whether it needs to be under.
-function M.from_diagnostic(opts, ret, index_diag, padding, total_chunks)
+function M.from_diagnostic(opts, ret, index_diag, padding, total_chunks, diag_count)
   local cursor_line = vim.api.nvim_win_get_cursor(0)[1] - 1
 
   local diag_hi, diag_inv_hi, body_hi =
@@ -78,7 +81,6 @@ function M.from_diagnostic(opts, ret, index_diag, padding, total_chunks)
 
   local all_virtual_texts = {}
 
-  -- Process each chunk
   for index_chunk, chunk in ipairs(ret.chunks) do
     local message = format_chunk_message(chunk, padding)
 
@@ -89,7 +91,8 @@ function M.from_diagnostic(opts, ret, index_diag, padding, total_chunks)
         message,
         { diag_hi = diag_hi, diag_inv_hi = diag_inv_hi },
         index_diag,
-        total_chunks
+        total_chunks,
+        diag_count
       )
       vim.list_extend(all_virtual_texts, first_chunks)
     else
@@ -108,7 +111,6 @@ function M.from_diagnostic(opts, ret, index_diag, padding, total_chunks)
     end
   end
 
-  -- Add spacing for under-cursor diagnostics
   if ret.need_to_be_under then
     table.insert(all_virtual_texts, 1, { { " ", "None" } })
   end
@@ -127,7 +129,6 @@ function M.from_diagnostics(opts, diags_on_line, cursor_pos, buf)
   local offset_win_col = 0
   local need_to_be_under = false
 
-  -- Calculate maximum chunk width
   local chunks = {}
   local max_chunk_line_length = 0
   local current_line = vim.api.nvim_win_get_cursor(0)[1] - 1
@@ -139,14 +140,12 @@ function M.from_diagnostics(opts, diags_on_line, cursor_pos, buf)
     chunks[index] = ret
   end
 
-  -- Process all diagnostics
   for index_diag, ret in ipairs(chunks) do
     local virt_texts, _, diag_need_to_be_under =
-      M.from_diagnostic(opts, ret, index_diag, max_chunk_line_length, #chunks)
+      M.from_diagnostic(opts, ret, index_diag, max_chunk_line_length, #chunks, #diags_on_line)
 
     need_to_be_under = need_to_be_under or diag_need_to_be_under
 
-    -- Remove extra spacing for subsequent diagnostics when under cursor
     if need_to_be_under and index_diag > 1 then
       table.remove(virt_texts, 1)
     end

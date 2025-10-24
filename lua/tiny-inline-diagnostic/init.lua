@@ -31,7 +31,12 @@ local default_config = {
       enabled = false,
       if_many = false,
     },
-    add_messages = true,
+    add_messages = {
+      messages = true,
+      display_count = false,
+      use_max_severity = false,
+      show_multiple_glyphs = true,
+    },
     set_arrow_to_diag_color = false,
     use_icons_from_diagnostic = false,
     throttle = 20,
@@ -103,6 +108,15 @@ local function normalize_config(config)
     config.options.multilines = vim.tbl_deep_extend("force", default_config.options.multilines, {
       enabled = config.options.multilines,
       always_show = default_config.options.multilines.always_show,
+    })
+  end
+
+  if type(config.options.add_messages) == "boolean" then
+    config.options.add_messages = vim.tbl_deep_extend("force", default_config.options.add_messages, {
+      messages = config.options.add_messages,
+      display_count = default_config.options.add_messages.display_count,
+      use_max_severity = default_config.options.add_messages.use_max_severity,
+      show_multiple_glyphs = default_config.options.add_messages.show_multiple_glyphs,
     })
   end
 

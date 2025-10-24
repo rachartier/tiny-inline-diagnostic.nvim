@@ -29,6 +29,7 @@ end
 ---@param diag_inv_hi string: The highlight group for the diagnostic signs.
 ---@param total_chunks number: The total number of chunks.
 ---@param severities table: The severities of the diagnostic messages.
+---@param diag_count number: The number of diagnostics on the line.
 ---@return table: A table representing the virtual text array for the diagnostic message header.
 function M.get_header_from_chunk(
   message,
@@ -38,7 +39,8 @@ function M.get_header_from_chunk(
   diag_hi,
   diag_inv_hi,
   total_chunks,
-  severities
+  severities,
+  diag_count
 )
   local virt_texts = {}
   local num_chunks = #chunk_info.chunks
@@ -57,9 +59,37 @@ function M.get_header_from_chunk(
   vim.list_extend(virt_texts, { { icon, diag_hi } })
 
   local cursor_line = vim.api.nvim_win_get_cursor(0)[1] - 1
-  if not opts.options.add_messages and cursor_line ~= chunk_info.line then
+  local add_messages_opts = type(opts.options.add_messages) == "table" 
+    and opts.options.add_messages 
+    or { messages = opts.options.add_messages, display_count = false, use_max_severity = false, show_multiple_glyphs = true }
+  
+  local add_messages = add_messages_opts.messages
+  local display_count = add_messages_opts.display_count
+  local show_multiple_glyphs = add_messages_opts.show_multiple_glyphs
+  local use_max_severity = add_messages_opts.use_max_severity
+
+  if display_count and cursor_line ~= chunk_info.line then
+    if use_max_severity then
+      local max_severity = severities[1]
+      for _, sev in ipairs(severities) do
+        if sev < max_severity then
+          max_severity = sev
+        end
+      end
+      local count = 0
+      for _, sev in ipairs(severities) do
+        if sev == max_severity then
+          count = count + 1
+        end
+      end
+      message = count
+    else
+      message = #severities
+    end
+  elseif not add_messages and cursor_line ~= chunk_info.line then
     message = ""
   end
+
   M.add_message_text(
     virt_texts,
     message,
@@ -80,24 +110,86 @@ end
 ---@param severities table: The severities of the diagnostic messages.
 ---@param diag_hi string: The highlight group for the diagnostic message.
 function M.add_severity_icons(virt_texts, opts, severities, diag_hi)
-  if severities and #severities > 0 then
-    table.sort(severities, function(a, b)
-      return a > b
-    end)
+  if not severities or #severities == 0 then
+    return
+  end
 
-    for i = 1, #severities - 1 do
-      local hl, _, _ = highlights.get_diagnostic_mixed_highlights_from_severity(
-        severities[#severities],
-        severities[i]
+  local add_messages_opts = type(opts.options.add_messages) == "table" 
+    and opts.options.add_messages 
+    or { messages = opts.options.add_messages, display_count = false, use_max_severity = false, show_multiple_glyphs = true }
+
+  local show_multiple_glyphs = add_messages_opts.show_multiple_glyphs
+  local use_max_severity = add_messages_opts.use_max_severity
+
+  local sorted_severities = vim.deepcopy(severities)
+  table.sort(sorted_severities)
+
+  local main_severity = sorted_severities[1]
+
+  if use_max_severity then
+    if show_multiple_glyphs then
+      local count = 0
+      for _, sev in ipairs(severities) do
+        if sev == main_severity then
+          count = count + 1
+        end
+      end
+      
+      for i = 1, count - 1 do
+        local hl = highlights.get_diagnostic_mixed_highlights_from_severity(
+          main_severity,
+          main_severity
+        )
+        local icon = opts.signs.diag
+
+        if opts.options.use_icons_from_diagnostic then
+          icon = highlights.get_diagnostic_icon(main_severity)
+        end
+
+        vim.list_extend(virt_texts, { { icon, hl } })
+      end
+    end
+    return
+  end
+
+  if show_multiple_glyphs then
+    for i = #sorted_severities, 2, -1 do
+      local severity = sorted_severities[i]
+      local hl = highlights.get_diagnostic_mixed_highlights_from_severity(
+        main_severity,
+        severity
       )
       local icon = opts.signs.diag
 
       if opts.options.use_icons_from_diagnostic then
-        icon = highlights.get_diagnostic_icon(severities[i])
+        icon = highlights.get_diagnostic_icon(severity)
       end
 
-      local severity_virt_texts = { { icon, hl } }
-      vim.list_extend(virt_texts, severity_virt_texts)
+      vim.list_extend(virt_texts, { { icon, hl } })
+    end
+  else
+    local unique_severities = {}
+    local seen = {}
+    for _, sev in ipairs(sorted_severities) do
+      if not seen[sev] then
+        seen[sev] = true
+        table.insert(unique_severities, sev)
+      end
+    end
+    
+    for i = #unique_severities, 2, -1 do
+      local severity = unique_severities[i]
+      local hl = highlights.get_diagnostic_mixed_highlights_from_severity(
+        main_severity,
+        severity
+      )
+      local icon = opts.signs.diag
+
+      if opts.options.use_icons_from_diagnostic then
+        icon = highlights.get_diagnostic_icon(severity)
+      end
+
+      vim.list_extend(virt_texts, { { icon, hl } })
     end
   end
 end

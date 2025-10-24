@@ -92,12 +92,26 @@ require("tiny-inline-diagnostic").setup({
         -- Color the arrow to match the severity of the first diagnostic
         set_arrow_to_diag_color = false,
 
-        -- Control how diagnostic messages are displayed
+        -- Add messages to diagnostics
+        -- Can be a boolean (true/false) or a table with detailed options
+        -- If set to true, full diagnostic messages are displayed
+        -- When messages = true, all other options in this table are ignored
         add_messages = {
-            messages = true,           -- Show full diagnostic messages
-            display_count = false,     -- Show diagnostic count instead of messages when cursor not on line
-            use_max_severity = false,  -- When counting, only show the most severe diagnostic
-            show_multiple_glyphs = true, -- Show multiple icons for multiple diagnostics of same severity
+            -- Display diagnostic messages
+            messages = true,
+
+            -- Display diagnostic count instead of full messages when cursor is not on the line
+            display_count = false,
+
+            -- When display_count = true and use_max_severity = true:
+            -- Only show count and glyphs for the most severe diagnostic type
+            -- When false: show count and glyphs for all diagnostics on the line
+            use_max_severity = false,
+
+            -- When show_multiple_glyphs = true:
+            -- Display one glyph for each diagnostic (e.g., 3 errors = 3 error icons)
+            -- When false: display only one glyph per severity type (e.g., 3 errors + 2 warnings = 1 error icon + 1 warning icon)
+            show_multiple_glyphs = true,
         },
 
         -- Throttle update frequency in milliseconds to improve performance
