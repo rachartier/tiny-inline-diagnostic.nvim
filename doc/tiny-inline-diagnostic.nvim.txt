@@ -88,14 +88,7 @@ DIAGNOTICS COUNT ~
 
 RELATED DIAGNOSTICS ~
 
-When `show_related.enabled = true`, diagnostics that have LSP
-`relatedInformation` will display their related messages inline below the main
-diagnostic. Related diagnostics appear dimmed (50% blend) with a "↳" prefix
-and location information. This is useful for understanding the full context of
-errors, such as where a conflicting definition or type originates.
 
-Diagnostics that are themselves referenced as related information by other
-diagnostics are automatically filtered out to avoid duplicate displays.
 
 
 CONFIGURATION*tiny-inline-diagnostic.nvim-tiny-inline-diagnostic.nvim-configuration*
