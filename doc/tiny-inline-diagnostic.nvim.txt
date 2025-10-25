@@ -78,6 +78,11 @@ WITH SOURCES ~
 
 
 
+DIAGNOTICS COUNT ~
+
+
+
+
 CONFIGURATION*tiny-inline-diagnostic.nvim-tiny-inline-diagnostic.nvim-configuration*
 
 >lua
