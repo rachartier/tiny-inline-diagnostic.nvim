@@ -42,13 +42,13 @@ A Neovim plugin for displaying inline diagnostic messages with customizable styl
 ## Examples
 
 ### Multiline Diagnostics
-![tiny_inline_1](https://github.com/user-attachments/assets/793dade7-8953-4e64-872b-b8e541100c4a)
+![tiny_inline_1](https://github.com/user-attachments/assets/0e990581-8daa-4651-a54d-aca222caf6a5)
 
 ### Overflow Handling
-![tiny_inline_2](https://github.com/user-attachments/assets/9a2fc978-34fd-4df9-8ea6-f902800d2697)
+![tiny_inline_2](https://github.com/user-attachments/assets/947fce9f-df53-4083-9fb9-0ef8f7f1dda8)
 
 ### With Sources
-<img width="2558" height="1373" alt="tiny_inline_4" src="https://github.com/user-attachments/assets/6a3f1491-3684-4e35-9cc2-e0f85e8908ab" />
+<img width="2399" height="1136" alt="tiny_inline_4" src="https://github.com/user-attachments/assets/5c45c7fc-eae5-4851-9378-1d3c584b285d" />
 
 ## Configuration
 
