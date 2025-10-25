@@ -7,21 +7,12 @@ local filter = require("tiny-inline-diagnostic.filter")
 local state = require("tiny-inline-diagnostic.state")
 local virtual_text_forge = require("tiny-inline-diagnostic.virtual_text")
 
----@param opts table
 ---@param bufnr number
-function M.safe_render(opts, bufnr)
-  if not vim.api.nvim_buf_is_valid(bufnr) then
-    return
-  end
-  M.render(opts, bufnr)
-end
-
----@param opts table
----@param bufnr number
-function M.render(opts, bufnr)
+---@return table|nil
+local function validate_and_prepare_state(bufnr)
   local current_win = vim.api.nvim_get_current_win()
   if not vim.api.nvim_win_is_valid(current_win) then
-    return
+    return nil
   end
 
   if
@@ -29,24 +20,29 @@ function M.render(opts, bufnr)
     or not (state.enabled and vim.diagnostic.is_enabled() and vim.api.nvim_buf_is_valid(bufnr))
   then
     extmarks.clear(bufnr)
-    return
+    return nil
   end
 
   local diagnostics = cache.get(bufnr)
   if vim.tbl_isempty(diagnostics) then
     extmarks.clear(bufnr)
-    return
+    return nil
   end
 
+  return diagnostics
+end
+
+---@param opts table
+---@param bufnr number
+---@param diagnostics table
+---@param cursor_line number
+---@return table, table
+local function build_render_plan(opts, bufnr, diagnostics, cursor_line)
   local filtered_diags = filter.for_display(opts, bufnr, diagnostics)
-  local cursor_line = vim.api.nvim_win_get_cursor(0)[1] - 1
   local visible_diags = filter.visible(filtered_diags)
 
-  extmarks.clear(bufnr)
-
   local diags_dims = {}
-  local to_render = {}
-  local virt_priority = opts.options.virt_texts.priority
+  local plan = {}
 
   for lnum, diags in pairs(visible_diags) do
     if diags then
@@ -64,7 +60,7 @@ function M.render(opts, bufnr)
       end
 
       table.insert(diags_dims, { lnum, #virt_lines })
-      table.insert(to_render, {
+      table.insert(plan, {
         virt_lines = virt_lines,
         offset = offset,
         need_to_be_under = need_to_be_under,
@@ -73,32 +69,64 @@ function M.render(opts, bufnr)
     end
   end
 
-  for _, data in ipairs(to_render) do
-    local virt_lines = data.virt_lines
-    local offset = data.offset
-    local need_to_be_under = data.need_to_be_under
-    local diagnostic_pos = data.diagnostic_pos
-    local signs_offset = 0
+  return plan, diags_dims
+end
 
-    if need_to_be_under then
-      signs_offset = vim.fn.strdisplaywidth(opts.signs.left)
-    else
-      signs_offset = vim.fn.strdisplaywidth(opts.signs.left)
-        + vim.fn.strdisplaywidth(opts.signs.arrow)
-    end
+---@param opts table
+---@param need_to_be_under boolean
+---@return number
+local function compute_signs_offset(opts, need_to_be_under)
+  local base_offset = vim.fn.strdisplaywidth(opts.signs.left)
+  if need_to_be_under then
+    return base_offset
+  end
+  return base_offset + vim.fn.strdisplaywidth(opts.signs.arrow)
+end
 
+---@param opts table
+---@param bufnr number
+---@param plan table
+---@param diags_dims table
+---@param virt_priority number
+local function apply_render_plan(opts, bufnr, plan, diags_dims, virt_priority)
+  for _, item in ipairs(plan) do
+    local signs_offset = compute_signs_offset(opts, item.need_to_be_under)
     extmarks.create_extmarks(
       opts,
       bufnr,
-      diagnostic_pos[1],
+      item.diagnostic_pos[1],
       diags_dims,
-      virt_lines,
-      offset,
+      item.virt_lines,
+      item.offset,
       signs_offset,
-      need_to_be_under,
+      item.need_to_be_under,
       virt_priority
     )
   end
+end
+
+---@param opts table
+---@param bufnr number
+function M.safe_render(opts, bufnr)
+  if not vim.api.nvim_buf_is_valid(bufnr) then
+    return
+  end
+  M.render(opts, bufnr)
+end
+
+---@param opts table
+---@param bufnr number
+function M.render(opts, bufnr)
+  local diagnostics = validate_and_prepare_state(bufnr)
+  if not diagnostics then
+    return
+  end
+
+  local cursor_line = vim.api.nvim_win_get_cursor(0)[1] - 1
+  extmarks.clear(bufnr)
+
+  local plan, diags_dims = build_render_plan(opts, bufnr, diagnostics, cursor_line)
+  apply_render_plan(opts, bufnr, plan, diags_dims, opts.options.virt_texts.priority)
 end
 
 return M
