@@ -1,5 +1,6 @@
 local M = {}
 
+---@type table
 local default_signs = {
   left = "",
   right = "",
@@ -10,6 +11,8 @@ local default_signs = {
   vertical_end = " └",
 }
 
+---@param overrides table
+---@return table
 local function create_preset(overrides)
   local preset = {
     signs = vim.tbl_extend("force", default_signs, overrides.signs or {}),
@@ -21,6 +24,9 @@ local function create_preset(overrides)
   return preset
 end
 
+---@param name string
+---@param transparent_bg boolean
+---@return table
 function M.build(name, transparent_bg)
   local presets = {
     classic = create_preset({

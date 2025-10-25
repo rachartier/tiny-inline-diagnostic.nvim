@@ -18,6 +18,7 @@
 
 local M = {}
 
+local highlighter_builder = require("tiny-inline-diagnostic.highlighter_builder")
 local utils = require("tiny-inline-diagnostic.utils")
 
 -- Constants
@@ -71,86 +72,6 @@ local function get_mixing_color(color)
   return get_highlight(color).bg
 end
 
----Create diagnostic highlight groups
----@param colors table<string, HighlightColor>
----@param blends table<string, string>
----@return table<string, table>
-local function create_highlight_groups(colors, blends, transparent)
-  local hi = {
-    [HIGHLIGHT_PREFIX .. "Bg"] = { bg = colors.background },
-  }
-
-  -- Create base highlight groups
-  for severity, name in pairs(SEVERITY_NAMES) do
-    -- Cursor line highlights
-    hi[HIGHLIGHT_PREFIX .. name .. "CursorLine"] = {
-      bg = colors.cursor_line.bg,
-      fg = colors[string.lower(name)].fg,
-      italic = colors[string.lower(name)].italic,
-    }
-
-    -- Regular highlights
-    hi[HIGHLIGHT_PREFIX .. name] = {
-      bg = transparent and "None" or blends[string.lower(name)],
-      fg = colors[string.lower(name)].fg,
-      italic = colors[string.lower(name)].italic,
-    }
-
-    hi[HIGHLIGHT_PREFIX .. name .. "NoBg"] = {
-      fg = colors[string.lower(name)].fg,
-      bg = "None",
-      italic = colors[string.lower(name)].italic,
-    }
-
-    -- Inverse highlights with and without background
-    hi[INV_HIGHLIGHT_PREFIX .. name] = {
-      fg = blends[string.lower(name)],
-      bg = transparent and "None" or colors.background,
-      italic = colors[string.lower(name)].italic,
-    }
-
-    hi[INV_HIGHLIGHT_PREFIX .. name .. "NoBg"] = {
-      fg = blends[string.lower(name)],
-      bg = "None",
-      italic = colors[string.lower(name)].italic,
-    }
-  end
-
-  -- Arrow highlights
-  hi[HIGHLIGHT_PREFIX .. "Arrow"] = {
-    bg = colors.background,
-    fg = colors.arrow.fg,
-  }
-  hi[HIGHLIGHT_PREFIX .. "ArrowNoBg"] = {
-    bg = "None",
-    fg = colors.arrow.fg,
-  }
-
-  return hi
-end
-
----Create mixed highlight groups
----@param hi table<string, table>
-local function create_mixed_highlights(hi)
-  local base_groups = {
-    HIGHLIGHT_PREFIX .. "Error",
-    HIGHLIGHT_PREFIX .. "Warn",
-    HIGHLIGHT_PREFIX .. "Info",
-    HIGHLIGHT_PREFIX .. "Hint",
-  }
-
-  for _, primary in ipairs(base_groups) do
-    for _, secondary in ipairs(base_groups) do
-      local mixed_name = primary .. "Mix" .. secondary:match("Text(%w+)$")
-      hi[mixed_name] = {
-        fg = hi[primary].fg,
-        bg = hi[secondary].bg,
-        italic = hi[primary].italic,
-      }
-    end
-  end
-end
-
 ---@param blend BlendOptions
 ---@param default_hi DefaultHighlights
 function M.setup_highlights(blend, default_hi, transparent_bg, transparent_cursorline)
@@ -186,12 +107,10 @@ function M.setup_highlights(blend, default_hi, transparent_bg, transparent_curso
     background = colors.background,
   }
 
-  -- Create highlight groups
-  local hi = create_highlight_groups(colors, blends, transparent_bg)
+  local base_groups = highlighter_builder.build_base_groups(colors, blends, transparent_bg)
+  local mixed_groups = highlighter_builder.build_mixed_groups(base_groups)
+  local hi = highlighter_builder.merge_groups(base_groups, mixed_groups)
 
-  create_mixed_highlights(hi)
-
-  -- Apply highlights
   for name, opts in pairs(hi) do
     vim.api.nvim_set_hl(0, name, opts)
   end

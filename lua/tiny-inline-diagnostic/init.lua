@@ -1,9 +1,6 @@
 ---@class PluginConfig
 ---@field preset string
 ---@field hi table
----
----
----
 ---@field options table
 ---@field blend table
 
@@ -112,12 +109,13 @@ local function normalize_config(config)
   end
 
   if type(config.options.add_messages) == "boolean" then
-    config.options.add_messages = vim.tbl_deep_extend("force", default_config.options.add_messages, {
-      messages = config.options.add_messages,
-      display_count = default_config.options.add_messages.display_count,
-      use_max_severity = default_config.options.add_messages.use_max_severity,
-      show_multiple_glyphs = default_config.options.add_messages.show_multiple_glyphs,
-    })
+    config.options.add_messages =
+      vim.tbl_deep_extend("force", default_config.options.add_messages, {
+        messages = config.options.add_messages,
+        display_count = default_config.options.add_messages.display_count,
+        use_max_severity = default_config.options.add_messages.use_max_severity,
+        show_multiple_glyphs = default_config.options.add_messages.show_multiple_glyphs,
+      })
   end
 
   return config

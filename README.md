@@ -25,7 +25,7 @@ A Neovim plugin for displaying inline diagnostic messages with customizable styl
 ### Lazy.nvim
 
 ```lua
-{
+    {
     "rachartier/tiny-inline-diagnostic.nvim",
     event = "VeryLazy",
     priority = 1000,
@@ -38,17 +38,6 @@ A Neovim plugin for displaying inline diagnostic messages with customizable styl
 
 > [!IMPORTANT]
 > This disables Neovim's built-in virtual text diagnostics to prevent conflicts and duplicate displays. The plugin provides its own inline diagnostic display.
-
-## Examples
-
-### Multiline Diagnostics
-![tiny_inline_1](https://github.com/user-attachments/assets/0e990581-8daa-4651-a54d-aca222caf6a5)
-
-### Overflow Handling
-![tiny_inline_2-ezgif com-speed](https://github.com/user-attachments/assets/19da9737-7335-4a53-b364-ac5c12c663b2)
-
-### With Sources
-<img width="2399" height="1136" alt="tiny_inline_4" src="https://github.com/user-attachments/assets/5c45c7fc-eae5-4851-9378-1d3c584b285d" />
 
 ## Configuration
 
@@ -92,26 +81,12 @@ require("tiny-inline-diagnostic").setup({
         -- Color the arrow to match the severity of the first diagnostic
         set_arrow_to_diag_color = false,
 
-        -- Add messages to diagnostics
-        -- Can be a boolean (true/false) or a table with detailed options
-        -- If set to true, full diagnostic messages are displayed
-        -- When messages = true, all other options in this table are ignored
+        -- Control how diagnostic messages are displayed
         add_messages = {
-            -- Display diagnostic messages
-            messages = true,
-
-            -- Display diagnostic count instead of full messages when cursor is not on the line
-            display_count = false,
-
-            -- When display_count = true and use_max_severity = true:
-            -- Only show count and glyphs for the most severe diagnostic type
-            -- When false: show count and glyphs for all diagnostics on the line
-            use_max_severity = false,
-
-            -- When show_multiple_glyphs = true:
-            -- Display one glyph for each diagnostic (e.g., 3 errors = 3 error icons)
-            -- When false: display only one glyph per severity type (e.g., 3 errors + 2 warnings = 1 error icon + 1 warning icon)
-            show_multiple_glyphs = true,
+            messages = true,           -- Show full diagnostic messages
+            display_count = false,     -- Show diagnostic count instead of messages when cursor not on line
+            use_max_severity = false,  -- When counting, only show the most severe diagnostic
+            show_multiple_glyphs = true, -- Show multiple icons for multiple diagnostics of same severity
         },
 
         -- Throttle update frequency in milliseconds to improve performance
@@ -233,6 +208,16 @@ require("tiny-inline-diagnostic").setup({
 ### amongus
 ![amongus](https://github.com/user-attachments/assets/780dc83e-43c4-4399-84b1-1a08d48e1e86)
 
+## Examples
+
+### Multiline Diagnostics
+![multiline](https://github.com/user-attachments/assets/9dfc75c6-6382-4c05-89d8-defea930ac43)
+
+### Overflow Handling
+![overflow](https://github.com/user-attachments/assets/e629659c-0925-4031-a046-bffdd57f9a9c)
+
+### Break Line
+![break](https://github.com/user-attachments/assets/45180d09-8653-4403-a79b-5bee522560e3)
 
 ## API
 

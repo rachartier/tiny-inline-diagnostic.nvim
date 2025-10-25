@@ -2,7 +2,7 @@ local M = {}
 
 local extmarks = require("tiny-inline-diagnostic.extmarks")
 local highlights = require("tiny-inline-diagnostic.highlights")
-local utils = require("tiny-inline-diagnostic.utils")
+local overflow_strategies = require("tiny-inline-diagnostic.overflow_strategies")
 
 --- Calculate the maximum width from a list of chunks.
 ---@param chunks table: A table representing the chunks of a diagnostic message.
@@ -59,10 +59,14 @@ function M.get_header_from_chunk(
   vim.list_extend(virt_texts, { { icon, diag_hi } })
 
   local cursor_line = vim.api.nvim_win_get_cursor(0)[1] - 1
-  local add_messages_opts = type(opts.options.add_messages) == "table" 
-    and opts.options.add_messages 
-    or { messages = opts.options.add_messages, display_count = false, use_max_severity = false, show_multiple_glyphs = true }
-  
+  local add_messages_opts = type(opts.options.add_messages) == "table" and opts.options.add_messages
+    or {
+      messages = opts.options.add_messages,
+      display_count = false,
+      use_max_severity = false,
+      show_multiple_glyphs = true,
+    }
+
   local add_messages = add_messages_opts.messages
   local display_count = add_messages_opts.display_count
   local show_multiple_glyphs = add_messages_opts.show_multiple_glyphs
@@ -114,9 +118,13 @@ function M.add_severity_icons(virt_texts, opts, severities, diag_hi)
     return
   end
 
-  local add_messages_opts = type(opts.options.add_messages) == "table" 
-    and opts.options.add_messages 
-    or { messages = opts.options.add_messages, display_count = false, use_max_severity = false, show_multiple_glyphs = true }
+  local add_messages_opts = type(opts.options.add_messages) == "table" and opts.options.add_messages
+    or {
+      messages = opts.options.add_messages,
+      display_count = false,
+      use_max_severity = false,
+      show_multiple_glyphs = true,
+    }
 
   local show_multiple_glyphs = add_messages_opts.show_multiple_glyphs
   local use_max_severity = add_messages_opts.use_max_severity
@@ -134,12 +142,10 @@ function M.add_severity_icons(virt_texts, opts, severities, diag_hi)
           count = count + 1
         end
       end
-      
+
       for i = 1, count - 1 do
-        local hl = highlights.get_diagnostic_mixed_highlights_from_severity(
-          main_severity,
-          main_severity
-        )
+        local hl =
+          highlights.get_diagnostic_mixed_highlights_from_severity(main_severity, main_severity)
         local icon = opts.signs.diag
 
         if opts.options.use_icons_from_diagnostic then
@@ -155,10 +161,7 @@ function M.add_severity_icons(virt_texts, opts, severities, diag_hi)
   if show_multiple_glyphs then
     for i = #sorted_severities, 2, -1 do
       local severity = sorted_severities[i]
-      local hl = highlights.get_diagnostic_mixed_highlights_from_severity(
-        main_severity,
-        severity
-      )
+      local hl = highlights.get_diagnostic_mixed_highlights_from_severity(main_severity, severity)
       local icon = opts.signs.diag
 
       if opts.options.use_icons_from_diagnostic then
@@ -176,13 +179,10 @@ function M.add_severity_icons(virt_texts, opts, severities, diag_hi)
         table.insert(unique_severities, sev)
       end
     end
-    
+
     for i = #unique_severities, 2, -1 do
       local severity = unique_severities[i]
-      local hl = highlights.get_diagnostic_mixed_highlights_from_severity(
-        main_severity,
-        severity
-      )
+      local hl = highlights.get_diagnostic_mixed_highlights_from_severity(main_severity, severity)
       local icon = opts.signs.diag
 
       if opts.options.use_icons_from_diagnostic then
@@ -345,18 +345,7 @@ end
 ---@param opts table: The options table, which includes signs for the diagnostic message and the softwrap option.
 ---@return table: A table representing the chunks of the diagnostic message.
 function M.get_message_chunks_for_overflow(message, offset, win_width, opts)
-  local signs_total_text_len = #opts.signs.arrow
-    + #opts.signs.right
-    + #opts.signs.left
-    + #opts.signs.diag
-    + 4
-  local distance = win_width - offset - signs_total_text_len
-  return utils.wrap_text(
-    message,
-    distance,
-    opts.options.multilines.trim_whitespaces,
-    opts.options.multilines.tabstop
-  )
+  return overflow_strategies.apply_wrap(message, false, win_width, opts)
 end
 
 --- Get the chunks for a diagnostic message.
@@ -449,30 +438,13 @@ function M.handle_overflow_modes(opts, diag_message, need_to_be_under, win_width
   local chunks = {}
 
   if opts.options.break_line.enabled then
-    chunks = utils.wrap_text(
-      diag_message,
-      opts.options.break_line.after,
-      opts.options.multilines.trim_whitespaces,
-      opts.options.multilines.tabstop
-    )
+    chunks = overflow_strategies.apply_break_line(diag_message, opts)
   elseif opts.options.overflow.mode == "wrap" then
-    if need_to_be_under then
-      offset = 0
-    else
-      local ok, win_col = pcall(vim.fn.virtcol, "$")
-      offset = ok and win_col or 0
-    end
-    offset = (opts.options.overflow.padding or 0) + offset
-    chunks = M.get_message_chunks_for_overflow(diag_message, offset, win_width, opts)
+    chunks = overflow_strategies.apply_wrap(diag_message, need_to_be_under, win_width, opts)
   elseif opts.options.overflow.mode == "none" then
-    chunks = utils.wrap_text(
-      diag_message,
-      0,
-      opts.options.multilines.trim_whitespaces,
-      opts.options.multilines.tabstop
-    )
+    chunks = overflow_strategies.apply_none(diag_message, opts)
   elseif opts.options.overflow.mode == "oneline" then
-    chunks = utils.remove_newline(diag_message)
+    chunks = overflow_strategies.apply_oneline(diag_message)
   end
 
   return chunks

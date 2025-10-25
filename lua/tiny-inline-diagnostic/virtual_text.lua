@@ -36,7 +36,15 @@ end
 ---@param total_chunks number
 ---@param diag_count number
 ---@return table
-local function build_first_chunk(opts, chunk_info, message, hl, index_diag, total_chunks, diag_count)
+local function build_first_chunk(
+  opts,
+  chunk_info,
+  message,
+  hl,
+  index_diag,
+  total_chunks,
+  diag_count
+)
   local chunk_header = chunk_utils.get_header_from_chunk(
     message,
     index_diag,
