@@ -1,5 +1,5 @@
-local MiniTest = require("mini.test")
 local H = require("tests.helpers")
+local MiniTest = require("mini.test")
 local virtual_text = require("tiny-inline-diagnostic.virtual_text")
 
 local T = MiniTest.new_set()
@@ -155,7 +155,8 @@ T["from_diagnostics"]["removes space for subsequent need_to_be_under"] = functio
       { message = "error 2", severity = vim.diagnostic.severity.ERROR, lnum = 0 },
     }
 
-    local virt_texts, _, need_to_be_under = virtual_text.from_diagnostics(opts, diags, { 0, 0 }, buf)
+    local virt_texts, _, need_to_be_under =
+      virtual_text.from_diagnostics(opts, diags, { 0, 0 }, buf)
 
     MiniTest.expect.equality(type(virt_texts), "table")
   end)

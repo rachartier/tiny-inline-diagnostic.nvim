@@ -1,6 +1,6 @@
+local H = require("tests.helpers")
 local MiniTest = require("mini.test")
 local chunk = require("tiny-inline-diagnostic.chunk")
-local H = require("tests.helpers")
 
 local T = MiniTest.new_set()
 

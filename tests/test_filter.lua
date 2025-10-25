@@ -1,6 +1,6 @@
+local H = require("tests.helpers")
 local MiniTest = require("mini.test")
 local filter = require("tiny-inline-diagnostic.filter")
-local H = require("tests.helpers")
 
 local T = MiniTest.new_set()
 

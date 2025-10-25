@@ -1,7 +1,7 @@
+local H = require("tests.helpers")
 local MiniTest = require("mini.test")
 local renderer = require("tiny-inline-diagnostic.renderer")
 local state = require("tiny-inline-diagnostic.state")
-local H = require("tests.helpers")
 
 local T = MiniTest.new_set()
 

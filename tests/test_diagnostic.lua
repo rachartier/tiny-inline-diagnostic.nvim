@@ -1,7 +1,7 @@
+local H = require("tests.helpers")
 local MiniTest = require("mini.test")
 local diagnostic = require("tiny-inline-diagnostic.diagnostic")
 local state = require("tiny-inline-diagnostic.state")
-local H = require("tests.helpers")
 
 local T = MiniTest.new_set()
 
@@ -30,7 +30,13 @@ T["filter_diags_under_cursor"]["returns diagnostics under cursor"] = function()
   H.with_win_buf({ "test line" }, { 1, 0 }, nil, function(buf, win)
     local opts = create_test_opts()
     local diags = {
-      { lnum = 0, col = 0, end_col = 5, message = "error", severity = vim.diagnostic.severity.ERROR },
+      {
+        lnum = 0,
+        col = 0,
+        end_col = 5,
+        message = "error",
+        severity = vim.diagnostic.severity.ERROR,
+      },
     }
 
     local result = diagnostic.filter_diags_under_cursor(opts, buf, diags)

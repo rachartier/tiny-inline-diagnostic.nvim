@@ -1,6 +1,6 @@
+local H = require("tests.helpers")
 local MiniTest = require("mini.test")
 local extmark_writer = require("tiny-inline-diagnostic.extmark_writer")
-local H = require("tests.helpers")
 
 local T = MiniTest.new_set()
 
