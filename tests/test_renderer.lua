@@ -1,12 +1,12 @@
 local MiniTest = require("mini.test")
 local renderer = require("tiny-inline-diagnostic.renderer")
 local state = require("tiny-inline-diagnostic.state")
-local test_helpers = require("tests.init")
+local H = require("tests.helpers")
 
 local T = MiniTest.new_set()
 
 local function create_test_opts()
-  return test_helpers.create_full_opts({
+  return H.make_opts({
     options = {
       add_messages = { messages = true },
       use_icons_from_diagnostic = false,
@@ -29,201 +29,157 @@ T["safe_render"]["handles invalid buffer"] = function()
 end
 
 T["safe_render"]["calls render for valid buffer"] = function()
-  local buf = vim.api.nvim_create_buf(false, true)
-  vim.api.nvim_buf_set_lines(buf, 0, -1, false, { "test line" })
+  H.with_buf({ "test line" }, function(buf)
+    local opts = create_test_opts()
+    state.init(opts)
 
-  local opts = create_test_opts()
-  state.init(opts)
-
-  renderer.safe_render(opts, buf)
-
-  vim.api.nvim_buf_delete(buf, { force = true })
+    renderer.safe_render(opts, buf)
+  end)
 end
 
 T["render"] = MiniTest.new_set()
 
 T["render"]["clears extmarks when disabled"] = function()
-  local buf = vim.api.nvim_create_buf(false, true)
-  vim.api.nvim_buf_set_lines(buf, 0, -1, false, { "test line" })
+  H.with_buf({ "test line" }, function(buf)
+    local opts = create_test_opts()
+    state.init(opts)
+    state.user_disable()
 
-  local opts = create_test_opts()
-  state.init(opts)
-  state.user_disable()
+    renderer.render(opts, buf)
 
-  renderer.render(opts, buf)
-
-  state.user_enable()
-  vim.api.nvim_buf_delete(buf, { force = true })
+    state.user_enable()
+  end)
 end
 
 T["render"]["clears extmarks when user_toggle_state is false"] = function()
-  local buf = vim.api.nvim_create_buf(false, true)
-  vim.api.nvim_buf_set_lines(buf, 0, -1, false, { "test line" })
+  H.with_buf({ "test line" }, function(buf)
+    local opts = create_test_opts()
+    state.init(opts)
+    state.user_toggle_state = false
 
-  local opts = create_test_opts()
-  state.init(opts)
-  state.user_toggle_state = false
+    renderer.render(opts, buf)
 
-  renderer.render(opts, buf)
-
-  state.user_toggle_state = true
-  vim.api.nvim_buf_delete(buf, { force = true })
+    state.user_toggle_state = true
+  end)
 end
 
 T["render"]["clears extmarks when no diagnostics"] = function()
-  local buf = vim.api.nvim_create_buf(false, true)
-  vim.api.nvim_buf_set_lines(buf, 0, -1, false, { "test line" })
+  H.with_win_buf({ "test line" }, nil, nil, function(buf, win)
+    local opts = create_test_opts()
+    state.init(opts)
 
-  local win = vim.api.nvim_get_current_win()
-  vim.api.nvim_win_set_buf(win, buf)
-
-  local opts = create_test_opts()
-  state.init(opts)
-
-  renderer.render(opts, buf)
-
-  vim.api.nvim_buf_delete(buf, { force = true })
+    renderer.render(opts, buf)
+  end)
 end
 
 T["render"]["renders diagnostics when present"] = function()
-  local buf = vim.api.nvim_create_buf(false, true)
-  vim.api.nvim_buf_set_lines(buf, 0, -1, false, { "test line" })
+  H.with_win_buf({ "test line" }, { 1, 0 }, nil, function(buf, win)
+    local opts = create_test_opts()
+    state.init(opts)
 
-  local win = vim.api.nvim_get_current_win()
-  vim.api.nvim_win_set_buf(win, buf)
-  vim.api.nvim_win_set_cursor(win, { 1, 0 })
+    vim.diagnostic.set(vim.api.nvim_create_namespace("test_diag"), buf, {
+      {
+        lnum = 0,
+        col = 0,
+        message = "test error",
+        severity = vim.diagnostic.severity.ERROR,
+      },
+    })
 
-  local opts = create_test_opts()
-  state.init(opts)
+    local cache = require("tiny-inline-diagnostic.cache")
+    cache.update(opts, buf, vim.diagnostic.get(buf))
 
-  vim.diagnostic.set(vim.api.nvim_create_namespace("test_diag"), buf, {
-    {
-      lnum = 0,
-      col = 0,
-      message = "test error",
-      severity = vim.diagnostic.severity.ERROR,
-    },
-  })
-
-  local cache = require("tiny-inline-diagnostic.cache")
-  cache.update(opts, buf, vim.diagnostic.get(buf))
-
-  renderer.render(opts, buf)
-
-  vim.api.nvim_buf_delete(buf, { force = true })
+    renderer.render(opts, buf)
+  end)
 end
 
 T["render"]["handles multiline diagnostics"] = function()
-  local buf = vim.api.nvim_create_buf(false, true)
-  vim.api.nvim_buf_set_lines(buf, 0, -1, false, { "line 1", "line 2", "line 3" })
+  H.with_win_buf({ "line 1", "line 2", "line 3" }, { 1, 0 }, nil, function(buf, win)
+    local opts = create_test_opts()
+    opts.options.multilines = { enabled = true }
+    state.init(opts)
 
-  local win = vim.api.nvim_get_current_win()
-  vim.api.nvim_win_set_buf(win, buf)
-  vim.api.nvim_win_set_cursor(win, { 1, 0 })
+    vim.diagnostic.set(vim.api.nvim_create_namespace("test_diag2"), buf, {
+      {
+        lnum = 0,
+        col = 0,
+        message = "error on line 1",
+        severity = vim.diagnostic.severity.ERROR,
+      },
+      {
+        lnum = 1,
+        col = 0,
+        message = "error on line 2",
+        severity = vim.diagnostic.severity.WARN,
+      },
+    })
 
-  local opts = create_test_opts()
-  opts.options.multilines = { enabled = true }
-  state.init(opts)
+    local cache = require("tiny-inline-diagnostic.cache")
+    cache.update(opts, buf, vim.diagnostic.get(buf))
 
-  vim.diagnostic.set(vim.api.nvim_create_namespace("test_diag2"), buf, {
-    {
-      lnum = 0,
-      col = 0,
-      message = "error on line 1",
-      severity = vim.diagnostic.severity.ERROR,
-    },
-    {
-      lnum = 1,
-      col = 0,
-      message = "error on line 2",
-      severity = vim.diagnostic.severity.WARN,
-    },
-  })
-
-  local cache = require("tiny-inline-diagnostic.cache")
-  cache.update(opts, buf, vim.diagnostic.get(buf))
-
-  renderer.render(opts, buf)
-
-  vim.api.nvim_buf_delete(buf, { force = true })
+    renderer.render(opts, buf)
+  end)
 end
 
 T["render"]["respects visible filter"] = function()
-  local buf = vim.api.nvim_create_buf(false, true)
   local lines = {}
   for i = 1, 100 do
     table.insert(lines, "line " .. i)
   end
-  vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
+  H.with_win_buf(lines, { 1, 0 }, nil, function(buf, win)
+    local opts = create_test_opts()
+    state.init(opts)
 
-  local win = vim.api.nvim_get_current_win()
-  vim.api.nvim_win_set_buf(win, buf)
-  vim.api.nvim_win_set_cursor(win, { 1, 0 })
+    vim.diagnostic.set(vim.api.nvim_create_namespace("test_diag3"), buf, {
+      {
+        lnum = 0,
+        col = 0,
+        message = "visible error",
+        severity = vim.diagnostic.severity.ERROR,
+      },
+      {
+        lnum = 90,
+        col = 0,
+        message = "non-visible error",
+        severity = vim.diagnostic.severity.ERROR,
+      },
+    })
 
-  local opts = create_test_opts()
-  state.init(opts)
+    local cache = require("tiny-inline-diagnostic.cache")
+    cache.update(opts, buf, vim.diagnostic.get(buf))
 
-  vim.diagnostic.set(vim.api.nvim_create_namespace("test_diag3"), buf, {
-    {
-      lnum = 0,
-      col = 0,
-      message = "visible error",
-      severity = vim.diagnostic.severity.ERROR,
-    },
-    {
-      lnum = 90,
-      col = 0,
-      message = "non-visible error",
-      severity = vim.diagnostic.severity.ERROR,
-    },
-  })
-
-  local cache = require("tiny-inline-diagnostic.cache")
-  cache.update(opts, buf, vim.diagnostic.get(buf))
-
-  renderer.render(opts, buf)
-
-  vim.api.nvim_buf_delete(buf, { force = true })
+    renderer.render(opts, buf)
+  end)
 end
 
 T["render"]["handles cursor line differently"] = function()
-  local buf = vim.api.nvim_create_buf(false, true)
-  vim.api.nvim_buf_set_lines(buf, 0, -1, false, { "line 1", "line 2" })
+  H.with_win_buf({ "line 1", "line 2" }, { 1, 0 }, nil, function(buf, win)
+    local opts = create_test_opts()
+    state.init(opts)
 
-  local win = vim.api.nvim_get_current_win()
-  vim.api.nvim_win_set_buf(win, buf)
-  vim.api.nvim_win_set_cursor(win, { 1, 0 })
+    vim.diagnostic.set(vim.api.nvim_create_namespace("test_diag4"), buf, {
+      {
+        lnum = 0,
+        col = 0,
+        message = "error on cursor line",
+        severity = vim.diagnostic.severity.ERROR,
+      },
+    })
 
-  local opts = create_test_opts()
-  state.init(opts)
+    local cache = require("tiny-inline-diagnostic.cache")
+    cache.update(opts, buf, vim.diagnostic.get(buf))
 
-  vim.diagnostic.set(vim.api.nvim_create_namespace("test_diag4"), buf, {
-    {
-      lnum = 0,
-      col = 0,
-      message = "error on cursor line",
-      severity = vim.diagnostic.severity.ERROR,
-    },
-  })
-
-  local cache = require("tiny-inline-diagnostic.cache")
-  cache.update(opts, buf, vim.diagnostic.get(buf))
-
-  renderer.render(opts, buf)
-
-  vim.api.nvim_buf_delete(buf, { force = true })
+    renderer.render(opts, buf)
+  end)
 end
 
 T["render"]["handles invalid window"] = function()
-  local buf = vim.api.nvim_create_buf(false, true)
-  vim.api.nvim_buf_set_lines(buf, 0, -1, false, { "test line" })
+  H.with_buf({ "test line" }, function(buf)
+    local opts = create_test_opts()
+    state.init(opts)
 
-  local opts = create_test_opts()
-  state.init(opts)
-
-  renderer.render(opts, buf)
-
-  vim.api.nvim_buf_delete(buf, { force = true })
+    renderer.render(opts, buf)
+  end)
 end
 
 return T

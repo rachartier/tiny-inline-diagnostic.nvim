@@ -1,12 +1,12 @@
 local MiniTest = require("mini.test")
 local diagnostic = require("tiny-inline-diagnostic.diagnostic")
 local state = require("tiny-inline-diagnostic.state")
-local test_helpers = require("tests.init")
+local H = require("tests.helpers")
 
 local T = MiniTest.new_set()
 
 local function create_test_opts()
-  return test_helpers.create_full_opts({
+  return H.make_opts({
     options = {
       add_messages = { messages = true },
       use_icons_from_diagnostic = false,
@@ -27,74 +27,53 @@ end
 T["filter_diags_under_cursor"] = MiniTest.new_set()
 
 T["filter_diags_under_cursor"]["returns diagnostics under cursor"] = function()
-  local buf = vim.api.nvim_create_buf(false, true)
-  vim.api.nvim_buf_set_lines(buf, 0, -1, false, { "test line" })
+  H.with_win_buf({ "test line" }, { 1, 0 }, nil, function(buf, win)
+    local opts = create_test_opts()
+    local diags = {
+      { lnum = 0, col = 0, end_col = 5, message = "error", severity = vim.diagnostic.severity.ERROR },
+    }
 
-  local win = vim.api.nvim_get_current_win()
-  vim.api.nvim_win_set_buf(win, buf)
-  vim.api.nvim_win_set_cursor(win, { 1, 0 })
-
-  local opts = create_test_opts()
-  local diags = {
-    { lnum = 0, col = 0, end_col = 5, message = "error", severity = vim.diagnostic.severity.ERROR },
-  }
-
-  local result = diagnostic.filter_diags_under_cursor(opts, buf, diags)
-  MiniTest.expect.equality(type(result), "table")
-
-  vim.api.nvim_buf_delete(buf, { force = true })
+    local result = diagnostic.filter_diags_under_cursor(opts, buf, diags)
+    MiniTest.expect.equality(type(result), "table")
+  end)
 end
 
 T["filter_diags_under_cursor"]["filters out diagnostics not under cursor"] = function()
-  local buf = vim.api.nvim_create_buf(false, true)
-  vim.api.nvim_buf_set_lines(buf, 0, -1, false, { "test line", "line 2" })
+  H.with_win_buf({ "test line", "line 2" }, { 1, 0 }, nil, function(buf, win)
+    local opts = create_test_opts()
+    local diags = {
+      {
+        lnum = 0,
+        col = 0,
+        end_col = 5,
+        message = "error1",
+        severity = vim.diagnostic.severity.ERROR,
+      },
+      {
+        lnum = 1,
+        col = 0,
+        end_col = 5,
+        message = "error2",
+        severity = vim.diagnostic.severity.ERROR,
+      },
+    }
 
-  local win = vim.api.nvim_get_current_win()
-  vim.api.nvim_win_set_buf(win, buf)
-  vim.api.nvim_win_set_cursor(win, { 1, 0 })
-
-  local opts = create_test_opts()
-  local diags = {
-    {
-      lnum = 0,
-      col = 0,
-      end_col = 5,
-      message = "error1",
-      severity = vim.diagnostic.severity.ERROR,
-    },
-    {
-      lnum = 1,
-      col = 0,
-      end_col = 5,
-      message = "error2",
-      severity = vim.diagnostic.severity.ERROR,
-    },
-  }
-
-  local result = diagnostic.filter_diags_under_cursor(opts, buf, diags)
-  MiniTest.expect.equality(type(result), "table")
-
-  vim.api.nvim_buf_delete(buf, { force = true })
+    local result = diagnostic.filter_diags_under_cursor(opts, buf, diags)
+    MiniTest.expect.equality(type(result), "table")
+  end)
 end
 
 T["get_diagnostic_under_cursor"] = MiniTest.new_set()
 
 T["get_diagnostic_under_cursor"]["returns diagnostic at cursor position"] = function()
-  local buf = vim.api.nvim_create_buf(false, true)
-  vim.api.nvim_buf_set_lines(buf, 0, -1, false, { "test line" })
+  H.with_win_buf({ "test line" }, { 1, 0 }, nil, function(buf, win)
+    vim.diagnostic.set(vim.api.nvim_create_namespace("test_cursor"), buf, {
+      { lnum = 0, col = 0, message = "error", severity = vim.diagnostic.severity.ERROR },
+    })
 
-  local win = vim.api.nvim_get_current_win()
-  vim.api.nvim_win_set_buf(win, buf)
-  vim.api.nvim_win_set_cursor(win, { 1, 0 })
-
-  vim.diagnostic.set(vim.api.nvim_create_namespace("test_cursor"), buf, {
-    { lnum = 0, col = 0, message = "error", severity = vim.diagnostic.severity.ERROR },
-  })
-
-  local result = diagnostic.get_diagnostic_under_cursor()
-  MiniTest.expect.equality(type(result), "table")
-
-  vim.api.nvim_buf_delete(buf, { force = true })
+    local result = diagnostic.get_diagnostic_under_cursor()
+    MiniTest.expect.equality(type(result), "table")
+  end)
 end
 
 T["enable"] = MiniTest.new_set()
@@ -151,16 +130,14 @@ T["set_diagnostic_autocmds"]["sets up autocmds"] = function()
 end
 
 T["set_diagnostic_autocmds"]["respects disabled filetypes"] = function()
-  local buf = vim.api.nvim_create_buf(false, true)
-  vim.api.nvim_buf_set_lines(buf, 0, -1, false, { "test" })
-  vim.bo[buf].filetype = "help"
+  H.with_buf({ "test" }, function(buf)
+    vim.bo[buf].filetype = "help"
 
-  local opts = create_test_opts()
-  opts.options.mode = "all"
+    local opts = create_test_opts()
+    opts.options.mode = "all"
 
-  diagnostic.set_diagnostic_autocmds(opts)
-
-  vim.api.nvim_buf_delete(buf, { force = true })
+    diagnostic.set_diagnostic_autocmds(opts)
+  end)
 end
 
 T["enabled"] = MiniTest.new_set()
