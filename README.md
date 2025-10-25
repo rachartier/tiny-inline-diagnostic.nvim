@@ -121,7 +121,7 @@ require("tiny-inline-diagnostic").setup({
             tabstop = 4,               -- Number of spaces per tab when expanding tabs
           },
 
-        -m Show all diagnostics on the current cursor line, not just those under the cursor
+        -- Show all diagnostics on the current cursor line, not just those under the cursor
         show_all_diags_on_cursorline = false,
 
         -- Enable diagnostics display in insert mode
