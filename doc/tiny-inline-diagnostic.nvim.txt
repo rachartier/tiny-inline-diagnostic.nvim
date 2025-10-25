@@ -293,7 +293,7 @@ API              *tiny-inline-diagnostic.nvim-tiny-inline-diagnostic.nvim-api*
 
 AUTO-DISABLE ON FLOAT ~
 
-To automatically hide inline diagnostics when opening Neovim’s diagnostic
+To automaticallm hide inline diagnostics when opening Neovim’s diagnostic
 float windows, override the function to disable diagnostics before opening the
 float and re-enable them after closing.
 
