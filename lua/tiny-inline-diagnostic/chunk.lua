@@ -51,7 +51,11 @@ function M.get_header_from_chunk(
     virt_texts = { { opts.signs.left, diag_inv_hi } }
   end
 
-  vim.list_extend(virt_texts, { { " ", diag_hi } })
+  if is_related then
+    vim.list_extend(virt_texts, { { "  ", diag_hi } })
+  else
+    vim.list_extend(virt_texts, { { " ", diag_hi } })
+  end
 
   if index_diag == 1 and total_chunks == 1 and not is_related then
     M.add_severity_icons(virt_texts, opts, severities, diag_hi)
@@ -59,7 +63,7 @@ function M.get_header_from_chunk(
 
   local icon = M.get_diagnostic_icon(opts, severities, index_diag, total_chunks)
   if is_related then
-    icon = " "
+    icon = "↳ "
   end
   vim.list_extend(virt_texts, { { icon, diag_hi } })
 
@@ -242,6 +246,11 @@ function M.add_message_text(
   is_related
 )
   local text_after_message = " "
+  local text_before_message = " "
+
+  if is_related then
+    text_before_message = ""
+  end
 
   if num_chunks == 1 then
     if total_chunks == 1 or index_diag == total_chunks then
@@ -250,16 +259,16 @@ function M.add_message_text(
       end
       vim.list_extend(
         virt_texts,
-        { { " " .. message, diag_hi }, { opts.signs.right, diag_inv_hi } }
+        { { text_before_message .. message, diag_hi }, { opts.signs.right, diag_inv_hi } }
       )
     else
       vim.list_extend(virt_texts, {
-        { " " .. message .. text_after_message, diag_hi },
+        { text_before_message .. message .. text_after_message, diag_hi },
       })
     end
   else
     vim.list_extend(virt_texts, {
-      { " " .. message .. text_after_message, diag_hi },
+      { text_before_message .. message .. text_after_message, diag_hi },
     })
   end
 end
@@ -274,6 +283,7 @@ end
 ---@param diag_hi string: The highlight group for the diagnostic message.
 ---@param diag_inv_hi string: The highlight group for the diagnostic signs.
 ---@param total_chunks number: The total number of chunks.
+---@param is_related boolean: Whether this is a related diagnostic.
 ---@return table: A table representing the virtual text array for the diagnostic message body.
 function M.get_body_from_chunk(
   chunk,
@@ -284,7 +294,8 @@ function M.get_body_from_chunk(
   opts,
   diag_hi,
   diag_inv_hi,
-  total_chunks
+  total_chunks,
+  is_related
 )
   local vertical_sign = opts.signs.vertical
   local is_last = index_diag == total_chunks and index_chunk == num_chunks
@@ -293,11 +304,19 @@ function M.get_body_from_chunk(
     vertical_sign = opts.signs.vertical_end
   end
 
-  local chunk_virtual_texts = {
-    { vertical_sign, diag_hi },
-    { " " .. chunk, diag_hi },
-    { " ", diag_hi },
-  }
+  local chunk_virtual_texts
+  if is_related then
+    chunk_virtual_texts = {
+      { "    " .. chunk, diag_hi },
+      { " ", diag_hi },
+    }
+  else
+    chunk_virtual_texts = {
+      { vertical_sign, diag_hi },
+      { " " .. chunk, diag_hi },
+      { " ", diag_hi },
+    }
+  end
 
   if is_last then
     vim.list_extend(chunk_virtual_texts, { { opts.signs.right, diag_inv_hi } })
@@ -404,7 +423,7 @@ function M.get_chunks(opts, diags_on_line, diag_index, diag_line, cursor_line, b
         location_info = string.format(" [%s]", short_name)
       end
     end
-    diag_message = "↳ " .. diag_message .. location_info
+    diag_message = diag_message .. location_info
   elseif show_source and diag.source then
     diag_message = diag_message .. " (" .. diag.source .. ")"
   end
@@ -430,7 +449,14 @@ function M.get_chunks(opts, diags_on_line, diag_index, diag_line, cursor_line, b
   end
 
   if not opts.options.multilines or cursor_line == diag_line then
-    chunks = M.handle_overflow_modes(opts, diag_message, need_to_be_under, win_width, offset)
+    chunks = M.handle_overflow_modes(
+      opts,
+      diag_message,
+      need_to_be_under,
+      win_width,
+      offset,
+      diag.is_related or false
+    )
   else
     chunks = { " " .. diag_message }
   end
@@ -454,14 +480,23 @@ end
 ---@param need_to_be_under boolean: A flag indicating whether the arrow needs to point upwards.
 ---@param win_width number: The width of the window where the diagnostic message is displayed.
 ---@param offset number: The offset from the start of the line to the diagnostic position.
+---@param is_related boolean: Whether this is a related diagnostic.
 ---@return table: A table representing the chunks of the diagnostic message.
-function M.handle_overflow_modes(opts, diag_message, need_to_be_under, win_width, offset)
+function M.handle_overflow_modes(
+  opts,
+  diag_message,
+  need_to_be_under,
+  win_width,
+  offset,
+  is_related
+)
   local chunks = {}
 
   if opts.options.break_line.enabled then
     chunks = overflow_strategies.apply_break_line(diag_message, opts)
   elseif opts.options.overflow.mode == "wrap" then
-    chunks = overflow_strategies.apply_wrap(diag_message, need_to_be_under, win_width, opts)
+    chunks =
+      overflow_strategies.apply_wrap(diag_message, need_to_be_under, win_width, opts, is_related)
   elseif opts.options.overflow.mode == "none" then
     chunks = overflow_strategies.apply_none(diag_message, opts)
   elseif opts.options.overflow.mode == "oneline" then

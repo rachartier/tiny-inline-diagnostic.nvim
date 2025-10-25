@@ -25,6 +25,48 @@ function M.at_position(opts, diagnostics, line, col)
   return #current_pos_diags > 0 and current_pos_diags or diags_on_line
 end
 
+---@param related_info table
+---@param parent_diag table
+---@return table
+local function create_related_diagnostic(related_info, parent_diag)
+  return {
+    message = related_info.message,
+    severity = parent_diag.severity,
+    lnum = parent_diag.lnum,
+    col = parent_diag.col,
+    end_lnum = parent_diag.end_lnum,
+    end_col = parent_diag.end_col,
+    source = parent_diag.source,
+    is_related = true,
+    related_location = related_info.location,
+  }
+end
+
+---@param diag table
+---@return boolean
+local function has_related_info(diag)
+  return diag.user_data
+    and diag.user_data.lsp
+    and diag.user_data.lsp.relatedInformation
+    and #diag.user_data.lsp.relatedInformation > 0
+end
+
+---@param diag table
+---@param max_count number
+---@return table
+local function extract_related_diagnostics(diag, max_count)
+  local related = {}
+  for i, info in ipairs(diag.user_data.lsp.relatedInformation) do
+    if i > max_count then
+      break
+    end
+    if info.message and info.message ~= "" then
+      table.insert(related, create_related_diagnostic(info, diag))
+    end
+  end
+  return related
+end
+
 ---@param opts table
 ---@param buf number
 ---@param diagnostics table
@@ -42,40 +84,22 @@ function M.under_cursor(opts, buf, diagnostics)
   local cursor_pos = vim.api.nvim_win_get_cursor(0)
   local filtered_diags = M.at_position(opts, diagnostics, cursor_pos[1] - 1, cursor_pos[2])
 
-  if opts.options.show_related and opts.options.show_related.enabled then
-    local expanded_diags = {}
-    for _, diag in ipairs(filtered_diags) do
-      table.insert(expanded_diags, diag)
-
-      if diag.user_data and diag.user_data.lsp and diag.user_data.lsp.relatedInformation then
-        local max_count = opts.options.show_related.max_count or 3
-        local count = 0
-        for _, related in ipairs(diag.user_data.lsp.relatedInformation) do
-          if count >= max_count then
-            break
-          end
-          if related.message and related.message ~= "" then
-            local related_diag = {
-              message = related.message,
-              severity = diag.severity,
-              lnum = diag.lnum,
-              col = diag.col,
-              end_lnum = diag.end_lnum,
-              end_col = diag.end_col,
-              source = diag.source,
-              is_related = true,
-              related_location = related.location,
-            }
-            table.insert(expanded_diags, related_diag)
-            count = count + 1
-          end
-        end
-      end
-    end
-    return expanded_diags
+  if not opts.options.show_related or not opts.options.show_related.enabled then
+    return filtered_diags
   end
 
-  return filtered_diags
+  local result = {}
+  local max_count = opts.options.show_related.max_count or 3
+
+  for _, diag in ipairs(filtered_diags) do
+    table.insert(result, diag)
+    if has_related_info(diag) then
+      local related = extract_related_diagnostics(diag, max_count)
+      vim.list_extend(result, related)
+    end
+  end
+
+  return result
 end
 
 ---@param opts table

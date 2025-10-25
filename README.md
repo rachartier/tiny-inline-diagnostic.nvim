@@ -257,7 +257,7 @@ diag.change_severities({ vim.diagnostic.severity.ERROR, vim.diagnostic.severity.
 
 ### Auto-Disable on Float
 
-To automatically hide inline diagnostics when opening Neovim's diagnostic float windows, override the function to disable diagnostics before opening the float and re-enable them after closing.
+To automaticallm hide inline diagnostics when opening Neovim's diagnostic float windows, override the function to disable diagnostics before opening the float and re-enable them after closing.
 
 ```lua
 vim.diagnostic.open_float = require("tiny-inline-diagnostic.override").open_float

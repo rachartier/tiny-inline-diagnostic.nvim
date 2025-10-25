@@ -117,7 +117,8 @@ function M.from_diagnostic(opts, ret, index_diag, padding, total_chunks, diag_co
         opts,
         diag_hi,
         body_hi,
-        total_chunks
+        total_chunks,
+        ret.is_related or false
       )
       table.insert(all_virtual_texts, chunk_body)
     end
@@ -130,31 +131,33 @@ function M.from_diagnostic(opts, ret, index_diag, padding, total_chunks, diag_co
   return all_virtual_texts, ret.offset_win_col, ret.need_to_be_under
 end
 
---- Generate virtual text from multiple diagnostics.
---- @param opts DiagnosticConfig
---- @param diags_on_line table[]
---- @param cursor_pos number[]
---- @param buf number
---- @return table, number, boolean Virtual texts, offset window column, and whether it needs to be under.
+---@param opts DiagnosticConfig
+---@param diags_on_line table[]
+---@param cursor_pos number[]
+---@param buf number
+---@return table, number, boolean
 function M.from_diagnostics(opts, diags_on_line, cursor_pos, buf)
   local all_virtual_texts = {}
-  local offset_win_col = 0
   local need_to_be_under = false
+  local current_line = vim.api.nvim_win_get_cursor(0)[1] - 1
 
   local chunks = {}
   local max_chunk_line_length = 0
-  local current_line = vim.api.nvim_win_get_cursor(0)[1] - 1
+  local has_related = false
 
   for index = 1, #diags_on_line do
     local ret = chunk_utils.get_chunks(opts, diags_on_line, index, cursor_pos[1], current_line, buf)
-    local chunk_line_length = chunk_utils.get_max_width_from_chunks(ret.chunks)
-    max_chunk_line_length = math.max(max_chunk_line_length, chunk_line_length)
+    max_chunk_line_length =
+      math.max(max_chunk_line_length, chunk_utils.get_max_width_from_chunks(ret.chunks))
     chunks[index] = ret
+    has_related = has_related or ret.is_related
   end
 
   for index_diag, ret in ipairs(chunks) do
+    local padding = has_related and not ret.is_related and max_chunk_line_length + 1
+      or max_chunk_line_length
     local virt_texts, _, diag_need_to_be_under =
-      M.from_diagnostic(opts, ret, index_diag, max_chunk_line_length, #chunks, #diags_on_line)
+      M.from_diagnostic(opts, ret, index_diag, padding, #chunks, #diags_on_line)
 
     need_to_be_under = need_to_be_under or diag_need_to_be_under
 
@@ -165,7 +168,7 @@ function M.from_diagnostics(opts, diags_on_line, cursor_pos, buf)
     vim.list_extend(all_virtual_texts, virt_texts)
   end
 
-  return all_virtual_texts, offset_win_col, need_to_be_under
+  return all_virtual_texts, 0, need_to_be_under
 end
 
 return M
