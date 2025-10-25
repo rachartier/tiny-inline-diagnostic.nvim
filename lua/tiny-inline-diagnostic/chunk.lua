@@ -30,6 +30,7 @@ end
 ---@param total_chunks number: The total number of chunks.
 ---@param severities table: The severities of the diagnostic messages.
 ---@param diag_count number: The number of diagnostics on the line.
+---@param is_related boolean: Whether this is a related diagnostic.
 ---@return table: A table representing the virtual text array for the diagnostic message header.
 function M.get_header_from_chunk(
   message,
@@ -40,7 +41,8 @@ function M.get_header_from_chunk(
   diag_inv_hi,
   total_chunks,
   severities,
-  diag_count
+  diag_count,
+  is_related
 )
   local virt_texts = {}
   local num_chunks = #chunk_info.chunks
@@ -51,11 +53,14 @@ function M.get_header_from_chunk(
 
   vim.list_extend(virt_texts, { { " ", diag_hi } })
 
-  if index_diag == 1 and total_chunks == 1 then
+  if index_diag == 1 and total_chunks == 1 and not is_related then
     M.add_severity_icons(virt_texts, opts, severities, diag_hi)
   end
 
   local icon = M.get_diagnostic_icon(opts, severities, index_diag, total_chunks)
+  if is_related then
+    icon = " "
+  end
   vim.list_extend(virt_texts, { { icon, diag_hi } })
 
   local cursor_line = vim.api.nvim_win_get_cursor(0)[1] - 1
@@ -72,7 +77,7 @@ function M.get_header_from_chunk(
   local show_multiple_glyphs = add_messages_opts.show_multiple_glyphs
   local use_max_severity = add_messages_opts.use_max_severity
 
-  if display_count and cursor_line ~= chunk_info.line then
+  if display_count and cursor_line ~= chunk_info.line and not is_related then
     if use_max_severity then
       local max_severity = severities[1]
       for _, sev in ipairs(severities) do
@@ -90,7 +95,7 @@ function M.get_header_from_chunk(
     else
       message = #severities
     end
-  elseif not add_messages and cursor_line ~= chunk_info.line then
+  elseif not add_messages and cursor_line ~= chunk_info.line and not is_related then
     message = ""
   end
 
@@ -102,7 +107,8 @@ function M.get_header_from_chunk(
     index_diag,
     opts,
     diag_hi,
-    diag_inv_hi
+    diag_inv_hi,
+    is_related or false
   )
 
   return virt_texts
@@ -223,6 +229,7 @@ end
 ---@param opts table: The options table.
 ---@param diag_hi string: The highlight group for the diagnostic message.
 ---@param diag_inv_hi string: The highlight group for the diagnostic signs.
+---@param is_related boolean: Whether this is a related diagnostic.
 function M.add_message_text(
   virt_texts,
   message,
@@ -231,9 +238,14 @@ function M.add_message_text(
   index_diag,
   opts,
   diag_hi,
-  diag_inv_hi
+  diag_inv_hi,
+  is_related
 )
   local text_after_message = " "
+
+  if is_related then
+    diag_hi = diag_hi .. "Dimmed"
+  end
 
   if num_chunks == 1 then
     if total_chunks == 1 or index_diag == total_chunks then
@@ -247,13 +259,11 @@ function M.add_message_text(
     else
       vim.list_extend(virt_texts, {
         { " " .. message .. text_after_message, diag_hi },
-        -- { string.rep(" ", vim.fn.strcharlen(opts.signs.right)), diag_inv_hi },
       })
     end
   else
     vim.list_extend(virt_texts, {
       { " " .. message .. text_after_message, diag_hi },
-      -- { string.rep(" ", vim.fn.strcharlen(opts.signs.right)), diag_inv_hi },
     })
   end
 end
@@ -385,7 +395,21 @@ function M.get_chunks(opts, diags_on_line, diag_index, diag_line, cursor_line, b
   end
 
   local diag_message = diag.message
-  if show_source and diag.source then
+  if diag.is_related then
+    local location_info = ""
+    if diag.related_location and diag.related_location.uri then
+      local uri = diag.related_location.uri
+      local filename = vim.uri_to_fname(uri)
+      local short_name = vim.fn.fnamemodify(filename, ":t")
+      if diag.related_location.range and diag.related_location.range.start then
+        local line_num = diag.related_location.range.start.line + 1
+        location_info = string.format(" [%s:%d]", short_name, line_num)
+      else
+        location_info = string.format(" [%s]", short_name)
+      end
+    end
+    diag_message = "↳ " .. diag_message .. location_info
+  elseif show_source and diag.source then
     diag_message = diag_message .. " (" .. diag.source .. ")"
   end
 
@@ -405,7 +429,7 @@ function M.get_chunks(opts, diags_on_line, diag_index, diag_line, cursor_line, b
     end
   end
 
-  if opts.options.format and diag_message then
+  if opts.options.format and diag_message and not diag.is_related then
     diag_message = opts.options.format(diag)
   end
 
@@ -424,6 +448,7 @@ function M.get_chunks(opts, diags_on_line, diag_index, diag_line, cursor_line, b
     offset_win_col = other_extmarks_offset,
     need_to_be_under = need_to_be_under,
     line = diag.lnum,
+    is_related = diag.is_related or false,
   }
 end
 

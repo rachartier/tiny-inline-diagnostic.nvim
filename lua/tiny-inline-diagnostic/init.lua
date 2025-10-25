@@ -28,6 +28,10 @@ local default_config = {
       enabled = false,
       if_many = false,
     },
+    show_related = {
+      enabled = true,
+      max_count = 3,
+    },
     add_messages = {
       messages = true,
       display_count = false,

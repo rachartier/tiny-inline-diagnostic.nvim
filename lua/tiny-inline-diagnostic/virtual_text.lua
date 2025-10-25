@@ -35,6 +35,7 @@ end
 ---@param index_diag number
 ---@param total_chunks number
 ---@param diag_count number
+---@param is_related boolean
 ---@return table
 local function build_first_chunk(
   opts,
@@ -43,7 +44,8 @@ local function build_first_chunk(
   hl,
   index_diag,
   total_chunks,
-  diag_count
+  diag_count,
+  is_related
 )
   local chunk_header = chunk_utils.get_header_from_chunk(
     message,
@@ -54,10 +56,11 @@ local function build_first_chunk(
     hl.diag_inv_hi,
     total_chunks,
     chunk_info.severities,
-    diag_count
+    diag_count,
+    is_related
   )
 
-  if index_diag == 1 then
+  if index_diag == 1 and not is_related then
     local cursor_line = vim.api.nvim_win_get_cursor(0)[1] - 1
     local chunk_arrow =
       chunk_utils.get_arrow_from_chunk(opts, cursor_line, chunk_info, hl.diag_inv_hi)
@@ -100,7 +103,8 @@ function M.from_diagnostic(opts, ret, index_diag, padding, total_chunks, diag_co
         { diag_hi = diag_hi, diag_inv_hi = diag_inv_hi },
         index_diag,
         total_chunks,
-        diag_count
+        diag_count,
+        ret.is_related or false
       )
       vim.list_extend(all_virtual_texts, first_chunks)
     else

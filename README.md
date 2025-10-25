@@ -55,6 +55,11 @@ A Neovim plugin for displaying inline diagnostic messages with customizable styl
 ### Diagnotics count
 <img width="2400" height="1138" alt="tiny_inline_3" src="https://github.com/user-attachments/assets/42fcfb20-8df9-4182-b994-326c5fdcc4fc" />
 
+### Related Diagnostics
+When `show_related.enabled = true`, diagnostics that have LSP `relatedInformation` will display their related messages inline below the main diagnostic. Related diagnostics appear dimmed (50% blend) with a "↳ " prefix and location information. This is useful for understanding the full context of errors, such as where a conflicting definition or type originates.
+
+Diagnostics that are themselves referenced as related information by other diagnostics are automatically filtered out to avoid duplicate displays.
+
 ## Configuration
 
 ```lua
@@ -123,6 +128,12 @@ require("tiny-inline-diagnostic").setup({
 
         -- Show all diagnostics on the current cursor line, not just those under the cursor
         show_all_diags_on_cursorline = false,
+
+        -- Display related diagnostics from LSP relatedInformation
+        show_related = {
+            enabled = false,           -- Enable displaying related diagnostics
+            max_count = 3,             -- Maximum number of related diagnostics to show per diagnostic
+        },
 
         -- Enable diagnostics display in insert mode
         -- May cause visual artifacts; consider setting throttle to 0 if enabled

@@ -29,6 +29,13 @@ function M.build_base_groups(colors, blends, transparent)
       italic = color.italic,
     }
 
+    hi[HIGHLIGHT_PREFIX .. name .. "Dimmed"] = {
+      bg = transparent and "None" or blends[name_lower],
+      fg = color.fg,
+      italic = color.italic,
+      blend = 50,
+    }
+
     hi[HIGHLIGHT_PREFIX .. name .. "NoBg"] = {
       fg = color.fg,
       bg = "None",
