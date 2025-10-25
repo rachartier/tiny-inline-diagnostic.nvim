@@ -344,7 +344,7 @@ TROUBLESHOOTING*tiny-inline-diagnostic.nvim-tiny-inline-diagnostic.nvim-troubles
 
 1. *Neovim*: https://img.shields.io/badge/Neovim-0.10+-blue.svg
 2. *tiny_inline_1*: https://github.com/user-attachments/assets/0e990581-8daa-4651-a54d-aca222caf6a5
-3. *tiny_inline_2*: https://github.com/user-attachments/assets/947fce9f-df53-4083-9fb9-0ef8f7f1dda8
+3. *tiny_inline_2-ezgif com-speed*: https://github.com/user-attachments/assets/19da9737-7335-4a53-b364-ac5c12c663b2
 4. *modern*: https://github.com/user-attachments/assets/38460aab-bb4d-4766-9cc6-4315315964c0
 5. *classic*: https://github.com/user-attachments/assets/add17b8e-a0b3-4ffa-883f-ed3f7f7ac162
 6. *minimal*: https://github.com/user-attachments/assets/931c75a8-27a7-4691-9ee1-6c9cd145c78d
