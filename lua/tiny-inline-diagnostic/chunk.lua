@@ -243,10 +243,6 @@ function M.add_message_text(
 )
   local text_after_message = " "
 
-  if is_related then
-    diag_hi = diag_hi .. "Dimmed"
-  end
-
   if num_chunks == 1 then
     if total_chunks == 1 or index_diag == total_chunks then
       if message ~= "" then
