@@ -104,7 +104,7 @@ function M.setup_buffer_autocmds(
         M.detach(bufnr)
         return
       end
-      throttled_apply(bufnr)
+      direct_apply(bufnr)
     end,
   })
 
