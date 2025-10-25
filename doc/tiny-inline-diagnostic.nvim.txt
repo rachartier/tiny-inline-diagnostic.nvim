@@ -48,7 +48,7 @@ INSTALLATION*tiny-inline-diagnostic.nvim-tiny-inline-diagnostic.nvim-installatio
 LAZY.NVIM ~
 
 >lua
-        {
+    {
         "rachartier/tiny-inline-diagnostic.nvim",
         event = "VeryLazy",
         priority = 1000,
