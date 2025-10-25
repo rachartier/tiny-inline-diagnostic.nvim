@@ -50,6 +50,9 @@ A Neovim plugin for displaying inline diagnostic messages with customizable styl
 ### With Sources
 <img width="2399" height="1136" alt="tiny_inline_4" src="https://github.com/user-attachments/assets/5c45c7fc-eae5-4851-9378-1d3c584b285d" />
 
+### Diagnotics count
+<img width="2400" height="1138" alt="tiny_inline_3" src="https://github.com/user-attachments/assets/42fcfb20-8df9-4182-b994-326c5fdcc4fc" />
+
 ## Configuration
 
 ```lua
