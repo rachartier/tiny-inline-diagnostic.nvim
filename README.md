@@ -56,9 +56,8 @@ A Neovim plugin for displaying inline diagnostic messages with customizable styl
 <img width="2400" height="1138" alt="tiny_inline_3" src="https://github.com/user-attachments/assets/42fcfb20-8df9-4182-b994-326c5fdcc4fc" />
 
 ### Related Diagnostics
-When `show_related.enabled = true`, diagnostics that have LSP `relatedInformation` will display their related messages inline below the main diagnostic. Related diagnostics appear dimmed (50% blend) with a "↳ " prefix and location information. This is useful for understanding the full context of errors, such as where a conflicting definition or type originates.
+<img width="2557" height="1363" alt="tiny_inline_5" src="https://github.com/user-attachments/assets/9d688945-c53f-4047-ae62-ae084adb9910" />
 
-Diagnostics that are themselves referenced as related information by other diagnostics are automatically filtered out to avoid duplicate displays.
 
 ## Configuration
 
