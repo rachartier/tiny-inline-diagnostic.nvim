@@ -25,7 +25,7 @@ A Neovim plugin for displaying inline diagnostic messages with customizable styl
 ### Lazy.nvim
 
 ```lua
-    {
+{
     "rachartier/tiny-inline-diagnostic.nvim",
     event = "VeryLazy",
     priority = 1000,
@@ -38,6 +38,17 @@ A Neovim plugin for displaying inline diagnostic messages with customizable styl
 
 > [!IMPORTANT]
 > This disables Neovim's built-in virtual text diagnostics to prevent conflicts and duplicate displays. The plugin provides its own inline diagnostic display.
+
+## Examples
+
+### Multiline Diagnostics
+![tiny_inline_1](https://github.com/user-attachments/assets/0e990581-8daa-4651-a54d-aca222caf6a5)
+
+### Overflow Handling
+![tiny_inline_2-ezgif com-speed](https://github.com/user-attachments/assets/19da9737-7335-4a53-b364-ac5c12c663b2)
+
+### With Sources
+<img width="2399" height="1136" alt="tiny_inline_4" src="https://github.com/user-attachments/assets/5c45c7fc-eae5-4851-9378-1d3c584b285d" />
 
 ## Configuration
 
@@ -208,16 +219,6 @@ require("tiny-inline-diagnostic").setup({
 ### amongus
 ![amongus](https://github.com/user-attachments/assets/780dc83e-43c4-4399-84b1-1a08d48e1e86)
 
-## Examples
-
-### Multiline Diagnostics
-![multiline](https://github.com/user-attachments/assets/9dfc75c6-6382-4c05-89d8-defea930ac43)
-
-### Overflow Handling
-![overflow](https://github.com/user-attachments/assets/e629659c-0925-4031-a046-bffdd57f9a9c)
-
-### Break Line
-![break](https://github.com/user-attachments/assets/45180d09-8653-4403-a79b-5bee522560e3)
 
 ## API
 
