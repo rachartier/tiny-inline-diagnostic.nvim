@@ -1,6 +1,8 @@
 # 🩺 tiny-inline-diagnostic.nvim
 
+[![CI](https://github.com/rachartier/tiny-inline-diagnostic.nvim/actions/workflows/ci.yml/badge.svg)](https://github.com/rachartier/tiny-inline-diagnostic.nvim/actions/workflows/ci.yml)
 [![Neovim](https://img.shields.io/badge/Neovim-0.10+-blue.svg)](https://neovim.io/)
+[![Stars](https://img.shields.io/github/stars/rachartier/tiny-inline-diagnostic.nvim)](https://github.com/rachartier/tiny-inline-diagnostic.nvim/stargazers)
 
 A Neovim plugin for displaying inline diagnostic messages with customizable styles and icons.
 
@@ -117,9 +119,9 @@ require("tiny-inline-diagnostic").setup({
             always_show = false,       -- Always show messages on all lines of multiline diagnostics
             trim_whitespaces = false,  -- Remove leading/trailing whitespace from each line
             tabstop = 4,               -- Number of spaces per tab when expanding tabs
-        },
+          },
 
-        -- Show all diagnostics on the current cursor line, not just those under the cursor
+        -m Show all diagnostics on the current cursor line, not just those under the cursor
         show_all_diags_on_cursorline = false,
 
         -- Enable diagnostics display in insert mode
