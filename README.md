@@ -56,7 +56,7 @@ A Neovim plugin for displaying inline diagnostic messages with customizable styl
 <img width="2400" height="1138" alt="tiny_inline_3" src="https://github.com/user-attachments/assets/42fcfb20-8df9-4182-b994-326c5fdcc4fc" />
 
 ### Related Diagnostics
-<img width="2557" height="1363" alt="tiny_inline_5" src="https://github.com/user-attachments/assets/9d688945-c53f-4047-ae62-ae084adb9910" />
+<img width="2558" height="1365" alt="tiny_inline_5" src="https://github.com/user-attachments/assets/77af469f-351e-4d4e-a424-51fc0c814a5c" />
 
 
 ## Configuration
