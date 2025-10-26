@@ -56,7 +56,7 @@ A Neovim plugin for displaying inline diagnostic messages with customizable styl
 ```
 
 > [!IMPORTANT]
-> This disables Neovim's built-in virtual text diagnostics to prevent conflicts and duplicate displays. The plugin provides its own inline diagnostic display.
+    > This disables Neovim's built-in virtual text diagnostics to prevent conflicts and duplicate displays. The plugin provides its own inline diagnostic display.
 
 ## Examples
 
@@ -197,7 +197,7 @@ require("tiny-inline-diagnostic").setup({
 
         -- Display related diagnostics from LSP relatedInformation
         show_related = {
-            enabled = false,           -- Enable displaying related diagnostics
+            enabled = true,           -- Enable displaying related diagnostics
             max_count = 3,             -- Maximum number of related diagnostics to show per diagnostic
         },
 
