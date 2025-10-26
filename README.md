@@ -63,18 +63,65 @@ A Neovim plugin for displaying inline diagnostic messages with customizable styl
 ### Multiline Diagnostics
 ![tiny_inline_1](https://github.com/user-attachments/assets/0e990581-8daa-4651-a54d-aca222caf6a5)
 
-### Overflow Handling
+<details>
+<summary>Configuration</summary>
+
+```lua
+require("tiny-inline-diagnostic").setup({
+    options = {
+        multilines = {
+            enabled = true,
+        },
+    },
+})
+```
+
+</details>
+
+### Overflow Handling (by default)
 ![tiny_inline_2-ezgif com-speed](https://github.com/user-attachments/assets/19da9737-7335-4a53-b364-ac5c12c663b2)
 
 ### With Sources
 <img width="2399" height="1136" alt="tiny_inline_4" src="https://github.com/user-attachments/assets/5c45c7fc-eae5-4851-9378-1d3c584b285d" />
 
+<details>
+<summary>Configuration</summary>
+
+```lua
+require("tiny-inline-diagnostic").setup({
+    options = {
+        show_source = {
+            enabled = true,
+        },
+    },
+})
+```
+
+</details>
+
 ### Diagnotics count
 <img width="2400" height="1138" alt="tiny_inline_3" src="https://github.com/user-attachments/assets/42fcfb20-8df9-4182-b994-326c5fdcc4fc" />
 
-### Related Diagnostics
-<img width="2558" height="1365" alt="tiny_inline_5" src="https://github.com/user-attachments/assets/77af469f-351e-4d4e-a424-51fc0c814a5c" />
+<details>
+<summary>Configuration</summary>
 
+```lua
+require("tiny-inline-diagnostic").setup({
+    options = {
+        add_messages = {
+            display_count = true,
+        },
+        multilines = {
+            enabled = true,
+        },
+    },
+})
+```
+
+</details>
+
+### Related Diagnostics (by default)
+<img width="2558" height="1365" alt="tiny_inline_5" src="https://github.com/user-attachments/assets/77af469f-351e-4d4e-a424-51fc0c814a5c" />
 
 ## Configuration
 
