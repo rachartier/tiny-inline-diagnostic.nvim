@@ -82,11 +82,9 @@ LAZYVIM ~
 <
 
 
-  [!IMPORTANT]
->
-    > This disables Neovim's built-in virtual text diagnostics to prevent conflicts and duplicate displays. The plugin provides its own inline diagnostic display.
-<
-
+  [!IMPORTANT] This disables Neovim’s built-in virtual text diagnostics to
+  prevent conflicts and duplicate displays. The plugin provides its own inline
+  diagnostic display.
 
 EXAMPLES    *tiny-inline-diagnostic.nvim-tiny-inline-diagnostic.nvim-examples*
 
