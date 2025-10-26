@@ -56,7 +56,7 @@ A Neovim plugin for displaying inline diagnostic messages with customizable styl
 ```
 
 > [!IMPORTANT]
-    > This disables Neovim's built-in virtual text diagnostics to prevent conflicts and duplicate displays. The plugin provides its own inline diagnostic display.
+> This disables Neovim's built-in virtual text diagnostics to prevent conflicts and duplicate displays. The plugin provides its own inline diagnostic display.
 
 ## Examples
 
