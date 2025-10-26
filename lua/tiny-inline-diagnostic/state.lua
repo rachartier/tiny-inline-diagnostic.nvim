@@ -18,6 +18,8 @@ function M.init(opts)
 
   if not opts.options.enable_on_insert then
     table.insert(disabled_modes, "i")
+    table.insert(disabled_modes, "ic")
+    table.insert(disabled_modes, "ix")
   end
 end
 
