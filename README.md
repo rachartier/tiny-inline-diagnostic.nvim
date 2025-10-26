@@ -117,13 +117,6 @@ require("tiny-inline-diagnostic").setup({
         -- Color the arrow to match the severity of the first diagnostic
         set_arrow_to_diag_color = false,
 
-        -- Control how diagnostic messages are displayed
-        add_messages = {
-            messages = true,           -- Show full diagnostic messages
-            display_count = false,     -- Show diagnostic count instead of messages when cursor not on line
-            use_max_severity = false,  -- When counting, only show the most severe diagnostic
-            show_multiple_glyphs = true, -- Show multiple icons for multiple diagnostics of same severity
-        },
 
         -- Throttle update frequency in milliseconds to improve performance
         -- Higher values reduce CPU usage but may feel less responsive
@@ -132,6 +125,16 @@ require("tiny-inline-diagnostic").setup({
 
         -- Minimum number of characters before wrapping long messages
         softwrap = 30,
+
+        -- Control how diagnostic messages are displayed
+        -- NOTE: When using display_count = true, you need to enable multiline diagnostics with multilines.enabled = true
+        --       If you want them to always be displayed, you can also set multilines.always_show = true.
+        add_messages = {
+            messages = true,           -- Show full diagnostic messages
+            display_count = false,     -- Show diagnostic count instead of messages when cursor not on line
+            use_max_severity = false,  -- When counting, only show the most severe diagnostic
+            show_multiple_glyphs = true, -- Show multiple icons for multiple diagnostics of same severity
+        },
 
         -- Settings for multiline diagnostics
         multilines = {
