@@ -38,6 +38,7 @@ TABLE OF CONTENTS*tiny-inline-diagnostic.nvim-tiny-inline-diagnostic.nvim-table-
 - |tiny-inline-diagnostic.nvim-examples|
 - |tiny-inline-diagnostic.nvim-api|
 - |tiny-inline-diagnostic.nvim-integrations|
+- |tiny-inline-diagnostic.nvim-comparison-with-neovim’s-built-in-`virtual_lines`|
 - |tiny-inline-diagnostic.nvim-troubleshooting|
 
 
