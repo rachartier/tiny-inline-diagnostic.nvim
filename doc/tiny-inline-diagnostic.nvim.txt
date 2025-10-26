@@ -91,21 +91,60 @@ EXAMPLES    *tiny-inline-diagnostic.nvim-tiny-inline-diagnostic.nvim-examples*
 
 MULTILINE DIAGNOSTICS ~
 
+Configuration ~
 
-OVERFLOW HANDLING ~
+>lua
+    require("tiny-inline-diagnostic").setup({
+        options = {
+            multilines = {
+                enabled = true,
+            },
+        },
+    })
+<
+
+
+OVERFLOW HANDLING (BY DEFAULT) ~
 
 
 WITH SOURCES ~
 
 
 
+Configuration ~
+
+>lua
+    require("tiny-inline-diagnostic").setup({
+        options = {
+            show_source = {
+                enabled = true,
+            },
+        },
+    })
+<
+
 
 DIAGNOTICS COUNT ~
 
 
 
+Configuration ~
 
-RELATED DIAGNOSTICS ~
+>lua
+    require("tiny-inline-diagnostic").setup({
+        options = {
+            add_messages = {
+                display_count = true,
+            },
+            multilines = {
+                enabled = true,
+            },
+        },
+    })
+<
+
+
+RELATED DIAGNOSTICS (BY DEFAULT) ~
 
 
 
