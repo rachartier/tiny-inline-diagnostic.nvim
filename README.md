@@ -16,6 +16,7 @@ A Neovim plugin for displaying inline diagnostic messages with customizable styl
 - [Examples](#examples)
 - [API](#api)
 - [Integrations](#integrations)
+- [Comparison with Neovim's Built-in `virtual_lines`](#comparison-with-neovims-built-in-virtual_lines)
 - [Troubleshooting](#troubleshooting)
 
 ## Requirements
