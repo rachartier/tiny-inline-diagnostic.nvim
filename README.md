@@ -321,6 +321,16 @@ return {
 
 This setup listens for `SidekickNesShow` and `SidekickNesHide` events to toggle the diagnostics accordingly.
 
+## Comparison with Neovim's Built-in `virtual_lines`
+
+As of Neovim 0.11, the diagnostic system supports a `virtual_lines` option (see [neovim/neovim#31959](https://github.com/neovim/neovim/pull/31959)). This built-in feature renders diagnostics as virtual lines below the affected code. However, there differences :
+
+**Built-in `virtual_lines`**: Inserts virtual lines into the buffer, which shifts all subsequent text down. This can be distracting during navigation, as the visible text "jumps" whenever diagnostics appear or disappear.
+
+**`tiny-inline-diagnostic.nvim`**: Renders diagnostics as inline virtual text that overlays the code without moving any lines. This approach eliminates visual disruption, maintaining a good editing experience. Additionally, this plugin is highly configurable with multiple presets, extensive display options (overflow handling, multiline support, diagnostic counts, related information), custom formatting, and fine control over when and how diagnostics appear.
+
+For users who prefer diagnostics to remain unobtrusive and non-intrusive while having extensive customization options, `tiny-inline-diagnostic.nvim` provides a cleaner, more flexible alternative.
+
 ## Troubleshooting
 
 - **Colors wrong**: Adjust `hi` table or `mixing_color`
