@@ -61,4 +61,15 @@ function M.clear(bufnr)
   diagnostics_cache[bufnr] = nil
 end
 
+---@param opts table
+function M.refilter_all(opts)
+  for bufnr, diags in pairs(diagnostics_cache) do
+    local filtered = filter_by_severity(opts, diags)
+    table.sort(filtered, function(a, b)
+      return a.severity < b.severity
+    end)
+    diagnostics_cache[bufnr] = filtered
+  end
+end
+
 return M
