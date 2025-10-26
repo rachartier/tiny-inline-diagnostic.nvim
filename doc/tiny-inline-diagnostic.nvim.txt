@@ -82,9 +82,11 @@ LAZYVIM ~
 <
 
 
-  [!IMPORTANT] This disables Neovim’s built-in virtual text diagnostics to
-  prevent conflicts and duplicate displays. The plugin provides its own inline
-  diagnostic display.
+  [!IMPORTANT]
+>
+    > This disables Neovim's built-in virtual text diagnostics to prevent conflicts and duplicate displays. The plugin provides its own inline diagnostic display.
+<
+
 
 EXAMPLES    *tiny-inline-diagnostic.nvim-tiny-inline-diagnostic.nvim-examples*
 
@@ -223,7 +225,7 @@ CONFIGURATION*tiny-inline-diagnostic.nvim-tiny-inline-diagnostic.nvim-configurat
     
             -- Display related diagnostics from LSP relatedInformation
             show_related = {
-                enabled = false,           -- Enable displaying related diagnostics
+                enabled = true,           -- Enable displaying related diagnostics
                 max_count = 3,             -- Maximum number of related diagnostics to show per diagnostic
             },
     
