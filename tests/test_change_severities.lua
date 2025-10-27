@@ -66,28 +66,6 @@ T["cache.update"]["stores all diagnostics without severity filtering"] = functio
   vim.api.nvim_buf_delete(buf, { force = true })
 end
 
-T["cache.update"]["fetches all diagnostics when called with nil"] = function()
-  local opts = H.make_opts()
-  opts.options.severity = { vim.diagnostic.severity.ERROR }
-
-  local buf = H.make_buf({ "line1" })
-  local ns = vim.api.nvim_create_namespace("test")
-
-  local all_diags = {
-    H.make_diagnostic({ lnum = 0, severity = vim.diagnostic.severity.ERROR }),
-    H.make_diagnostic({ lnum = 0, severity = vim.diagnostic.severity.WARN }),
-    H.make_diagnostic({ lnum = 0, severity = vim.diagnostic.severity.HINT }),
-  }
-  vim.diagnostic.set(ns, buf, all_diags)
-
-  cache.update(opts, buf, nil)
-
-  local cached = cache.get(buf)
-  MiniTest.expect.equality(#cached, 3)
-
-  vim.api.nvim_buf_delete(buf, { force = true })
-end
-
 T["filter.for_display"] = MiniTest.new_set()
 
 T["filter.for_display"]["applies severity filter"] = function()

@@ -23,7 +23,7 @@ end
 ---@param diagnostics table|nil
 function M.update(opts, bufnr, diagnostics)
   if diagnostics == nil or vim.tbl_isempty(diagnostics) then
-    diagnostics = vim.diagnostic.get(bufnr)
+    diagnostics = {}
   end
 
   local diag_buf = diagnostics_cache[bufnr] or {}
