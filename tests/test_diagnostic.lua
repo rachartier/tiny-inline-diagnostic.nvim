@@ -392,4 +392,186 @@ T["single_diagnostic_lifecycle"]["handles diagnostic replacement"] = function()
   end)
 end
 
+T["multiple_lsp_diagnostics"] = MiniTest.new_set()
+
+T["multiple_lsp_diagnostics"]["DiagnosticChanged preserves diagnostics from all namespaces"] = function()
+  H.with_win_buf({ "test line" }, { 1, 0 }, nil, function(buf, win)
+    local tiny = require("tiny-inline-diagnostic")
+    local cache = require("tiny-inline-diagnostic.cache")
+    tiny.setup(create_test_opts())
+
+    local ns1 = vim.api.nvim_create_namespace("lsp1")
+    local ns2 = vim.api.nvim_create_namespace("lsp2")
+
+    vim.diagnostic.set(ns1, buf, {
+      { lnum = 0, col = 0, message = "error from lsp1", severity = vim.diagnostic.severity.ERROR },
+    })
+
+    vim.wait(100)
+
+    vim.diagnostic.set(ns2, buf, {
+      { lnum = 0, col = 5, message = "warn from lsp2", severity = vim.diagnostic.severity.WARN },
+    })
+
+    vim.wait(100)
+
+    local cached = cache.get(buf)
+    MiniTest.expect.equality(#cached, 2)
+
+    local messages = { cached[1].message, cached[2].message }
+    table.sort(messages)
+    MiniTest.expect.equality(messages[1], "error from lsp1")
+    MiniTest.expect.equality(messages[2], "warn from lsp2")
+  end)
+end
+
+T["multiple_lsp_diagnostics"]["updates from one LSP do not erase diagnostics from other LSPs"] = function()
+  H.with_win_buf({ "test line" }, { 1, 0 }, nil, function(buf, win)
+    local tiny = require("tiny-inline-diagnostic")
+    local cache = require("tiny-inline-diagnostic.cache")
+    tiny.setup(create_test_opts())
+
+    local ns1 = vim.api.nvim_create_namespace("lsp_a")
+    local ns2 = vim.api.nvim_create_namespace("lsp_b")
+
+    vim.diagnostic.set(ns1, buf, {
+      { lnum = 0, col = 0, message = "first lsp error", severity = vim.diagnostic.severity.ERROR },
+    })
+
+    vim.wait(100)
+
+    vim.diagnostic.set(ns2, buf, {
+      { lnum = 0, col = 5, message = "second lsp error", severity = vim.diagnostic.severity.ERROR },
+    })
+
+    vim.wait(100)
+
+    local cached_before = cache.get(buf)
+    MiniTest.expect.equality(#cached_before, 2)
+
+    vim.diagnostic.set(ns1, buf, {
+      {
+        lnum = 0,
+        col = 0,
+        message = "updated first lsp error",
+        severity = vim.diagnostic.severity.WARN,
+      },
+    })
+
+    vim.wait(100)
+
+    local cached_after = cache.get(buf)
+    MiniTest.expect.equality(#cached_after, 2)
+
+    local has_first_lsp = false
+    local has_second_lsp = false
+    for _, diag in ipairs(cached_after) do
+      if diag.message == "updated first lsp error" then
+        has_first_lsp = true
+      end
+      if diag.message == "second lsp error" then
+        has_second_lsp = true
+      end
+    end
+
+    MiniTest.expect.equality(has_first_lsp, true)
+    MiniTest.expect.equality(has_second_lsp, true)
+  end)
+end
+
+T["multiple_lsp_diagnostics"]["clearing one LSP namespace preserves others"] = function()
+  H.with_win_buf({ "test line" }, { 1, 0 }, nil, function(buf, win)
+    local tiny = require("tiny-inline-diagnostic")
+    local cache = require("tiny-inline-diagnostic.cache")
+    tiny.setup(create_test_opts())
+
+    local ns1 = vim.api.nvim_create_namespace("lsp_x")
+    local ns2 = vim.api.nvim_create_namespace("lsp_y")
+    local ns3 = vim.api.nvim_create_namespace("lsp_z")
+
+    vim.diagnostic.set(ns1, buf, {
+      { lnum = 0, col = 0, message = "lsp x error", severity = vim.diagnostic.severity.ERROR },
+    })
+
+    vim.diagnostic.set(ns2, buf, {
+      { lnum = 0, col = 5, message = "lsp y error", severity = vim.diagnostic.severity.WARN },
+    })
+
+    vim.diagnostic.set(ns3, buf, {
+      { lnum = 0, col = 10, message = "lsp z error", severity = vim.diagnostic.severity.INFO },
+    })
+
+    vim.wait(100)
+
+    local cached_all = cache.get(buf)
+    MiniTest.expect.equality(#cached_all, 3)
+
+    vim.diagnostic.set(ns2, buf, {})
+
+    vim.wait(100)
+
+    local cached_after_clear = cache.get(buf)
+    MiniTest.expect.equality(#cached_after_clear, 2)
+
+    local has_ns1 = false
+    local has_ns2 = false
+    local has_ns3 = false
+    for _, diag in ipairs(cached_after_clear) do
+      if diag.message == "lsp x error" then
+        has_ns1 = true
+      end
+      if diag.message == "lsp y error" then
+        has_ns2 = true
+      end
+      if diag.message == "lsp z error" then
+        has_ns3 = true
+      end
+    end
+
+    MiniTest.expect.equality(has_ns1, true)
+    MiniTest.expect.equality(has_ns2, false)
+    MiniTest.expect.equality(has_ns3, true)
+  end)
+end
+
+T["multiple_lsp_diagnostics"]["rapid DiagnosticChanged events preserve all diagnostics"] = function()
+  H.with_win_buf({ "test line", "line 2", "line 3" }, { 1, 0 }, nil, function(buf, win)
+    local tiny = require("tiny-inline-diagnostic")
+    local cache = require("tiny-inline-diagnostic.cache")
+    tiny.setup(create_test_opts())
+
+    local namespaces = {}
+    for i = 1, 5 do
+      namespaces[i] = vim.api.nvim_create_namespace("rapid_lsp_" .. i)
+    end
+
+    for i, ns in ipairs(namespaces) do
+      vim.diagnostic.set(ns, buf, {
+        {
+          lnum = (i - 1) % 3,
+          col = 0,
+          message = "diagnostic from lsp " .. i,
+          severity = vim.diagnostic.severity.ERROR,
+        },
+      })
+    end
+
+    vim.wait(150)
+
+    local cached = cache.get(buf)
+    MiniTest.expect.equality(#cached, 5)
+
+    for i = 1, 5 do
+      local found = false
+      for _, diag in ipairs(cached) do
+        if diag.message == "diagnostic from lsp " .. i then
+          found = true
+          break
+        end
+      end
+      MiniTest.expect.equality(found, true)
+    end
+  end)
+end
+
 return T
