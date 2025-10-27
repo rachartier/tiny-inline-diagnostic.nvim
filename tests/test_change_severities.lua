@@ -70,9 +70,10 @@ T["filter.for_display"] = MiniTest.new_set()
 
 T["filter.for_display"]["applies severity filter"] = function()
   local opts = H.make_opts()
-  opts.options.severity = { vim.diagnostic.severity.ERROR }
+  opts.options.severity = { vim.diagnostic.severity.WARN }
   opts.options.multilines.enabled = true
   opts.options.multilines.always_show = true
+  opts.options.multilines.severity = { vim.diagnostic.severity.ERROR }
 
   local buf = H.make_buf({ "line1" })
 

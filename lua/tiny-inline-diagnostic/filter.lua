@@ -99,6 +99,8 @@ function M.under_cursor(opts, buf, diagnostics)
   local cursor_pos = vim.api.nvim_win_get_cursor(0)
   local filtered_diags = M.at_position(opts, diagnostics, cursor_pos[1] - 1, cursor_pos[2])
 
+  filtered_diags = M.by_severity(opts, filtered_diags)
+
   if not opts.options.show_related or not opts.options.show_related.enabled then
     return filtered_diags
   end
@@ -122,18 +124,26 @@ end
 ---@param diagnostics table
 ---@return table
 function M.for_display(opts, bufnr, diagnostics)
-  diagnostics = M.by_severity(opts, diagnostics)
-
   if not opts.options.multilines.enabled then
     return M.under_cursor(opts, bufnr, diagnostics)
   end
 
   if opts.options.multilines.always_show then
+    if opts.options.multilines.severity then
+      return M.by_severity({ options = { severity = opts.options.multilines.severity } }, diagnostics)
+    end
     return diagnostics
   end
 
   local under_cursor = M.under_cursor(opts, bufnr, diagnostics)
-  return not vim.tbl_isempty(under_cursor) and under_cursor or diagnostics
+  if not vim.tbl_isempty(under_cursor) then
+    return under_cursor
+  end
+
+  if opts.options.multilines.severity then
+    return M.by_severity({ options = { severity = opts.options.multilines.severity } }, diagnostics)
+  end
+  return diagnostics
 end
 
 ---@param diagnostics table

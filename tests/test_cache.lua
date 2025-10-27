@@ -200,7 +200,13 @@ T["single_diagnostic_persistence_bug"]["does not persist single diagnostic after
     local ns = vim.api.nvim_create_namespace("test_persist_bug")
 
     vim.diagnostic.set(ns, buf, {
-      { lnum = 0, col = 0, end_col = 4, message = "error", severity = vim.diagnostic.severity.ERROR },
+      {
+        lnum = 0,
+        col = 0,
+        end_col = 4,
+        message = "error",
+        severity = vim.diagnostic.severity.ERROR,
+      },
     })
 
     local diags = vim.diagnostic.get(buf, { namespace = ns })

@@ -47,6 +47,7 @@ local default_config = {
       always_show = false,
       trim_whitespaces = false,
       tabstop = 4,
+      severity = nil,
     },
     show_all_diags_on_cursorline = false,
     enable_on_insert = false,

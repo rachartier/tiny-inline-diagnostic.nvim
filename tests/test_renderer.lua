@@ -192,7 +192,13 @@ T["single_diagnostic_clearing"]["clears when single diagnostic is removed"] = fu
     local ns = vim.api.nvim_create_namespace("test_single_clear")
 
     vim.diagnostic.set(ns, buf, {
-      { lnum = 0, col = 0, end_col = 4, message = "error", severity = vim.diagnostic.severity.ERROR },
+      {
+        lnum = 0,
+        col = 0,
+        end_col = 4,
+        message = "error",
+        severity = vim.diagnostic.severity.ERROR,
+      },
     })
     cache.update(opts, buf, vim.diagnostic.get(buf))
 

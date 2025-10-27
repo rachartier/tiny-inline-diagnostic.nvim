@@ -156,4 +156,124 @@ T["visible"]["groups diagnostics by line"] = function()
   end)
 end
 
+T["for_display"]["filters by multilines.severity when always_show enabled"] = function()
+  H.with_buf({}, function(buf)
+    local diagnostics = {
+      H.make_diagnostic({
+        lnum = 0,
+        col = 0,
+        end_col = 5,
+        severity = vim.diagnostic.severity.ERROR,
+      }),
+      H.make_diagnostic({ lnum = 1, col = 0, end_col = 5, severity = vim.diagnostic.severity.WARN }),
+      H.make_diagnostic({ lnum = 2, col = 0, end_col = 5, severity = vim.diagnostic.severity.INFO }),
+      H.make_diagnostic({ lnum = 3, col = 0, end_col = 5, severity = vim.diagnostic.severity.HINT }),
+    }
+
+    local result = filter.for_display({
+      options = {
+        multilines = {
+          enabled = true,
+          always_show = true,
+          severity = { vim.diagnostic.severity.ERROR, vim.diagnostic.severity.WARN },
+        },
+      },
+    }, buf, diagnostics)
+
+    MiniTest.expect.equality(#result, 2)
+    MiniTest.expect.equality(result[1].severity, vim.diagnostic.severity.ERROR)
+    MiniTest.expect.equality(result[2].severity, vim.diagnostic.severity.WARN)
+  end)
+end
+
+T["for_display"]["shows all diagnostics when multilines.severity is nil"] = function()
+  H.with_buf({}, function(buf)
+    local diagnostics = {
+      H.make_diagnostic({
+        lnum = 0,
+        col = 0,
+        end_col = 5,
+        severity = vim.diagnostic.severity.ERROR,
+      }),
+      H.make_diagnostic({ lnum = 1, col = 0, end_col = 5, severity = vim.diagnostic.severity.WARN }),
+      H.make_diagnostic({ lnum = 2, col = 0, end_col = 5, severity = vim.diagnostic.severity.INFO }),
+    }
+
+    local result = filter.for_display({
+      options = {
+        multilines = {
+          enabled = true,
+          always_show = true,
+          severity = nil,
+        },
+      },
+    }, buf, diagnostics)
+
+    MiniTest.expect.equality(#result, 3)
+  end)
+end
+
+T["for_display"]["filters only errors with multilines.severity"] = function()
+  H.with_buf({}, function(buf)
+    local diagnostics = {
+      H.make_diagnostic({
+        lnum = 0,
+        col = 0,
+        end_col = 5,
+        severity = vim.diagnostic.severity.ERROR,
+      }),
+      H.make_diagnostic({
+        lnum = 1,
+        col = 0,
+        end_col = 5,
+        severity = vim.diagnostic.severity.ERROR,
+      }),
+      H.make_diagnostic({ lnum = 2, col = 0, end_col = 5, severity = vim.diagnostic.severity.WARN }),
+    }
+
+    local result = filter.for_display({
+      options = {
+        multilines = {
+          enabled = true,
+          always_show = true,
+          severity = { vim.diagnostic.severity.ERROR },
+        },
+      },
+    }, buf, diagnostics)
+
+    MiniTest.expect.equality(#result, 2)
+    for _, diag in ipairs(result) do
+      MiniTest.expect.equality(diag.severity, vim.diagnostic.severity.ERROR)
+    end
+  end)
+end
+
+T["for_display"]["filters by multilines.severity when always_show is false"] = function()
+  H.with_win_buf({ "line1", "line2", "line3" }, { 1, 0 }, nil, function(buf)
+    local diagnostics = {
+      H.make_diagnostic({
+        lnum = 0,
+        col = 0,
+        end_col = 5,
+        severity = vim.diagnostic.severity.ERROR,
+      }),
+      H.make_diagnostic({ lnum = 1, col = 0, end_col = 5, severity = vim.diagnostic.severity.WARN }),
+      H.make_diagnostic({ lnum = 2, col = 0, end_col = 5, severity = vim.diagnostic.severity.INFO }),
+    }
+
+    local result = filter.for_display({
+      options = {
+        multilines = {
+          enabled = true,
+          always_show = false,
+          severity = { vim.diagnostic.severity.ERROR },
+        },
+      },
+    }, buf, diagnostics)
+
+    MiniTest.expect.equality(#result, 1)
+    MiniTest.expect.equality(result[1].severity, vim.diagnostic.severity.ERROR)
+  end)
+end
+
 return T
