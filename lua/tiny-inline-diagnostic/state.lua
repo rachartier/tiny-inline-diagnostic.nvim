@@ -8,6 +8,7 @@ M.user_toggle_state = true
 ---@param opts table
 function M.init(opts)
   disabled_modes = {}
+  M.user_toggle_state = true
 
   if not opts.options.enable_on_select then
     table.insert(disabled_modes, "s")

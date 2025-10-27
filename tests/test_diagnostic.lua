@@ -91,6 +91,30 @@ T["enable"]["enables diagnostics"] = function()
   MiniTest.expect.equality(state.user_toggle_state, true)
 end
 
+T["enable"]["re-renders diagnostics in all buffers"] = function()
+  H.with_win_buf({ "test line" }, { 1, 0 }, nil, function(buf, win)
+    local tiny = require("tiny-inline-diagnostic")
+    tiny.setup(create_test_opts())
+
+    vim.diagnostic.set(vim.api.nvim_create_namespace("test_enable"), buf, {
+      { lnum = 0, col = 0, message = "error", severity = vim.diagnostic.severity.ERROR },
+    })
+
+    diagnostic.disable()
+    vim.wait(100)
+
+    local ns = vim.api.nvim_create_namespace("TinyInlineDiagnostic")
+    local extmarks_disabled = vim.api.nvim_buf_get_extmarks(buf, ns, 0, -1, {})
+    MiniTest.expect.equality(#extmarks_disabled, 0)
+
+    diagnostic.enable()
+    vim.wait(100)
+
+    local extmarks_enabled = vim.api.nvim_buf_get_extmarks(buf, ns, 0, -1, {})
+    MiniTest.expect.equality(#extmarks_enabled > 0, true)
+  end)
+end
+
 T["disable"] = MiniTest.new_set()
 
 T["disable"]["disables diagnostics"] = function()
@@ -101,11 +125,35 @@ T["disable"]["disables diagnostics"] = function()
   state.user_enable()
 end
 
+T["disable"]["clears all extmarks from all buffers"] = function()
+  H.with_win_buf({ "test line" }, { 1, 0 }, nil, function(buf, win)
+    local tiny = require("tiny-inline-diagnostic")
+    tiny.setup(create_test_opts())
+
+    vim.diagnostic.set(vim.api.nvim_create_namespace("test_disable"), buf, {
+      { lnum = 0, col = 0, message = "error", severity = vim.diagnostic.severity.ERROR },
+    })
+
+    diagnostic.enable()
+    vim.wait(100)
+
+    local ns = vim.api.nvim_create_namespace("TinyInlineDiagnostic")
+    local extmarks_before = vim.api.nvim_buf_get_extmarks(buf, ns, 0, -1, {})
+
+    diagnostic.disable()
+    vim.wait(100)
+
+    local extmarks_after = vim.api.nvim_buf_get_extmarks(buf, ns, 0, -1, {})
+    MiniTest.expect.equality(#extmarks_after, 0)
+  end)
+end
+
 T["toggle"] = MiniTest.new_set()
 
 T["toggle"]["toggles diagnostic state"] = function()
   local opts = create_test_opts()
   state.init(opts)
+  state.user_enable()
   local initial = state.user_toggle_state
 
   diagnostic.toggle()
@@ -113,6 +161,48 @@ T["toggle"]["toggles diagnostic state"] = function()
 
   diagnostic.toggle()
   MiniTest.expect.equality(state.user_toggle_state, initial)
+end
+
+T["toggle"]["clears extmarks when toggled off"] = function()
+  H.with_win_buf({ "test line" }, { 1, 0 }, nil, function(buf, win)
+    local tiny = require("tiny-inline-diagnostic")
+    tiny.setup(create_test_opts())
+
+    vim.diagnostic.set(vim.api.nvim_create_namespace("test_toggle_off"), buf, {
+      { lnum = 0, col = 0, message = "error", severity = vim.diagnostic.severity.ERROR },
+    })
+
+    diagnostic.enable()
+    vim.wait(100)
+
+    diagnostic.toggle()
+    vim.wait(100)
+
+    local ns = vim.api.nvim_create_namespace("TinyInlineDiagnostic")
+    local extmarks = vim.api.nvim_buf_get_extmarks(buf, ns, 0, -1, {})
+    MiniTest.expect.equality(#extmarks, 0)
+  end)
+end
+
+T["toggle"]["renders extmarks when toggled on"] = function()
+  H.with_win_buf({ "test line" }, { 1, 0 }, nil, function(buf, win)
+    local tiny = require("tiny-inline-diagnostic")
+    tiny.setup(create_test_opts())
+
+    vim.diagnostic.set(vim.api.nvim_create_namespace("test_toggle_on"), buf, {
+      { lnum = 0, col = 0, message = "error", severity = vim.diagnostic.severity.ERROR },
+    })
+
+    diagnostic.disable()
+    vim.wait(100)
+
+    diagnostic.toggle()
+    vim.wait(100)
+
+    local ns = vim.api.nvim_create_namespace("TinyInlineDiagnostic")
+    local extmarks = vim.api.nvim_buf_get_extmarks(buf, ns, 0, -1, {})
+    MiniTest.expect.equality(#extmarks > 0, true)
+  end)
 end
 
 T["set_diagnostic_autocmds"] = MiniTest.new_set()
@@ -159,6 +249,7 @@ T["user_toggle_state"] = MiniTest.new_set()
 T["user_toggle_state"]["reflects state.user_toggle_state"] = function()
   local opts = create_test_opts()
   state.init(opts)
+  state.user_enable()
   MiniTest.expect.equality(diagnostic.user_toggle_state, state.user_toggle_state)
 end
 
