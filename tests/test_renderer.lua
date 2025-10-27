@@ -182,4 +182,121 @@ T["render"]["handles invalid window"] = function()
   end)
 end
 
+T["single_diagnostic_clearing"] = MiniTest.new_set()
+
+T["single_diagnostic_clearing"]["clears when single diagnostic is removed"] = function()
+  H.with_win_buf({ "test line" }, { 1, 0 }, nil, function(buf, win)
+    local opts = create_test_opts()
+    state.init(opts)
+    local cache = require("tiny-inline-diagnostic.cache")
+    local ns = vim.api.nvim_create_namespace("test_single_clear")
+
+    vim.diagnostic.set(ns, buf, {
+      { lnum = 0, col = 0, end_col = 4, message = "error", severity = vim.diagnostic.severity.ERROR },
+    })
+    cache.update(opts, buf, vim.diagnostic.get(buf))
+
+    renderer.render(opts, buf)
+
+    vim.diagnostic.set(ns, buf, {})
+    cache.update(opts, buf, vim.diagnostic.get(buf))
+
+    renderer.render(opts, buf)
+
+    MiniTest.expect.equality(cache.get(buf), {})
+  end)
+end
+
+T["single_diagnostic_clearing"]["clears when last diagnostic is removed from multiple"] = function()
+  H.with_win_buf({ "line 1", "line 2" }, { 1, 0 }, nil, function(buf, win)
+    local opts = create_test_opts()
+    state.init(opts)
+    local cache = require("tiny-inline-diagnostic.cache")
+    local ns = vim.api.nvim_create_namespace("test_multi_clear")
+
+    vim.diagnostic.set(ns, buf, {
+      { lnum = 0, col = 0, message = "error1", severity = vim.diagnostic.severity.ERROR },
+      { lnum = 1, col = 0, message = "error2", severity = vim.diagnostic.severity.ERROR },
+    })
+    cache.update(opts, buf, vim.diagnostic.get(buf))
+    renderer.render(opts, buf)
+
+    vim.diagnostic.set(ns, buf, {
+      { lnum = 1, col = 0, message = "error2", severity = vim.diagnostic.severity.ERROR },
+    })
+    cache.update(opts, buf, vim.diagnostic.get(buf))
+    renderer.render(opts, buf)
+
+    local cached = cache.get(buf)
+    MiniTest.expect.equality(#cached, 1)
+    MiniTest.expect.equality(cached[1].message, "error2")
+
+    vim.diagnostic.set(ns, buf, {})
+    cache.update(opts, buf, vim.diagnostic.get(buf))
+    renderer.render(opts, buf)
+
+    MiniTest.expect.equality(cache.get(buf), {})
+  end)
+end
+
+T["single_diagnostic_clearing"]["handles rapid diagnostic changes"] = function()
+  H.with_win_buf({ "test line" }, { 1, 0 }, nil, function(buf, win)
+    local opts = create_test_opts()
+    state.init(opts)
+    local cache = require("tiny-inline-diagnostic.cache")
+    local ns = vim.api.nvim_create_namespace("test_rapid_changes")
+
+    vim.diagnostic.set(ns, buf, {
+      { lnum = 0, col = 0, message = "error1", severity = vim.diagnostic.severity.ERROR },
+    })
+    cache.update(opts, buf, vim.diagnostic.get(buf))
+    renderer.render(opts, buf)
+
+    vim.diagnostic.set(ns, buf, {})
+    cache.update(opts, buf, vim.diagnostic.get(buf))
+    renderer.render(opts, buf)
+    MiniTest.expect.equality(cache.get(buf), {})
+
+    vim.diagnostic.set(ns, buf, {
+      { lnum = 0, col = 0, message = "error2", severity = vim.diagnostic.severity.WARN },
+    })
+    cache.update(opts, buf, vim.diagnostic.get(buf))
+    renderer.render(opts, buf)
+
+    local cached = cache.get(buf)
+    MiniTest.expect.equality(#cached, 1)
+    MiniTest.expect.equality(cached[1].message, "error2")
+
+    vim.diagnostic.set(ns, buf, {})
+    cache.update(opts, buf, vim.diagnostic.get(buf))
+    renderer.render(opts, buf)
+    MiniTest.expect.equality(cache.get(buf), {})
+  end)
+end
+
+T["single_diagnostic_clearing"]["does not persist stale diagnostics after namespace update"] = function()
+  H.with_win_buf({ "test line" }, { 1, 0 }, nil, function(buf, win)
+    local opts = create_test_opts()
+    state.init(opts)
+    local cache = require("tiny-inline-diagnostic.cache")
+    local ns = vim.api.nvim_create_namespace("test_namespace_update")
+
+    vim.diagnostic.set(ns, buf, {
+      { lnum = 0, col = 0, message = "initial", severity = vim.diagnostic.severity.ERROR },
+    })
+    cache.update(opts, buf, vim.diagnostic.get(buf, { namespace = ns }))
+    renderer.render(opts, buf)
+
+    local cached_initial = cache.get(buf)
+    MiniTest.expect.equality(#cached_initial, 1)
+
+    vim.diagnostic.set(ns, buf, {})
+    cache.update(opts, buf, vim.diagnostic.get(buf, { namespace = ns }))
+    renderer.render(opts, buf)
+
+    local cached_final = cache.get(buf)
+    MiniTest.expect.equality(cached_final, {})
+  end)
+end
+
 return T

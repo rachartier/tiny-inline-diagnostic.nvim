@@ -162,4 +162,89 @@ T["user_toggle_state"]["reflects state.user_toggle_state"] = function()
   MiniTest.expect.equality(diagnostic.user_toggle_state, state.user_toggle_state)
 end
 
+T["single_diagnostic_lifecycle"] = MiniTest.new_set()
+
+T["single_diagnostic_lifecycle"]["clears when single diagnostic is fixed"] = function()
+  H.with_win_buf({ "test line" }, { 1, 0 }, nil, function(buf, win)
+    local ns = vim.api.nvim_create_namespace("test_single_diag")
+
+    vim.diagnostic.set(ns, buf, {
+      { lnum = 0, col = 0, end_col = 4, message = "error", severity = vim.diagnostic.severity.ERROR },
+    })
+
+    local diags = vim.diagnostic.get(buf, { namespace = ns })
+    MiniTest.expect.equality(#diags, 1)
+
+    vim.diagnostic.set(ns, buf, {})
+
+    local diags_after = vim.diagnostic.get(buf, { namespace = ns })
+    MiniTest.expect.equality(#diags_after, 0)
+  end)
+end
+
+T["single_diagnostic_lifecycle"]["handles single diagnostic removal from multiple"] = function()
+  H.with_win_buf({ "line 1", "line 2" }, { 1, 0 }, nil, function(buf, win)
+    local ns = vim.api.nvim_create_namespace("test_multi_diag")
+
+    vim.diagnostic.set(ns, buf, {
+      { lnum = 0, col = 0, end_col = 4, message = "error1", severity = vim.diagnostic.severity.ERROR },
+      { lnum = 1, col = 0, end_col = 4, message = "error2", severity = vim.diagnostic.severity.ERROR },
+    })
+
+    local diags = vim.diagnostic.get(buf, { namespace = ns })
+    MiniTest.expect.equality(#diags, 2)
+
+    vim.diagnostic.set(ns, buf, {
+      { lnum = 1, col = 0, end_col = 4, message = "error2", severity = vim.diagnostic.severity.ERROR },
+    })
+
+    local diags_after = vim.diagnostic.get(buf, { namespace = ns })
+    MiniTest.expect.equality(#diags_after, 1)
+    MiniTest.expect.equality(diags_after[1].message, "error2")
+  end)
+end
+
+T["single_diagnostic_lifecycle"]["handles all diagnostics cleared"] = function()
+  H.with_win_buf({ "line 1", "line 2", "line 3" }, { 1, 0 }, nil, function(buf, win)
+    local ns = vim.api.nvim_create_namespace("test_all_clear")
+
+    vim.diagnostic.set(ns, buf, {
+      { lnum = 0, col = 0, end_col = 4, message = "error1", severity = vim.diagnostic.severity.ERROR },
+      { lnum = 1, col = 0, end_col = 4, message = "error2", severity = vim.diagnostic.severity.WARN },
+      { lnum = 2, col = 0, end_col = 4, message = "error3", severity = vim.diagnostic.severity.INFO },
+    })
+
+    local diags = vim.diagnostic.get(buf, { namespace = ns })
+    MiniTest.expect.equality(#diags, 3)
+
+    vim.diagnostic.set(ns, buf, {})
+
+    local diags_after = vim.diagnostic.get(buf, { namespace = ns })
+    MiniTest.expect.equality(#diags_after, 0)
+  end)
+end
+
+T["single_diagnostic_lifecycle"]["handles diagnostic replacement"] = function()
+  H.with_win_buf({ "test line" }, { 1, 0 }, nil, function(buf, win)
+    local ns = vim.api.nvim_create_namespace("test_replace")
+
+    vim.diagnostic.set(ns, buf, {
+      { lnum = 0, col = 0, end_col = 4, message = "old error", severity = vim.diagnostic.severity.ERROR },
+    })
+
+    local diags = vim.diagnostic.get(buf, { namespace = ns })
+    MiniTest.expect.equality(#diags, 1)
+    MiniTest.expect.equality(diags[1].message, "old error")
+
+    vim.diagnostic.set(ns, buf, {
+      { lnum = 0, col = 0, end_col = 4, message = "new error", severity = vim.diagnostic.severity.WARN },
+    })
+
+    local diags_after = vim.diagnostic.get(buf, { namespace = ns })
+    MiniTest.expect.equality(#diags_after, 1)
+    MiniTest.expect.equality(diags_after[1].message, "new error")
+    MiniTest.expect.equality(diags_after[1].severity, vim.diagnostic.severity.WARN)
+  end)
+end
+
 return T
