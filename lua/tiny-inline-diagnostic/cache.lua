@@ -26,6 +26,12 @@ function M.update(opts, bufnr, diagnostics)
     diagnostics = vim.diagnostic.get(bufnr)
   end
 
+  -- Fix: Clear cache when diagnostics are empty to avoid displaying stale errors
+  if vim.tbl_isempty(diagnostics) then
+    diagnostics_cache[bufnr] = {}
+    return
+  end
+
   local diag_buf = diagnostics_cache[bufnr] or {}
 
   local namespaces = {}
