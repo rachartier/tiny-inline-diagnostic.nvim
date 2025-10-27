@@ -44,7 +44,34 @@ end
 ---@return table, table
 local function build_render_plan(opts, bufnr, diagnostics, cursor_line)
   local filtered_diags = filter.for_display(opts, bufnr, diagnostics)
-  local visible_diags = filter.visible(filtered_diags)
+  local visible_diags
+
+  local use_cache = cache.get_version(bufnr) > 0
+  if use_cache and not opts.options.multilines then
+    visible_diags = filter.visible_from_cache(cache, bufnr)
+    local temp_visible = {}
+    for lnum, diags in pairs(visible_diags) do
+      local matching = {}
+      for _, diag in ipairs(diags) do
+        for _, fdiag in ipairs(filtered_diags) do
+          if
+            diag.lnum == fdiag.lnum
+            and diag.col == fdiag.col
+            and diag.message == fdiag.message
+          then
+            table.insert(matching, diag)
+            break
+          end
+        end
+      end
+      if #matching > 0 then
+        temp_visible[lnum] = matching
+      end
+    end
+    visible_diags = temp_visible
+  else
+    visible_diags = filter.visible(filtered_diags)
+  end
 
   local diags_dims = {}
   local plan = {}
@@ -124,14 +151,31 @@ end
 function M.render(opts, bufnr)
   local diagnostics = validate_and_prepare_state(bufnr)
   if not diagnostics then
+    state.invalidate_render(bufnr)
     return
   end
 
-  local cursor_line = vim.api.nvim_win_get_cursor(0)[1] - 1
+  local cursor_pos = vim.api.nvim_win_get_cursor(0)
+  local cursor_line = cursor_pos[1] - 1
+  local cursor_col = cursor_pos[2]
+  local current_version = cache.get_version(bufnr)
+  local last_render = state.get_last_render(bufnr)
+
+  if
+    last_render
+    and last_render.version == current_version
+    and last_render.cursor_line == cursor_line
+    and last_render.cursor_col == cursor_col
+  then
+    return
+  end
+
   extmarks.clear(bufnr)
 
   local plan, diags_dims = build_render_plan(opts, bufnr, diagnostics, cursor_line)
   apply_render_plan(opts, bufnr, plan, diags_dims, opts.options.virt_texts.priority)
+
+  state.set_last_render(bufnr, current_version, cursor_line, cursor_col)
 end
 
 return M

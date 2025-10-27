@@ -16,9 +16,11 @@ end
 ---@param cleanup_callback function|nil
 function M.detach(bufnr, cleanup_callback)
   local cache = require("tiny-inline-diagnostic.cache")
+  local state = require("tiny-inline-diagnostic.state")
   timers.close(bufnr)
   attached_buffers[bufnr] = nil
   cache.clear(bufnr)
+  state.invalidate_render(bufnr)
   if cleanup_callback then
     cleanup_callback(bufnr)
   end
@@ -108,12 +110,26 @@ function M.setup_buffer_autocmds(
     group = autocmd_ns,
     callback = function()
       if vim.api.nvim_buf_is_valid(bufnr) then
+        local state = require("tiny-inline-diagnostic.state")
+        state.invalidate_render(bufnr)
         direct_apply(bufnr)
       else
         M.detach(bufnr)
       end
     end,
     desc = "Update diagnostics on window resize",
+  })
+
+  vim.api.nvim_create_autocmd({ "WinScrolled" }, {
+    group = autocmd_ns,
+    callback = function()
+      if vim.api.nvim_buf_is_valid(bufnr) then
+        local state = require("tiny-inline-diagnostic.state")
+        state.invalidate_render(bufnr)
+        throttled_apply(bufnr)
+      end
+    end,
+    desc = "Update diagnostics on window scroll",
   })
 end
 

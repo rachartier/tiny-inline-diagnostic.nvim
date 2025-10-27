@@ -1,6 +1,7 @@
 local M = {}
 
 local disabled_modes = {}
+local render_state = {}
 
 M.enabled = true
 M.user_toggle_state = true
@@ -46,6 +47,18 @@ end
 
 function M.user_toggle()
   M.user_toggle_state = not M.user_toggle_state
+end
+
+function M.set_last_render(bufnr, version, cursor_line, cursor_col)
+  render_state[bufnr] = { version = version, cursor_line = cursor_line, cursor_col = cursor_col }
+end
+
+function M.get_last_render(bufnr)
+  return render_state[bufnr]
+end
+
+function M.invalidate_render(bufnr)
+  render_state[bufnr] = nil
 end
 
 return M

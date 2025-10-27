@@ -166,4 +166,10 @@ function M.visible(diagnostics)
   return visible_diags
 end
 
+function M.visible_from_cache(cache_module, bufnr)
+  local first_line = vim.fn.line("w0") - 1
+  local last_line = vim.fn.line("w$")
+  return cache_module.get_visible(bufnr, first_line, last_line)
+end
+
 return M
