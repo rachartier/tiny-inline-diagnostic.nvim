@@ -20,20 +20,15 @@ end
 
 ---@param opts table
 ---@param bufnr number
----@param diagnostics table
+---@param diagnostics table|nil
 function M.update(opts, bufnr, diagnostics)
-  if not diagnostics or vim.tbl_isempty(diagnostics) then
+  if diagnostics == nil or vim.tbl_isempty(diagnostics) then
     diagnostics = vim.diagnostic.get(bufnr)
-  end
-
-  -- Fix: Clear cache when diagnostics are empty to avoid displaying stale errors
-  if vim.tbl_isempty(diagnostics) then
-    diagnostics_cache[bufnr] = {}
-    return
   end
 
   local diag_buf = diagnostics_cache[bufnr] or {}
 
+  -- extract namespaces from incoming diagnostics
   local namespaces = {}
   for _, diag in ipairs(diagnostics) do
     if not vim.tbl_contains(namespaces, diag.namespace) then
@@ -41,12 +36,16 @@ function M.update(opts, bufnr, diagnostics)
     end
   end
 
-  diag_buf = vim.tbl_filter(function(diag)
-    return not vim.tbl_contains(namespaces, diag.namespace)
-  end, diag_buf)
+  if diagnostics and #namespaces == 0 and #diagnostics == 0 then
+    diag_buf = {}
+  else
+    diag_buf = vim.tbl_filter(function(diag)
+      return not vim.tbl_contains(namespaces, diag.namespace)
+    end, diag_buf)
 
-  for _, diag in pairs(diagnostics) do
-    table.insert(diag_buf, diag)
+    for _, diag in pairs(diagnostics) do
+      table.insert(diag_buf, diag)
+    end
   end
 
   diagnostics_cache[bufnr] = sort_by_severity(diag_buf)
