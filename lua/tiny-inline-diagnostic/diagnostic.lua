@@ -74,17 +74,42 @@ function M.set_diagnostic_autocmds(opts)
   return true
 end
 
----@return table
 function M.enable()
   state.user_enable()
+  local config = require("tiny-inline-diagnostic").config
+
+  vim.schedule(function()
+    for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
+      if vim.api.nvim_buf_is_valid(bufnr) and vim.api.nvim_buf_is_loaded(bufnr) then
+        if config then
+          renderer.safe_render(config, bufnr)
+        end
+      end
+    end
+  end)
 end
 
 function M.disable()
   state.user_disable()
+  local extmarks = require("tiny-inline-diagnostic.extmarks")
+
+  vim.schedule(function()
+    for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
+      if vim.api.nvim_buf_is_valid(bufnr) then
+        extmarks.clear(bufnr)
+      end
+    end
+  end)
 end
 
 function M.toggle()
   state.user_toggle()
+
+  if state.user_toggle_state then
+    M.enable()
+  else
+    M.disable()
+  end
 end
 
 function M.get_diagnostic_under_cursor()
