@@ -193,10 +193,7 @@ function M.change_severities(severities)
 
   M.config.options.severity = severities
 
-  local cache = require("tiny-inline-diagnostic.cache")
   local renderer = require("tiny-inline-diagnostic.renderer")
-
-  cache.refilter_all(M.config)
 
   for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
     if vim.api.nvim_buf_is_valid(bufnr) and vim.api.nvim_buf_is_loaded(bufnr) then

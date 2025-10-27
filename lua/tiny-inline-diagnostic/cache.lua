@@ -2,13 +2,14 @@ local M = {}
 
 local diagnostics_cache = {}
 
----@param opts table
 ---@param diagnostics table
 ---@return table
-local function filter_by_severity(opts, diagnostics)
-  return vim.tbl_filter(function(diag)
-    return vim.tbl_contains(opts.options.severity, diag.severity)
-  end, diagnostics)
+local function sort_by_severity(diagnostics)
+  local sorted = vim.deepcopy(diagnostics)
+  table.sort(sorted, function(a, b)
+    return a.severity < b.severity
+  end)
+  return sorted
 end
 
 ---@param bufnr number
@@ -22,17 +23,10 @@ end
 ---@param diagnostics table
 function M.update(opts, bufnr, diagnostics)
   if not diagnostics or vim.tbl_isempty(diagnostics) then
-    local diags = vim.diagnostic.get(bufnr)
-    table.sort(diags, function(a, b)
-      return a.severity < b.severity
-    end)
-    diagnostics_cache[bufnr] = diags
-    return
+    diagnostics = vim.diagnostic.get(bufnr)
   end
 
   local diag_buf = diagnostics_cache[bufnr] or {}
-
-  diagnostics = filter_by_severity(opts, diagnostics)
 
   local namespaces = {}
   for _, diag in ipairs(diagnostics) do
@@ -49,27 +43,12 @@ function M.update(opts, bufnr, diagnostics)
     table.insert(diag_buf, diag)
   end
 
-  table.sort(diag_buf, function(a, b)
-    return a.severity < b.severity
-  end)
-
-  diagnostics_cache[bufnr] = diag_buf
+  diagnostics_cache[bufnr] = sort_by_severity(diag_buf)
 end
 
 ---@param bufnr number
 function M.clear(bufnr)
   diagnostics_cache[bufnr] = nil
-end
-
----@param opts table
-function M.refilter_all(opts)
-  for bufnr, diags in pairs(diagnostics_cache) do
-    local filtered = filter_by_severity(opts, diags)
-    table.sort(filtered, function(a, b)
-      return a.severity < b.severity
-    end)
-    diagnostics_cache[bufnr] = filtered
-  end
 end
 
 return M

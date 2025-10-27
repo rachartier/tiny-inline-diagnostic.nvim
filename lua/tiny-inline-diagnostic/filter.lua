@@ -2,6 +2,21 @@ local M = {}
 
 ---@param opts table
 ---@param diagnostics table
+---@return table
+function M.by_severity(opts, diagnostics)
+  if not diagnostics or #diagnostics == 0 then
+    return {}
+  end
+  if not opts.options.severity then
+    return diagnostics
+  end
+  return vim.tbl_filter(function(diag)
+    return vim.tbl_contains(opts.options.severity, diag.severity)
+  end, diagnostics)
+end
+
+---@param opts table
+---@param diagnostics table
 ---@param line number
 ---@param col number
 ---@return table
@@ -107,6 +122,8 @@ end
 ---@param diagnostics table
 ---@return table
 function M.for_display(opts, bufnr, diagnostics)
+  diagnostics = M.by_severity(opts, diagnostics)
+
   if not opts.options.multilines.enabled then
     return M.under_cursor(opts, bufnr, diagnostics)
   end
