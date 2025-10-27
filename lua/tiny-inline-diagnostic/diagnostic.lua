@@ -57,6 +57,16 @@ function M.set_diagnostic_autocmds(opts)
       )
       autocmds.setup_cursor_autocmds(autocmd_ns, opts, event.buf, throttler.fn)
       autocmds.setup_mode_change_autocmds(autocmd_ns, event.buf, on_mode_change)
+
+      local existing_diagnostics = vim.diagnostic.get(event.buf)
+      if existing_diagnostics and #existing_diagnostics > 0 then
+        cache.update(opts, event.buf, existing_diagnostics)
+        vim.schedule(function()
+          if vim.api.nvim_buf_is_valid(event.buf) then
+            direct_renderer(event.buf)
+          end
+        end)
+      end
     end,
     desc = "Setup diagnostic display system",
   })

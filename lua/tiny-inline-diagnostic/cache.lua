@@ -23,32 +23,10 @@ end
 ---@param diagnostics table|nil
 function M.update(opts, bufnr, diagnostics)
   if diagnostics == nil or vim.tbl_isempty(diagnostics) then
-    diagnostics = {}
-  end
-
-  local diag_buf = diagnostics_cache[bufnr] or {}
-
-  -- extract namespaces from incoming diagnostics
-  local namespaces = {}
-  for _, diag in ipairs(diagnostics) do
-    if not vim.tbl_contains(namespaces, diag.namespace) then
-      table.insert(namespaces, diag.namespace)
-    end
-  end
-
-  if diagnostics and #namespaces == 0 and #diagnostics == 0 then
-    diag_buf = {}
+    diagnostics_cache[bufnr] = {}
   else
-    diag_buf = vim.tbl_filter(function(diag)
-      return not vim.tbl_contains(namespaces, diag.namespace)
-    end, diag_buf)
-
-    for _, diag in pairs(diagnostics) do
-      table.insert(diag_buf, diag)
-    end
+    diagnostics_cache[bufnr] = sort_by_severity(diagnostics)
   end
-
-  diagnostics_cache[bufnr] = sort_by_severity(diag_buf)
 end
 
 ---@param bufnr number

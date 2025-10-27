@@ -1,6 +1,5 @@
 local M = {}
 
-local USER_EVENT = "TinyDiagnosticEvent"
 local disabled_modes = {}
 
 M.enabled = true
@@ -30,32 +29,23 @@ function M.is_mode_disabled(mode)
 end
 
 function M.enable()
-  if not M.enabled then
-    M.enabled = true
-    vim.api.nvim_exec_autocmds("User", { pattern = USER_EVENT })
-  end
+  M.enabled = true
 end
 
 function M.disable()
-  if M.enabled then
-    M.enabled = false
-    vim.api.nvim_exec_autocmds("User", { pattern = USER_EVENT })
-  end
+  M.enabled = false
 end
 
 function M.user_enable()
   M.user_toggle_state = true
-  vim.api.nvim_exec_autocmds("User", { pattern = USER_EVENT })
 end
 
 function M.user_disable()
   M.user_toggle_state = false
-  vim.api.nvim_exec_autocmds("User", { pattern = USER_EVENT })
 end
 
 function M.user_toggle()
   M.user_toggle_state = not M.user_toggle_state
-  vim.api.nvim_exec_autocmds("User", { pattern = USER_EVENT })
 end
 
 return M

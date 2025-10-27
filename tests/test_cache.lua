@@ -132,8 +132,8 @@ T["update"]["handles namespace filtering"] = function()
       { lnum = 0, col = 0, message = "error2", severity = vim.diagnostic.severity.WARN },
     })
 
-    local diags_ns2 = vim.diagnostic.get(buf, { namespace = ns2 })
-    cache.update(opts, buf, diags_ns2)
+    local all_diags = vim.diagnostic.get(buf)
+    cache.update(opts, buf, all_diags)
 
     local cached = cache.get(buf)
     MiniTest.expect.equality(#cached, 2)

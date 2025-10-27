@@ -130,7 +130,10 @@ function M.for_display(opts, bufnr, diagnostics)
 
   if opts.options.multilines.always_show then
     if opts.options.multilines.severity then
-      return M.by_severity({ options = { severity = opts.options.multilines.severity } }, diagnostics)
+      return M.by_severity(
+        { options = { severity = opts.options.multilines.severity } },
+        diagnostics
+      )
     end
     return diagnostics
   end

@@ -25,8 +25,13 @@ local function validate_and_prepare_state(bufnr)
 
   local diagnostics = cache.get(bufnr)
   if vim.tbl_isempty(diagnostics) then
-    extmarks.clear(bufnr)
-    return nil
+    local live_diagnostics = vim.diagnostic.get(bufnr)
+    if live_diagnostics and #live_diagnostics > 0 then
+      diagnostics = live_diagnostics
+    else
+      extmarks.clear(bufnr)
+      return nil
+    end
   end
 
   return diagnostics

@@ -3,8 +3,6 @@ local M = {}
 local timers = require("tiny-inline-diagnostic.timer")
 
 local AUGROUP_NAME = "TinyInlineDiagnosticAutocmds"
-local USER_EVENT = "TinyDiagnosticEvent"
-local USER_EVENT_THROTTLED = "TinyDiagnosticEventThrottled"
 
 local attached_buffers = {}
 
@@ -17,8 +15,10 @@ end
 ---@param bufnr number
 ---@param cleanup_callback function|nil
 function M.detach(bufnr, cleanup_callback)
+  local cache = require("tiny-inline-diagnostic.cache")
   timers.close(bufnr)
   attached_buffers[bufnr] = nil
+  cache.clear(bufnr)
   if cleanup_callback then
     cleanup_callback(bufnr)
   end
@@ -91,20 +91,8 @@ function M.setup_buffer_autocmds(
     callback = function(args)
       if vim.api.nvim_buf_is_valid(args.buf) then
         on_diagnostic_change(args.buf, args.data.diagnostics)
-        vim.api.nvim_exec_autocmds("User", { pattern = USER_EVENT })
+        direct_apply(args.buf)
       end
-    end,
-  })
-
-  vim.api.nvim_create_autocmd("User", {
-    group = autocmd_ns,
-    pattern = USER_EVENT,
-    callback = function()
-      if not vim.api.nvim_buf_is_valid(bufnr) then
-        M.detach(bufnr)
-        return
-      end
-      direct_apply(bufnr)
     end,
   })
 
@@ -113,18 +101,6 @@ function M.setup_buffer_autocmds(
     buffer = bufnr,
     callback = function(event)
       M.detach(event.buf)
-    end,
-  })
-
-  vim.api.nvim_create_autocmd("User", {
-    group = autocmd_ns,
-    pattern = USER_EVENT_THROTTLED,
-    callback = function()
-      if not vim.api.nvim_buf_is_valid(bufnr) then
-        M.detach(bufnr)
-        return
-      end
-      throttled_apply(bufnr)
     end,
   })
 
