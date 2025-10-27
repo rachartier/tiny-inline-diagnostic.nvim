@@ -193,13 +193,14 @@ function M.change_severities(severities)
 
   M.config.options.severity = severities
 
-  local renderer = require("tiny-inline-diagnostic.renderer")
-
-  for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
-    if vim.api.nvim_buf_is_valid(bufnr) and vim.api.nvim_buf_is_loaded(bufnr) then
-      renderer.safe_render(M.config, bufnr)
+  vim.schedule(function()
+    local renderer = require("tiny-inline-diagnostic.renderer")
+    for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
+      if vim.api.nvim_buf_is_valid(bufnr) and vim.api.nvim_buf_is_loaded(bufnr) then
+        renderer.safe_render(M.config, bufnr)
+      end
     end
-  end
+  end)
 end
 
 function M.get_diagnostic_under_cursor()
