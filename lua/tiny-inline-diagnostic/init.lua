@@ -208,4 +208,34 @@ function M.get_diagnostic_under_cursor()
   return diag.get_diagnostic_under_cursor()
 end
 
+---@param action string
+local function handle_command(action)
+  if action == "enable" then
+    M.enable()
+  elseif action == "disable" then
+    M.disable()
+  elseif action == "toggle" then
+    M.toggle()
+  else
+    vim.notify(
+      "Invalid action: " .. action .. ". Use 'enable', 'disable', or 'toggle'.",
+      vim.log.levels.ERROR
+    )
+  end
+end
+
+local function setup_commands()
+  vim.api.nvim_create_user_command("TinyInlineDiag", function(opts)
+    handle_command(opts.args)
+  end, {
+    nargs = 1,
+    complete = function()
+      return { "enable", "disable", "toggle" }
+    end,
+    desc = "Control tiny-inline-diagnostic display",
+  })
+end
+
+setup_commands()
+
 return M

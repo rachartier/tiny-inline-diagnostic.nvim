@@ -15,6 +15,7 @@ A Neovim plugin for displaying inline diagnostic messages with customizable styl
 - [Presets](#presets)
 - [Examples](#examples)
 - [API](#api)
+  - [Commands](#commands)
 - [Integrations](#integrations)
 - [Comparison with Neovim's Built-in `virtual_lines`](#comparison-with-neovims-built-in-virtual_lines)
 - [Troubleshooting](#troubleshooting)
@@ -322,6 +323,24 @@ diag.toggle()
 
 -- Filter severities
 diag.change_severities({ vim.diagnostic.severity.ERROR, vim.diagnostic.severity.WARN })
+```
+
+### Commands
+
+The plugin provides a user command for controlling diagnostic display:
+
+```vim
+:TinyInlineDiag enable   " Enable inline diagnostics
+:TinyInlineDiag disable  " Disable inline diagnostics
+:TinyInlineDiag toggle   " Toggle inline diagnostics on/off
+```
+
+You can map these to keybindings for quick access:
+
+```lua
+vim.keymap.set("n", "<leader>de", "<cmd>TinyInlineDiag enable<cr>", { desc = "Enable diagnostics" })
+vim.keymap.set("n", "<leader>dd", "<cmd>TinyInlineDiag disable<cr>", { desc = "Disable diagnostics" })
+vim.keymap.set("n", "<leader>dt", "<cmd>TinyInlineDiag toggle<cr>", { desc = "Toggle diagnostics" })
 ```
 
 ### Auto-Disable on Float
