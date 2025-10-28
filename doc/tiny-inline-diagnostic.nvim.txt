@@ -376,7 +376,7 @@ You can map these to keybindings for quick access:
 
 AUTO-DISABLE ON FLOAT ~
 
-To automaticallm hide inline diagnostics when opening Neovim’s diagnostic
+To automatically hide inline diagnostics when opening Neovim’s diagnostic
 float windows, override the function to disable diagnostics before opening the
 float and re-enable them after closing.
 
