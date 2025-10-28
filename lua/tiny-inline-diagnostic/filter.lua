@@ -129,13 +129,26 @@ function M.for_display(opts, bufnr, diagnostics)
   end
 
   if opts.options.multilines.always_show then
+    local under_cursor = M.under_cursor(opts, bufnr, diagnostics)
+    local multiline_diags = diagnostics
+
     if opts.options.multilines.severity then
-      return M.by_severity(
-        { options = { severity = opts.options.multilines.severity } },
-        diagnostics
-      )
+      multiline_diags =
+        M.by_severity({ options = { severity = opts.options.multilines.severity } }, diagnostics)
     end
-    return diagnostics
+
+    local seen = {}
+    for _, diag in ipairs(under_cursor) do
+      seen[diag] = true
+    end
+
+    for _, diag in ipairs(multiline_diags) do
+      if not seen[diag] then
+        table.insert(under_cursor, diag)
+      end
+    end
+
+    return under_cursor
   end
 
   local under_cursor = M.under_cursor(opts, bufnr, diagnostics)
