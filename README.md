@@ -345,7 +345,7 @@ vim.keymap.set("n", "<leader>dt", "<cmd>TinyInlineDiag toggle<cr>", { desc = "To
 
 ### Auto-Disable on Float
 
-To automaticallm hide inline diagnostics when opening Neovim's diagnostic float windows, override the function to disable diagnostics before opening the float and re-enable them after closing.
+To automatically hide inline diagnostics when opening Neovim's diagnostic float windows, override the function to disable diagnostics before opening the float and re-enable them after closing.
 
 ```lua
 vim.diagnostic.open_float = require("tiny-inline-diagnostic.override").open_float
