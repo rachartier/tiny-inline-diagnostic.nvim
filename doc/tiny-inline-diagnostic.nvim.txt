@@ -1,4 +1,4 @@
-*tiny-inline-diagnostic.nvim.txt*For Neovim >= 0.10.0Last change: 2025 October 27
+*tiny-inline-diagnostic.nvim.txt*For Neovim >= 0.10.0Last change: 2025 October 28
 
 ==============================================================================
 Table of Contents              *tiny-inline-diagnostic.nvim-table-of-contents*
@@ -37,6 +37,7 @@ TABLE OF CONTENTS*tiny-inline-diagnostic.nvim-tiny-inline-diagnostic.nvim-table-
 - |tiny-inline-diagnostic.nvim-presets|
 - |tiny-inline-diagnostic.nvim-examples|
 - |tiny-inline-diagnostic.nvim-api|
+    - |tiny-inline-diagnostic.nvim-commands|
 - |tiny-inline-diagnostic.nvim-integrations|
 - |tiny-inline-diagnostic.nvim-comparison-with-neovim’s-built-in-`virtual_lines`|
 - |tiny-inline-diagnostic.nvim-troubleshooting|
@@ -351,6 +352,25 @@ API              *tiny-inline-diagnostic.nvim-tiny-inline-diagnostic.nvim-api*
     
     -- Filter severities
     diag.change_severities({ vim.diagnostic.severity.ERROR, vim.diagnostic.severity.WARN })
+<
+
+
+COMMANDS ~
+
+The plugin provides a user command for controlling diagnostic display:
+
+>vim
+    :TinyInlineDiag enable   " Enable inline diagnostics
+    :TinyInlineDiag disable  " Disable inline diagnostics
+    :TinyInlineDiag toggle   " Toggle inline diagnostics on/off
+<
+
+You can map these to keybindings for quick access:
+
+>lua
+    vim.keymap.set("n", "<leader>de", "<cmd>TinyInlineDiag enable<cr>", { desc = "Enable diagnostics" })
+    vim.keymap.set("n", "<leader>dd", "<cmd>TinyInlineDiag disable<cr>", { desc = "Disable diagnostics" })
+    vim.keymap.set("n", "<leader>dt", "<cmd>TinyInlineDiag toggle<cr>", { desc = "Toggle diagnostics" })
 <
 
 
