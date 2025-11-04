@@ -5,6 +5,7 @@ local timers = require("tiny-inline-diagnostic.timer")
 local AUGROUP_NAME = "TinyInlineDiagnosticAutocmds"
 
 local attached_buffers = {}
+local last_cursor_positions = {}
 
 ---@param bufnr number
 ---@return boolean
@@ -18,6 +19,7 @@ function M.detach(bufnr, cleanup_callback)
   local cache = require("tiny-inline-diagnostic.cache")
   timers.close(bufnr)
   attached_buffers[bufnr] = nil
+  last_cursor_positions[bufnr] = nil
   cache.clear(bufnr)
   if cleanup_callback then
     cleanup_callback(bufnr)
@@ -28,7 +30,8 @@ end
 ---@param opts table
 ---@param bufnr number
 ---@param throttle_apply function
-function M.setup_cursor_autocmds(autocmd_ns, opts, bufnr, throttle_apply)
+---@param direct_apply function
+function M.setup_cursor_autocmds(autocmd_ns, opts, bufnr, throttle_apply, direct_apply)
   local events = opts.options.enable_on_insert and { "CursorMoved", "CursorMovedI" }
     or { "CursorMoved" }
 
@@ -36,13 +39,30 @@ function M.setup_cursor_autocmds(autocmd_ns, opts, bufnr, throttle_apply)
     group = autocmd_ns,
     buffer = bufnr,
     callback = function(event)
-      if vim.api.nvim_buf_is_valid(event.buf) then
-        throttle_apply(event.buf)
-      else
+      if not vim.api.nvim_buf_is_valid(event.buf) then
         M.detach(event.buf)
+        return
+      end
+
+      local current_pos = vim.api.nvim_win_get_cursor(0)
+      local current_line = current_pos[1]
+      local last_pos = last_cursor_positions[event.buf]
+
+      if last_pos then
+        local line_diff = math.abs(current_line - last_pos[1])
+        last_cursor_positions[event.buf] = current_pos
+
+        if line_diff > 1 then
+          direct_apply(event.buf)
+        else
+          throttle_apply(event.buf)
+        end
+      else
+        last_cursor_positions[event.buf] = current_pos
+        throttle_apply(event.buf)
       end
     end,
-    desc = "Update diagnostics on cursor move (throttled)",
+    desc = "Update diagnostics on cursor move (throttled for small moves, direct for jumps)",
   })
 end
 
