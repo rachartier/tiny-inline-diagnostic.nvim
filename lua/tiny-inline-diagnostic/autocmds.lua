@@ -101,7 +101,17 @@ function M.setup_buffer_autocmds(
     group = autocmd_ns,
     buffer = bufnr,
     callback = function(event)
-      if #vim.lsp.get_clients({ bufnr = event.buf }) == 0 then
+      local remaining_clients = vim.lsp.get_clients({ bufnr = event.buf })
+      local has_other_clients = false
+
+      for _, client in ipairs(remaining_clients) do
+        if client.id ~= event.data.client_id then
+          has_other_clients = true
+          break
+        end
+      end
+
+      if not has_other_clients then
         M.detach(event.buf)
       end
     end,
