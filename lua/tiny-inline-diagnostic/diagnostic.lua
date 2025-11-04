@@ -40,6 +40,10 @@ function M.set_diagnostic_autocmds(opts)
         return
       end
 
+      if autocmds.is_attached(event.buf) then
+        return
+      end
+
       local throttler = handlers.build_throttled_renderer(opts, renderer)
       local direct_renderer = handlers.build_direct_renderer(opts, renderer)
       timers.add(event.buf, throttler.timer)

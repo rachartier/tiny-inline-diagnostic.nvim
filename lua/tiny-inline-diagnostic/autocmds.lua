@@ -97,7 +97,17 @@ function M.setup_buffer_autocmds(
     end,
   })
 
-  vim.api.nvim_create_autocmd({ "LspDetach", "BufDelete", "BufUnload", "BufWipeout" }, {
+  vim.api.nvim_create_autocmd("LspDetach", {
+    group = autocmd_ns,
+    buffer = bufnr,
+    callback = function(event)
+      if #vim.lsp.get_clients({ bufnr = event.buf }) == 0 then
+        M.detach(event.buf)
+      end
+    end,
+  })
+
+  vim.api.nvim_create_autocmd({ "BufDelete", "BufUnload", "BufWipeout" }, {
     group = autocmd_ns,
     buffer = bufnr,
     callback = function(event)
