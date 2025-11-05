@@ -328,7 +328,112 @@ T["get_chunks"]["sets need_to_be_under for long lines"] = function()
     }
 
     local result = chunk.get_chunks(opts, diags, 1, 0, 0, buf)
-    MiniTest.expect.equality(type(result.need_to_be_under), "boolean")
+    MiniTest.expect.equality(result.need_to_be_under, true)
+  end)
+end
+
+T["get_chunks"]["does not set need_to_be_under for short lines"] = function()
+  local short_line = "short"
+  H.with_win_buf({ short_line }, nil, 80, function(buf, win)
+    local opts = H.make_opts({
+      options = {
+        overflow = { mode = "wrap" },
+        multilines = { enabled = false },
+        softwrap = 10,
+        break_line = { enabled = false },
+        show_source = { enabled = false },
+      },
+    })
+    local diags = {
+      { message = "test error", severity = vim.diagnostic.severity.ERROR, lnum = 0 },
+    }
+
+    local result = chunk.get_chunks(opts, diags, 1, 0, 0, buf)
+    MiniTest.expect.equality(result.need_to_be_under, false)
+  end)
+end
+
+T["get_chunks"]["uses display width not byte length"] = function()
+  local line_with_multibyte = string.rep("こんにちは世界", 10)
+  H.with_win_buf({ line_with_multibyte }, nil, 80, function(buf, win)
+    local opts = H.make_opts({
+      options = {
+        overflow = { mode = "wrap" },
+        multilines = { enabled = false },
+        softwrap = 5,
+        break_line = { enabled = false },
+        show_source = { enabled = false },
+      },
+    })
+    local diags = {
+      { message = "test", severity = vim.diagnostic.severity.ERROR, lnum = 0 },
+    }
+
+    local result = chunk.get_chunks(opts, diags, 1, 0, 0, buf)
+    MiniTest.expect.equality(result.need_to_be_under, true)
+  end)
+end
+
+T["get_chunks"]["uses virtcol when cursor on diagnostic line"] = function()
+  local line = string.rep("x", 50)
+  H.with_win_buf({ line }, { 1, 0 }, 80, function(buf, win)
+    local opts = H.make_opts({
+      options = {
+        overflow = { mode = "wrap" },
+        multilines = { enabled = false },
+        softwrap = 10,
+        break_line = { enabled = false },
+        show_source = { enabled = false },
+      },
+    })
+    local diags = {
+      { message = "test error", severity = vim.diagnostic.severity.ERROR, lnum = 0 },
+    }
+
+    local result = chunk.get_chunks(opts, diags, 1, 0, 0, buf)
+    MiniTest.expect.equality(result.need_to_be_under, false)
+  end)
+end
+
+T["get_chunks"]["accounts for window width in wrapping decision"] = function()
+  local line = string.rep("x", 60)
+  H.with_win_buf({ line }, nil, 80, function(buf, win)
+    local opts = H.make_opts({
+      options = {
+        overflow = { mode = "wrap" },
+        multilines = { enabled = false },
+        softwrap = 10,
+        break_line = { enabled = false },
+        show_source = { enabled = false },
+      },
+    })
+    local diags = {
+      { message = "test", severity = vim.diagnostic.severity.ERROR, lnum = 0 },
+    }
+
+    local result = chunk.get_chunks(opts, diags, 1, 0, 0, buf)
+    MiniTest.expect.equality(result.need_to_be_under, false)
+  end)
+end
+
+T["get_chunks"]["wraps when line exceeds window width minus softwrap"] = function()
+  local line = string.rep("x", 80)
+  H.with_win_buf({ line }, nil, 80, function(buf, win)
+    local opts = H.make_opts({
+      options = {
+        overflow = { mode = "wrap" },
+        multilines = { enabled = false },
+        softwrap = 5,
+        break_line = { enabled = false },
+        show_source = { enabled = false },
+      },
+    })
+    local diags = {
+      { message = "test", severity = vim.diagnostic.severity.ERROR, lnum = 0 },
+    }
+
+    local result = chunk.get_chunks(opts, diags, 1, 0, 0, buf)
+    MiniTest.expect.equality(result.need_to_be_under, true)
   end)
 end
 
