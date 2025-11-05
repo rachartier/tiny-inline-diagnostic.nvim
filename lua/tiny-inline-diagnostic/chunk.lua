@@ -439,7 +439,17 @@ function M.get_chunks(opts, diags_on_line, diag_index, diag_line, cursor_line, b
     (opts.options.overflow.mode ~= "none" and not opts.options.multilines)
     or cursor_line == diag_line
   then
-    if (line_length + other_extmarks_offset) > win_width - opts.options.softwrap then
+    local line_display_width = lines[1] and vim.fn.strdisplaywidth(lines[1]) or 0
+    local visual_line_width = line_display_width + other_extmarks_offset
+
+    if cursor_line == diag_line then
+      local ok, virtcol_end = pcall(vim.fn.virtcol, "$")
+      if ok then
+        visual_line_width = virtcol_end - 1
+      end
+    end
+
+    if visual_line_width > win_width - opts.options.softwrap then
       need_to_be_under = true
     end
   end
