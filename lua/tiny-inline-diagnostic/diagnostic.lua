@@ -59,7 +59,7 @@ function M.set_diagnostic_autocmds(opts)
         direct_renderer,
         on_diagnostic_change
       )
-      autocmds.setup_cursor_autocmds(autocmd_ns, opts, event.buf, throttler.fn)
+      autocmds.setup_cursor_autocmds(autocmd_ns, opts, event.buf, throttler.fn, direct_renderer)
       autocmds.setup_mode_change_autocmds(autocmd_ns, event.buf, on_mode_change)
 
       local existing_diagnostics = vim.diagnostic.get(event.buf)

@@ -184,9 +184,13 @@ end
 function M.throttle(fn, ms)
   local timer = vim.loop.new_timer()
   local running = false
+  local pending_arg = nil
+  local has_pending = false
 
   ---@param ... any
   local function throttled(...)
+    local arg = select(1, ...)
+
     if not running and timer then
       local success = pcall(function()
         timer:start(ms, 0, function()
@@ -194,13 +198,24 @@ function M.throttle(fn, ms)
             timer:stop()
           end
           running = false
+
+          if has_pending and pending_arg then
+            pcall(vim.schedule_wrap(fn), pending_arg)
+            has_pending = false
+            pending_arg = nil
+          end
         end)
       end)
 
       if success then
         running = true
-        pcall(vim.schedule_wrap(fn), select(1, ...))
+        has_pending = false
+        pending_arg = nil
+        pcall(vim.schedule_wrap(fn), arg)
       end
+    else
+      pending_arg = arg
+      has_pending = true
     end
   end
 
