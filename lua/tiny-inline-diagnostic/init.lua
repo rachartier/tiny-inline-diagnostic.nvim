@@ -50,6 +50,7 @@ local default_config = {
       severity = nil,
     },
     show_all_diags_on_cursorline = false,
+    show_diags_only_under_cursor = false,
     enable_on_insert = false,
     enable_on_select = false,
     format = nil,

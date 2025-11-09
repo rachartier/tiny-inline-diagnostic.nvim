@@ -37,7 +37,11 @@ function M.at_position(opts, diagnostics, line, col)
     return diag.lnum == line and col >= diag.col and col <= diag.end_col
   end, diagnostics)
 
-  return #current_pos_diags > 0 and current_pos_diags or diags_on_line
+  if opts.options.show_diags_only_under_cursor then
+    return current_pos_diags
+  else
+    return #current_pos_diags > 0 and current_pos_diags or diags_on_line
+  end
 end
 
 ---@param related_info table
@@ -83,6 +87,28 @@ local function extract_related_diagnostics(diag, max_count)
 end
 
 ---@param opts table
+---@param diagnostics table
+---@return table
+local function add_related_diagnostics(opts, diagnostics)
+  if not opts.options.show_related or not opts.options.show_related.enabled then
+    return diagnostics
+  end
+
+  local result = {}
+  local max_count = opts.options.show_related.max_count or 3
+
+  for _, diag in ipairs(diagnostics) do
+    table.insert(result, diag)
+    if has_related_info(diag) then
+      local related = extract_related_diagnostics(diag, max_count)
+      vim.list_extend(result, related)
+    end
+  end
+
+  return result
+end
+
+---@param opts table
 ---@param buf number
 ---@param diagnostics table
 ---@return table
@@ -101,22 +127,7 @@ function M.under_cursor(opts, buf, diagnostics)
 
   filtered_diags = M.by_severity(opts, filtered_diags)
 
-  if not opts.options.show_related or not opts.options.show_related.enabled then
-    return filtered_diags
-  end
-
-  local result = {}
-  local max_count = opts.options.show_related.max_count or 3
-
-  for _, diag in ipairs(filtered_diags) do
-    table.insert(result, diag)
-    if has_related_info(diag) then
-      local related = extract_related_diagnostics(diag, max_count)
-      vim.list_extend(result, related)
-    end
-  end
-
-  return result
+  return add_related_diagnostics(opts, filtered_diags)
 end
 
 ---@param opts table
@@ -126,6 +137,22 @@ end
 function M.for_display(opts, bufnr, diagnostics)
   if not opts.options.multilines.enabled then
     return M.under_cursor(opts, bufnr, diagnostics)
+  end
+
+  if opts.options.show_diags_only_under_cursor then
+    local cursor_pos = vim.api.nvim_win_get_cursor(0)
+    local current_line = cursor_pos[1] - 1
+
+    local under_cursor_on_line = M.at_position(opts, diagnostics, current_line, cursor_pos[2])
+
+    local other_diags = vim.tbl_filter(function(diag)
+      return diag.lnum ~= current_line
+    end, diagnostics)
+
+    local result = vim.list_extend({}, under_cursor_on_line)
+    vim.list_extend(result, other_diags)
+    result = M.by_severity(opts, result)
+    return add_related_diagnostics(opts, result)
   end
 
   if opts.options.multilines.always_show then
