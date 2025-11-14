@@ -77,6 +77,7 @@ local default_config = {
 }
 
 M.config = nil
+M.enabled = diag.enabled
 
 ---Create color scheme autocommand
 local function setup_colorscheme_handler(config)
