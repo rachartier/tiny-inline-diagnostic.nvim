@@ -41,6 +41,12 @@ function M.build_base_groups(colors, blends, transparent)
       italic = color.italic,
     }
 
+    hi[INV_HIGHLIGHT_PREFIX .. name .. "CursorLine"] = {
+      fg = blends[name_lower],
+      bg = colors.cursor_line.bg,
+      italic = color.italic,
+    }
+
     hi[INV_HIGHLIGHT_PREFIX .. name .. "NoBg"] = {
       fg = blends[name_lower],
       bg = "None",
@@ -49,7 +55,7 @@ function M.build_base_groups(colors, blends, transparent)
   end
 
   hi[HIGHLIGHT_PREFIX .. "Arrow"] = {
-    bg = colors.background,
+    bg = colors.cursor_line.bg,
     fg = colors.arrow.fg,
   }
   hi[HIGHLIGHT_PREFIX .. "ArrowNoBg"] = {

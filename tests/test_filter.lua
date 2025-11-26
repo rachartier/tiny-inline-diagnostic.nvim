@@ -56,6 +56,16 @@ T["at_position"]["returns line diagnostics when cursor not in range"] = function
   MiniTest.expect.equality(#result, 2)
 end
 
+T["at_position"]["returns empty when show_diags_only_under_cursor enabled and cursor not in range"] = function()
+  local diagnostics = {
+    H.make_diagnostic({ lnum = 5, col = 10, end_col = 20 }),
+    H.make_diagnostic({ lnum = 5, col = 30, end_col = 40 }),
+  }
+
+  local result = filter.at_position({ options = { show_diags_only_under_cursor = true } }, diagnostics, 5, 0)
+  MiniTest.expect.equality(#result, 0)
+end
+
 T["under_cursor"] = MiniTest.new_set()
 
 T["under_cursor"]["returns empty for invalid buffer"] = function()
@@ -273,6 +283,35 @@ T["for_display"]["filters by multilines.severity when always_show is false"] = f
 
     MiniTest.expect.equality(#result, 1)
     MiniTest.expect.equality(result[1].severity, vim.diagnostic.severity.ERROR)
+  end)
+end
+
+T["for_display"]["show_diags_only_under_cursor with multilines shows under cursor on current line and all on other lines"] = function()
+  H.with_win_buf({ "line1", "line2", "line3" }, { 2, 0 }, nil, function(buf)
+    local diagnostics = {
+      H.make_diagnostic({ lnum = 0, col = 0, end_col = 5 }), -- line 1
+      H.make_diagnostic({ lnum = 0, col = 10, end_col = 15 }), -- line 1, not under cursor
+      H.make_diagnostic({ lnum = 1, col = 0, end_col = 5 }), -- line 2 (current line)
+      H.make_diagnostic({ lnum = 2, col = 0, end_col = 5 }), -- line 3
+    }
+
+    local result = filter.for_display({
+      options = {
+        multilines = { enabled = true },
+        show_diags_only_under_cursor = true,
+      },
+    }, buf, diagnostics)
+
+    -- Should show: all from line 1 (other line), 1 diag from line 2 (under cursor), 1 from line 3
+    MiniTest.expect.equality(#result, 4)
+    -- Check that we have diagnostics from all lines
+    local lines = {}
+    for _, diag in ipairs(result) do
+      lines[diag.lnum] = (lines[diag.lnum] or 0) + 1
+    end
+    MiniTest.expect.equality(lines[0], 2) -- line 1
+    MiniTest.expect.equality(lines[1], 1) -- line 2 (current)
+    MiniTest.expect.equality(lines[2], 1) -- line 3
   end)
 end
 

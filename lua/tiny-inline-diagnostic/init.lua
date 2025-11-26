@@ -13,7 +13,6 @@ local presets = require("tiny-inline-diagnostic.presets")
 local default_config = {
   preset = "modern",
   transparent_bg = false,
-  transparent_cursorline = true,
   hi = {
     error = "DiagnosticError",
     warn = "DiagnosticWarn",
@@ -50,6 +49,7 @@ local default_config = {
       severity = nil,
     },
     show_all_diags_on_cursorline = false,
+    show_diags_only_under_cursor = false,
     enable_on_insert = false,
     enable_on_select = false,
     format = nil,
@@ -76,18 +76,14 @@ local default_config = {
 }
 
 M.config = nil
+M.enabled = diag.enabled
 
 ---Create color scheme autocommand
 local function setup_colorscheme_handler(config)
   vim.api.nvim_create_autocmd("ColorScheme", {
     pattern = "*",
     callback = function()
-      hi.setup_highlights(
-        config.blend,
-        config.hi,
-        config.transparent_bg,
-        config.transparent_cursorline
-      )
+      hi.setup_highlights(config.blend, config.hi, config.transparent_bg)
     end,
   })
 end
@@ -135,7 +131,7 @@ function M.setup(opts)
 
   M.config = config
 
-  hi.setup_highlights(config.blend, config.hi, config.transparent_bg, config.transparent_cursorline)
+  hi.setup_highlights(config.blend, config.hi, config.transparent_bg)
 
   setup_colorscheme_handler(config)
   diag.set_diagnostic_autocmds(config)
@@ -155,7 +151,7 @@ function M.change(blend, highlights)
     hi = highlights or M.config.hi,
   })
 
-  hi.setup_highlights(config.blend, config.hi, config.transparent_bg, config.transparent_cursorline)
+  hi.setup_highlights(config.blend, config.hi, config.transparent_bg)
 end
 
 --- Enable the diagnostic display.
