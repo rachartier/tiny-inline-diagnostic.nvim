@@ -74,22 +74,8 @@ end
 
 ---@param blend BlendOptions
 ---@param default_hi DefaultHighlights
-function M.setup_highlights(blend, default_hi, transparent_bg)
-  if not transparent_bg then
-    transparent_bg = false
-  end
-
-  if blend.factor == 0 then
-    transparent_bg = true
-  end
-
-  local cursorline_hl = get_highlight("CursorLine")
-  local is_cursorline_enabled = vim.opt.cursorline:get()
-  local has_cursorline_bg = cursorline_hl.bg ~= "None"
-
-  local cursor_line_color = (is_cursorline_enabled and has_cursorline_bg) and cursorline_hl
-    or { bg = "None" }
-
+function M.setup_highlights(blend, default_hi, transparent_bg, transparent_cursorline)
+  -- Get base colors
   local colors = {
     error = get_highlight(default_hi.error),
     warn = get_highlight(default_hi.warn),
@@ -97,8 +83,16 @@ function M.setup_highlights(blend, default_hi, transparent_bg)
     hint = get_highlight(default_hi.hint),
     ok = get_highlight(default_hi.ok),
     arrow = get_highlight(default_hi.arrow),
-    cursor_line = cursor_line_color,
+    cursor_line = transparent_cursorline and { bg = "None" } or get_highlight("CursorLine"),
   }
+
+  if not transparent_bg then
+    transparent_bg = false
+  end
+
+  if blend.factor == 0 then
+    transparent_bg = true
+  end
 
   -- Get special colors
   colors.background = get_background_color(default_hi.background)
@@ -133,11 +127,8 @@ end
 function M.get_diagnostic_highlights(blend_factor, diag_ret, curline, index_diag)
   local diag_hi, diag_inv_hi, body_hi = M.get_diagnostic_highlights_from_severity(diag_ret.severity)
 
-  if (diag_ret.line and diag_ret.line == curline) and index_diag == 1 then
-    if blend_factor == 0 then
-      diag_hi = diag_hi .. "CursorLine"
-    end
-    diag_inv_hi = diag_inv_hi .. "CursorLine"
+  if (diag_ret.line and diag_ret.line == curline) and index_diag == 1 and blend_factor == 0 then
+    diag_hi = diag_hi .. "CursorLine"
   end
 
   if

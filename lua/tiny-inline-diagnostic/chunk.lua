@@ -435,13 +435,10 @@ function M.get_chunks(opts, diags_on_line, diag_index, diag_line, cursor_line, b
 
   local other_extmarks_offset = extmarks.handle_other_extmarks(buf, diag_line, line_length)
 
-  local multilines_enabled = type(opts.options.multilines) == "table"
-      and opts.options.multilines.enabled
+  local multilines_enabled = type(opts.options.multilines) == "table" and opts.options.multilines.enabled
     or opts.options.multilines
 
-  if
-    (opts.options.overflow.mode ~= "none" and not multilines_enabled) or cursor_line == diag_line
-  then
+  if (opts.options.overflow.mode ~= "none" and not multilines_enabled) or cursor_line == diag_line then
     local line_display_width = lines[1] and vim.fn.strdisplaywidth(lines[1]) or 0
     local visual_line_width = line_display_width + other_extmarks_offset
 
