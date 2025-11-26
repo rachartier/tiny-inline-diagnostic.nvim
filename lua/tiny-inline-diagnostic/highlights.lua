@@ -133,17 +133,24 @@ end
 function M.get_diagnostic_highlights(blend_factor, diag_ret, curline, index_diag)
   local diag_hi, diag_inv_hi, body_hi = M.get_diagnostic_highlights_from_severity(diag_ret.severity)
 
-  if (diag_ret.line and diag_ret.line == curline) and index_diag == 1 then
+  local is_cursorline_enabled = vim.opt.cursorline:get()
+
+  if
+    (diag_ret.line and diag_ret.line == curline)
+    and index_diag == 1
+    and not diag_ret.need_to_be_under
+  then
     if blend_factor == 0 then
       diag_hi = diag_hi .. "CursorLine"
+      diag_inv_hi = diag_inv_hi .. "CursorLine"
     end
-    diag_inv_hi = diag_inv_hi .. "CursorLine"
   end
 
   if
     (diag_ret.line and diag_ret.line ~= curline)
     or index_diag > 1
     or diag_ret.need_to_be_under
+    or not is_cursorline_enabled
   then
     diag_inv_hi = diag_inv_hi .. "NoBg"
   end
