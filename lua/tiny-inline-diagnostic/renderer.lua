@@ -17,7 +17,7 @@ local function validate_and_prepare_state(bufnr)
 
   if
     not state.user_toggle_state
-    or not (state.enabled and vim.diagnostic.is_enabled() and vim.api.nvim_buf_is_valid(bufnr))
+    or not (state.enabled and vim.diagnostic.is_enabled({ bufnr = bufnr }) and vim.api.nvim_buf_is_valid(bufnr))
   then
     extmarks.clear(bufnr)
     return nil
