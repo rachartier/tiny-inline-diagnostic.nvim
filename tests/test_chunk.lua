@@ -23,6 +23,24 @@ T["get_max_width_from_chunks"]["handles single chunk"] = function()
   MiniTest.expect.equality(result, 6)
 end
 
+T["get_max_width_from_chunks"]["handles binary data with null bytes"] = function()
+  local chunks = { "\x00\xff", "valid text" }
+  local result = chunk.get_max_width_from_chunks(chunks)
+  MiniTest.expect.equality(result, vim.fn.strdisplaywidth("valid text"))
+end
+
+T["get_max_width_from_chunks"]["ignores non-string chunks"] = function()
+  local chunks = { "text", 123, "longer text", { "table" }, nil }
+  local result = chunk.get_max_width_from_chunks(chunks)
+  MiniTest.expect.equality(result, vim.fn.strdisplaywidth("longer text"))
+end
+
+T["get_max_width_from_chunks"]["returns zero for all non-string chunks"] = function()
+  local chunks = { 123, { "table" }, true, nil }
+  local result = chunk.get_max_width_from_chunks(chunks)
+  MiniTest.expect.equality(result, 0)
+end
+
 T["get_diagnostic_icon"] = MiniTest.new_set()
 
 T["get_diagnostic_icon"]["returns default icon when use_icons_from_diagnostic is false"] = function()

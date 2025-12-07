@@ -11,9 +11,11 @@ function M.get_max_width_from_chunks(chunks)
   local max_chunk_line_length = 0
 
   for _, chunk in ipairs(chunks) do
-    local line_length = vim.fn.strdisplaywidth(chunk)
-    if line_length > max_chunk_line_length then
-      max_chunk_line_length = line_length
+    if type(chunk) == "string" then
+      local ok, line_length = pcall(vim.fn.strdisplaywidth, chunk)
+      if ok and line_length > max_chunk_line_length then
+        max_chunk_line_length = line_length
+      end
     end
   end
 
