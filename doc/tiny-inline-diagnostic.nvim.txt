@@ -1,4 +1,4 @@
-*tiny-inline-diagnostic.nvim.txt*For Neovim >= 0.10.0Last change: 2025 December 07
+*tiny-inline-diagnostic.nvim.txt*For Neovim >= 0.10.0Last change: 2025 December 13
 
 ==============================================================================
 Table of Contents              *tiny-inline-diagnostic.nvim-table-of-contents*
@@ -278,6 +278,13 @@ CONFIGURATION*tiny-inline-diagnostic.nvim-tiny-inline-diagnostic.nvim-configurat
     
             -- Automatically disable diagnostics when opening diagnostic float windows
             override_open_float = false,
+    
+            -- Experimental options, subject to misbehave in future NeoVim releases
+            experimental = {
+              -- Make diagnostics not mirror across windows containing the same buffer
+              -- See: https://github.com/rachartier/tiny-inline-diagnostic.nvim/issues/127
+              use_window_local_extmarks = false,
+            },
         },
     })
 <
