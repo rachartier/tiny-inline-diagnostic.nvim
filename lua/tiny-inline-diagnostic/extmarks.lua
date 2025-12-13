@@ -10,6 +10,11 @@ local state = {
   uid_counter = INITIAL_UID,
 }
 
+function M.update_namespace_window()
+  local current_window = vim.api.nvim_get_current_win()
+  vim.api.nvim__ns_set(DIAGNOSTIC_NAMESPACE, { wins = { current_window } })
+end
+
 local function is_valid_buffer(buf)
   return buf and vim.api.nvim_buf_is_valid(buf)
 end

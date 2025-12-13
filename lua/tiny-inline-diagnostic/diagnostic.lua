@@ -2,6 +2,7 @@ local M = {}
 
 local autocmds = require("tiny-inline-diagnostic.autocmds")
 local cache = require("tiny-inline-diagnostic.cache")
+local extmarks = require("tiny-inline-diagnostic.extmarks")
 local filter = require("tiny-inline-diagnostic.filter")
 local handlers = require("tiny-inline-diagnostic.handlers")
 local renderer = require("tiny-inline-diagnostic.renderer")
@@ -50,6 +51,7 @@ function M.set_diagnostic_autocmds(opts)
 
       local on_diagnostic_change = handlers.build_diagnostic_change_handler(cache, opts)
       local on_mode_change = handlers.build_mode_change_handler(state, renderer, opts)
+      local on_window_change = extmarks.update_namespace_window
 
       autocmds.setup_buffer_autocmds(
         autocmd_ns,
@@ -57,7 +59,8 @@ function M.set_diagnostic_autocmds(opts)
         event.buf,
         throttler.fn,
         direct_renderer,
-        on_diagnostic_change
+        on_diagnostic_change,
+        on_window_change
       )
       autocmds.setup_cursor_autocmds(autocmd_ns, opts, event.buf, throttler.fn, direct_renderer)
       autocmds.setup_mode_change_autocmds(autocmd_ns, event.buf, on_mode_change)
@@ -95,7 +98,6 @@ end
 
 function M.disable()
   state.user_disable()
-  local extmarks = require("tiny-inline-diagnostic.extmarks")
 
   vim.schedule(function()
     for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
