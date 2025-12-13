@@ -72,6 +72,9 @@ local default_config = {
     },
     override_open_float = false,
     overwrite_events = nil,
+    experimental = {
+      use_window_local_extmarks = false,
+    },
   },
   disabled_ft = {},
 }
@@ -139,7 +142,9 @@ function M.setup(opts)
 
   -- Ensure the diagnostics are only linked to the current window on startup
   -- This gets around a bug where having 2 windows with the same buffer on startup causes mirroring
-  extmarks.update_namespace_window()
+  if config.options.experimental.use_window_local_extmarks then
+    extmarks.update_namespace_window()
+  end
 end
 
 --- Change the blend and highlight settings dynamically.

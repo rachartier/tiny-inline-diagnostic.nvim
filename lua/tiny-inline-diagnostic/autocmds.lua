@@ -159,11 +159,13 @@ function M.setup_buffer_autocmds(
     desc = "Update diagnostics on window resize",
   })
 
-  vim.api.nvim_create_autocmd("WinEnter", {
-    group = autocmd_ns,
-    callback = on_window_change,
-    desc = "Sync namespace window on window change",
-  })
+  if opts.options.experimental.use_window_local_extmarks then
+    vim.api.nvim_create_autocmd("WinEnter", {
+      group = autocmd_ns,
+      callback = on_window_change,
+      desc = "Sync namespace window on window change",
+    })
+  end
 end
 
 ---@return number
