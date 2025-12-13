@@ -252,6 +252,13 @@ require("tiny-inline-diagnostic").setup({
 
         -- Automatically disable diagnostics when opening diagnostic float windows
         override_open_float = false,
+
+        -- Experimental options, subject to misbehave in future NeoVim releases
+        experimental = {
+          -- Make diagnostics not mirror across windows containing the same buffer
+          -- See: https://github.com/rachartier/tiny-inline-diagnostic.nvim/issues/127
+          use_window_local_extmarks = false,
+        },
     },
 })
 ```
