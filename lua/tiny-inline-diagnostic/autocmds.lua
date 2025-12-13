@@ -91,13 +91,15 @@ end
 ---@param throttled_apply function
 ---@param direct_apply function
 ---@param on_diagnostic_change function
+---@param on_window_change function
 function M.setup_buffer_autocmds(
   autocmd_ns,
   opts,
   bufnr,
   throttled_apply,
   direct_apply,
-  on_diagnostic_change
+  on_diagnostic_change,
+  on_window_change
 )
   if not vim.api.nvim_buf_is_valid(bufnr) or attached_buffers[bufnr] then
     return
@@ -156,6 +158,14 @@ function M.setup_buffer_autocmds(
     end,
     desc = "Update diagnostics on window resize",
   })
+
+  if opts.options.experimental.use_window_local_extmarks then
+    vim.api.nvim_create_autocmd("WinEnter", {
+      group = autocmd_ns,
+      callback = on_window_change,
+      desc = "Sync namespace window on window change",
+    })
+  end
 end
 
 ---@return number

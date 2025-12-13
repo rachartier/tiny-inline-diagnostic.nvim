@@ -7,6 +7,7 @@
 local M = {}
 
 local diag = require("tiny-inline-diagnostic.diagnostic")
+local extmarks = require("tiny-inline-diagnostic.extmarks")
 local hi = require("tiny-inline-diagnostic.highlights")
 local presets = require("tiny-inline-diagnostic.presets")
 
@@ -71,6 +72,9 @@ local default_config = {
     },
     override_open_float = false,
     overwrite_events = nil,
+    experimental = {
+      use_window_local_extmarks = false,
+    },
   },
   disabled_ft = {},
 }
@@ -135,6 +139,12 @@ function M.setup(opts)
 
   setup_colorscheme_handler(config)
   diag.set_diagnostic_autocmds(config)
+
+  -- Ensure the diagnostics are only linked to the current window on startup
+  -- This gets around a bug where having 2 windows with the same buffer on startup causes mirroring
+  if config.options.experimental.use_window_local_extmarks then
+    extmarks.update_namespace_window()
+  end
 end
 
 --- Change the blend and highlight settings dynamically.

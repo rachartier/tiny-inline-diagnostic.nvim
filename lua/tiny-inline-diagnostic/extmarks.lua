@@ -80,6 +80,13 @@ function M.count_inlay_hints_characters(buf, linenr)
   return count
 end
 
+---Update the current namespace used for extmarks to only include the active window.
+---Note: this uses a currently experimental API call, and may break in future NeoVim releases.
+function M.update_namespace_window()
+  local current_window = vim.api.nvim_get_current_win()
+  vim.api.nvim__ns_set(DIAGNOSTIC_NAMESPACE, { wins = { current_window } })
+end
+
 -- Public API
 
 ---Clear extmarks from buffer
