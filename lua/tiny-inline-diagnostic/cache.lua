@@ -8,6 +8,12 @@ local function sort_by_severity(diagnostics)
   local sorted = vim.deepcopy(diagnostics)
   table.sort(sorted, function(a, b)
     return a.severity < b.severity
+      or (
+        a.severity == b.severity
+        and a._extmark_id
+        and b._extmark_id
+        and a._extmark_id > b._extmark_id
+      )
   end)
   return sorted
 end
