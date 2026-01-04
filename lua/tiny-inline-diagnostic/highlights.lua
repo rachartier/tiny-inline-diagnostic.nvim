@@ -72,6 +72,17 @@ local function get_mixing_color(color)
   return get_highlight(color).bg
 end
 
+---Check if the cursorline is visible
+---@return boolean
+local function is_cursorline_visible()
+  if vim.opt.cursorline:get() then
+    local cursorline_opt = vim.opt.cursorlineopt:get()
+    return not (#cursorline_opt == 1 and cursorline_opt[1] == "number")
+  end
+
+  return false
+end
+
 ---@param blend BlendOptions
 ---@param default_hi DefaultHighlights
 function M.setup_highlights(blend, default_hi, transparent_bg)
@@ -84,10 +95,10 @@ function M.setup_highlights(blend, default_hi, transparent_bg)
   end
 
   local cursorline_hl = get_highlight("CursorLine")
-  local is_cursorline_enabled = vim.opt.cursorline:get()
+  local cursorline_is_visible = is_cursorline_visible()
   local has_cursorline_bg = cursorline_hl.bg ~= "None"
 
-  local cursor_line_color = (is_cursorline_enabled and has_cursorline_bg) and cursorline_hl
+  local cursor_line_color = (cursorline_is_visible and has_cursorline_bg) and cursorline_hl
     or { bg = "None" }
 
   local colors = {
