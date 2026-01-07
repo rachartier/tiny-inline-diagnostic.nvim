@@ -55,7 +55,7 @@ function M.build_base_groups(colors, blends, transparent)
   end
 
   hi[HIGHLIGHT_PREFIX .. "Arrow"] = {
-    bg = colors.cursor_line.bg,
+    bg = transparent and colors.cursor_line.bg or colors.background,
     fg = colors.arrow.fg,
   }
   hi[HIGHLIGHT_PREFIX .. "ArrowNoBg"] = {
