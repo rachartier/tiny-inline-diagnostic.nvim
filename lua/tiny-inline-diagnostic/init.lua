@@ -167,6 +167,11 @@ function M.setup(opts)
   if config.options.experimental.use_window_local_extmarks then
     extmarks.update_namespace_window()
   end
+
+  if config.options.override_open_float then
+    local override = require("tiny-inline-diagnostic.override")
+    vim.diagnostic.open_float = override.open_float
+  end
 end
 
 --- Change the blend and highlight settings dynamically.
