@@ -205,7 +205,9 @@ function M.get_diagnostic_icon(opts, severities, index_diag, total_chunks)
 
   if opts.options.use_icons_from_diagnostic then
     if total_chunks == 1 then
-      icon = highlights.get_diagnostic_icon(severities[#severities])
+      local sorted = vim.deepcopy(severities)
+      table.sort(sorted)
+      icon = highlights.get_diagnostic_icon(sorted[1])
     else
       icon = highlights.get_diagnostic_icon(severities[index_diag])
     end
