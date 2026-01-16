@@ -12,6 +12,7 @@ local function create_test_opts()
       use_icons_from_diagnostic = false,
       set_arrow_to_diag_color = false,
       show_source = { enabled = false },
+      show_code = false,
       overflow = { mode = "none" },
       break_line = { enabled = false },
       multilines = { enabled = false },

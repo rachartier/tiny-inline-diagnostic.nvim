@@ -411,6 +411,8 @@ function M.get_chunks(opts, diags_on_line, diag_index, diag_line, cursor_line, b
     show_source = true
   end
 
+  local show_code = opts.options.show_code
+
   local diag_message = diag.message
   if diag.is_related then
     local location_info = ""
@@ -426,8 +428,13 @@ function M.get_chunks(opts, diags_on_line, diag_index, diag_line, cursor_line, b
       end
     end
     diag_message = diag_message .. location_info
-  elseif show_source and diag.source then
-    diag_message = diag_message .. " (" .. diag.source .. ")"
+  else
+    if show_code and diag.code then
+      diag_message = diag_message .. " [" .. diag.code .. "]"
+    end
+    if show_source and diag.source then
+      diag_message = diag_message .. " (" .. diag.source .. ")"
+    end
   end
 
   local chunks = { diag_message }

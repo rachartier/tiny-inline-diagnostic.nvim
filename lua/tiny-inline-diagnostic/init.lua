@@ -28,6 +28,7 @@ local default_config = {
       enabled = false,
       if_many = false,
     },
+    show_code = true,
     show_related = {
       enabled = true,
       max_count = 3,
