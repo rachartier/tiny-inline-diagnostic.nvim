@@ -90,12 +90,12 @@ end
 ---@param diagnostics table
 ---@return table
 local function add_related_diagnostics(opts, diagnostics)
-  if not opts.options.show_related or not opts.options.show_related.enabled then
+  if not opts.options.show_related.enabled then
     return diagnostics
   end
 
   local result = {}
-  local max_count = opts.options.show_related.max_count or 3
+  local max_count = opts.options.show_related.max_count
 
   for _, diag in ipairs(diagnostics) do
     table.insert(result, diag)

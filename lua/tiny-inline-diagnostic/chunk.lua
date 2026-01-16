@@ -70,13 +70,7 @@ function M.get_header_from_chunk(
   vim.list_extend(virt_texts, { { icon, diag_hi } })
 
   local cursor_line = vim.api.nvim_win_get_cursor(0)[1] - 1
-  local add_messages_opts = type(opts.options.add_messages) == "table" and opts.options.add_messages
-    or {
-      messages = opts.options.add_messages,
-      display_count = false,
-      use_max_severity = false,
-      show_multiple_glyphs = true,
-    }
+  local add_messages_opts = opts.options.add_messages
 
   local add_messages = add_messages_opts.messages
   local display_count = add_messages_opts.display_count
@@ -130,13 +124,7 @@ function M.add_severity_icons(virt_texts, opts, severities, diag_hi)
     return
   end
 
-  local add_messages_opts = type(opts.options.add_messages) == "table" and opts.options.add_messages
-    or {
-      messages = opts.options.add_messages,
-      display_count = false,
-      use_max_severity = false,
-      show_multiple_glyphs = true,
-    }
+  local add_messages_opts = opts.options.add_messages
 
   local show_multiple_glyphs = add_messages_opts.show_multiple_glyphs
   local use_max_severity = add_messages_opts.use_max_severity
@@ -393,22 +381,18 @@ function M.get_chunks(opts, diags_on_line, diag_index, diag_line, cursor_line, b
   local diag = diags_on_line[diag_index]
 
   local show_source = false
-  if type(opts.options.show_source) == "table" then
-    if opts.options.show_source.enabled then
-      if opts.options.show_source.if_many then
-        local sources = {}
-        for _, d in ipairs(diags_on_line) do
-          if d.source then
-            sources[d.source] = true
-          end
+  if opts.options.show_source.enabled then
+    if opts.options.show_source.if_many then
+      local sources = {}
+      for _, d in ipairs(diags_on_line) do
+        if d.source then
+          sources[d.source] = true
         end
-        show_source = vim.tbl_count(sources) > 1
-      else
-        show_source = true
       end
+      show_source = vim.tbl_count(sources) > 1
+    else
+      show_source = true
     end
-  elseif opts.options.show_source then
-    show_source = true
   end
 
   local diag_message = diag.message
@@ -437,9 +421,7 @@ function M.get_chunks(opts, diags_on_line, diag_index, diag_line, cursor_line, b
 
   local other_extmarks_offset = extmarks.handle_other_extmarks(buf, diag_line, line_length)
 
-  local multilines_enabled = type(opts.options.multilines) == "table"
-      and opts.options.multilines.enabled
-    or opts.options.multilines
+  local multilines_enabled = opts.options.multilines.enabled
 
   if
     (opts.options.overflow.mode ~= "none" and not multilines_enabled) or cursor_line == diag_line
