@@ -110,18 +110,40 @@ local function normalize_config(config)
   if type(config.options.multilines) == "boolean" then
     config.options.multilines = vim.tbl_deep_extend("force", default_config.options.multilines, {
       enabled = config.options.multilines,
-      always_show = default_config.options.multilines.always_show,
     })
+  elseif type(config.options.multilines) == "table" then
+    config.options.multilines =
+      vim.tbl_deep_extend("force", default_config.options.multilines, config.options.multilines)
   end
 
   if type(config.options.add_messages) == "boolean" then
     config.options.add_messages =
       vim.tbl_deep_extend("force", default_config.options.add_messages, {
         messages = config.options.add_messages,
-        display_count = default_config.options.add_messages.display_count,
-        use_max_severity = default_config.options.add_messages.use_max_severity,
-        show_multiple_glyphs = default_config.options.add_messages.show_multiple_glyphs,
       })
+  elseif type(config.options.add_messages) == "table" then
+    config.options.add_messages =
+      vim.tbl_deep_extend("force", default_config.options.add_messages, config.options.add_messages)
+  end
+
+  if type(config.options.show_source) == "boolean" then
+    config.options.show_source =
+      vim.tbl_deep_extend("force", default_config.options.show_source, {
+        enabled = config.options.show_source,
+      })
+  elseif type(config.options.show_source) == "table" then
+    config.options.show_source =
+      vim.tbl_deep_extend("force", default_config.options.show_source, config.options.show_source)
+  end
+
+  if type(config.options.show_related) == "boolean" then
+    config.options.show_related =
+      vim.tbl_deep_extend("force", default_config.options.show_related, {
+        enabled = config.options.show_related,
+      })
+  elseif type(config.options.show_related) == "table" then
+    config.options.show_related =
+      vim.tbl_deep_extend("force", default_config.options.show_related, config.options.show_related)
   end
 
   return config
@@ -145,6 +167,11 @@ function M.setup(opts)
   -- This gets around a bug where having 2 windows with the same buffer on startup causes mirroring
   if config.options.experimental.use_window_local_extmarks then
     extmarks.update_namespace_window()
+  end
+
+  if config.options.override_open_float then
+    local override = require("tiny-inline-diagnostic.override")
+    vim.diagnostic.open_float = override.open_float
   end
 end
 
