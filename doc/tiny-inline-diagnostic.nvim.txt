@@ -1,4 +1,4 @@
-*tiny-inline-diagnostic.nvim.txt*For Neovim >= 0.10.0Last change: 2026 January 07
+*tiny-inline-diagnostic.nvim.txt*For Neovim >= 0.10.0Last change: 2026 January 17
 
 ==============================================================================
 Table of Contents              *tiny-inline-diagnostic.nvim-table-of-contents*
@@ -186,7 +186,7 @@ CONFIGURATION*tiny-inline-diagnostic.nvim-tiny-inline-diagnostic.nvim-configurat
                 enabled = false,           -- Enable showing source names
                 if_many = false,           -- Only show source if multiple sources exist for the same diagnostic
             },
-
+    
             -- Display the diagnostic code of diagnostics (e.g., "F401", "no-dupe-args")
             show_code = true,
     
