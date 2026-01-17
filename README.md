@@ -161,6 +161,9 @@ require("tiny-inline-diagnostic").setup({
             if_many = false,           -- Only show source if multiple sources exist for the same diagnostic
         },
 
+        -- Display the diagnostic code of diagnostics (e.g., "F401", "no-dupe-args")
+        show_code = true,
+
         -- Use icons from vim.diagnostic.config instead of preset icons
         use_icons_from_diagnostic = false,
 

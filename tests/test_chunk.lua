@@ -288,6 +288,7 @@ T["get_chunks"]["returns chunk info for diagnostic"] = function()
         softwrap = 10,
         break_line = { enabled = false },
         show_source = { enabled = false },
+        show_code = false,
       },
     })
     local diags = {
@@ -312,6 +313,7 @@ T["get_chunks"]["includes source when show_source is enabled"] = function()
         softwrap = 10,
         break_line = { enabled = false },
         show_source = { enabled = true },
+        show_code = false,
       },
     })
     local diags = {
@@ -326,6 +328,35 @@ T["get_chunks"]["includes source when show_source is enabled"] = function()
     local result = chunk.get_chunks(opts, diags, 1, 0, 0, buf)
     local full_message = table.concat(result.chunks, "")
     MiniTest.expect.equality(full_message:find("test_lsp") ~= nil, true)
+    MiniTest.expect.equality(full_message:find("E308") ~= nil, false)
+  end)
+end
+
+T["get_chunks"]["includes code when show_code is enabled"] = function()
+  H.with_buf({ "test line" }, function(buf)
+    local opts = H.make_opts({
+      options = {
+        overflow = { mode = "none" },
+        multilines = { enabled = false },
+        softwrap = 10,
+        break_line = { enabled = false },
+        show_source = { enabled = true },
+        show_code = true,
+      },
+    })
+    local diags = {
+      {
+        message = "test error",
+        severity = vim.diagnostic.severity.ERROR,
+        lnum = 0,
+        source = "test_lsp",
+        code = "E308",
+      },
+    }
+
+    local result = chunk.get_chunks(opts, diags, 1, 0, 0, buf)
+    local full_message = table.concat(result.chunks, "")
+    MiniTest.expect.equality(full_message:find("%[E308%] %(test_lsp%)") ~= nil, true)
   end)
 end
 
@@ -339,6 +370,7 @@ T["get_chunks"]["sets need_to_be_under for long lines"] = function()
         softwrap = 10,
         break_line = { enabled = false },
         show_source = { enabled = false },
+        show_code = false,
       },
     })
     local diags = {
@@ -360,6 +392,7 @@ T["get_chunks"]["does not set need_to_be_under for short lines"] = function()
         softwrap = 10,
         break_line = { enabled = false },
         show_source = { enabled = false },
+        show_code = false,
       },
     })
     local diags = {
@@ -381,6 +414,7 @@ T["get_chunks"]["uses display width not byte length"] = function()
         softwrap = 5,
         break_line = { enabled = false },
         show_source = { enabled = false },
+        show_code = false,
       },
     })
     local diags = {
@@ -402,6 +436,7 @@ T["get_chunks"]["uses virtcol when cursor on diagnostic line"] = function()
         softwrap = 10,
         break_line = { enabled = false },
         show_source = { enabled = false },
+        show_code = false,
       },
     })
     local diags = {
@@ -423,6 +458,7 @@ T["get_chunks"]["accounts for window width in wrapping decision"] = function()
         softwrap = 10,
         break_line = { enabled = false },
         show_source = { enabled = false },
+        show_code = false,
       },
     })
     local diags = {
@@ -444,6 +480,7 @@ T["get_chunks"]["wraps when line exceeds window width minus softwrap"] = functio
         softwrap = 5,
         break_line = { enabled = false },
         show_source = { enabled = false },
+        show_code = false,
       },
     })
     local diags = {
