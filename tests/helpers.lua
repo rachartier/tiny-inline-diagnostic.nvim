@@ -88,6 +88,11 @@ function H.make_opts(overrides)
         enabled = false,
         if_many = false,
       },
+      show_code = true,
+      show_related = {
+        enabled = true,
+        max_count = 3,
+      },
       add_messages = {
         messages = true,
         display_count = false,
@@ -103,8 +108,10 @@ function H.make_opts(overrides)
         always_show = false,
         trim_whitespaces = false,
         tabstop = 4,
+        severity = nil,
       },
       show_all_diags_on_cursorline = false,
+      show_diags_only_under_cursor = false,
       enable_on_insert = false,
       enable_on_select = false,
       format = nil,
@@ -127,12 +134,34 @@ function H.make_opts(overrides)
       override_open_float = false,
       overwrite_events = nil,
       multiple_diag_under_cursor = false,
+      experimental = {
+        use_window_local_extmarks = false,
+      },
     },
     disabled_ft = {},
   }
+
+  local defaults = vim.deepcopy(base.options)
+
   if overrides then
     base = vim.tbl_deep_extend("force", base, overrides)
   end
+
+  local function normalize_option(value, default_value, boolean_key)
+    if type(value) == "boolean" then
+      return vim.tbl_deep_extend("force", default_value, { [boolean_key] = value })
+    elseif type(value) == "table" then
+      return vim.tbl_deep_extend("force", default_value, value)
+    else
+      return vim.deepcopy(default_value)
+    end
+  end
+
+  base.options.multilines = normalize_option(base.options.multilines, defaults.multilines, "enabled")
+  base.options.add_messages = normalize_option(base.options.add_messages, defaults.add_messages, "messages")
+  base.options.show_source = normalize_option(base.options.show_source, defaults.show_source, "enabled")
+  base.options.show_related = normalize_option(base.options.show_related, defaults.show_related, "enabled")
+
   return base
 end
 

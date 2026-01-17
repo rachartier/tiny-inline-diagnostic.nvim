@@ -93,6 +93,21 @@ local function setup_colorscheme_handler(config)
   })
 end
 
+---Normalize a single option field that can be boolean or table
+---@param value any User-provided value
+---@param default_value table Default table value
+---@param boolean_key string Key to set when value is boolean (e.g., "enabled" or "messages")
+---@return table Normalized table value
+local function normalize_option(value, default_value, boolean_key)
+  if type(value) == "boolean" then
+    return vim.tbl_deep_extend("force", default_value, { [boolean_key] = value })
+  elseif type(value) == "table" then
+    return vim.tbl_deep_extend("force", default_value, value)
+  else
+    return vim.deepcopy(default_value)
+  end
+end
+
 ---Normalize configuration values
 local function normalize_config(config)
   if config.options.overflow and config.options.overflow.mode then
@@ -107,44 +122,29 @@ local function normalize_config(config)
     config = vim.tbl_deep_extend("force", config, preset)
   end
 
-  if type(config.options.multilines) == "boolean" then
-    config.options.multilines = vim.tbl_deep_extend("force", default_config.options.multilines, {
-      enabled = config.options.multilines,
-    })
-  elseif type(config.options.multilines) == "table" then
-    config.options.multilines =
-      vim.tbl_deep_extend("force", default_config.options.multilines, config.options.multilines)
-  end
+  config.options.multilines = normalize_option(
+    config.options.multilines,
+    default_config.options.multilines,
+    "enabled"
+  )
 
-  if type(config.options.add_messages) == "boolean" then
-    config.options.add_messages =
-      vim.tbl_deep_extend("force", default_config.options.add_messages, {
-        messages = config.options.add_messages,
-      })
-  elseif type(config.options.add_messages) == "table" then
-    config.options.add_messages =
-      vim.tbl_deep_extend("force", default_config.options.add_messages, config.options.add_messages)
-  end
+  config.options.add_messages = normalize_option(
+    config.options.add_messages,
+    default_config.options.add_messages,
+    "messages"
+  )
 
-  if type(config.options.show_source) == "boolean" then
-    config.options.show_source =
-      vim.tbl_deep_extend("force", default_config.options.show_source, {
-        enabled = config.options.show_source,
-      })
-  elseif type(config.options.show_source) == "table" then
-    config.options.show_source =
-      vim.tbl_deep_extend("force", default_config.options.show_source, config.options.show_source)
-  end
+  config.options.show_source = normalize_option(
+    config.options.show_source,
+    default_config.options.show_source,
+    "enabled"
+  )
 
-  if type(config.options.show_related) == "boolean" then
-    config.options.show_related =
-      vim.tbl_deep_extend("force", default_config.options.show_related, {
-        enabled = config.options.show_related,
-      })
-  elseif type(config.options.show_related) == "table" then
-    config.options.show_related =
-      vim.tbl_deep_extend("force", default_config.options.show_related, config.options.show_related)
-  end
+  config.options.show_related = normalize_option(
+    config.options.show_related,
+    default_config.options.show_related,
+    "enabled"
+  )
 
   return config
 end

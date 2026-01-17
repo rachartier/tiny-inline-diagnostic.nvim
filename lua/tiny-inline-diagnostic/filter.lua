@@ -90,7 +90,7 @@ end
 ---@param diagnostics table
 ---@return table
 local function add_related_diagnostics(opts, diagnostics)
-  if not opts.options.show_related.enabled then
+  if not opts.options.show_related or not opts.options.show_related.enabled then
     return diagnostics
   end
 

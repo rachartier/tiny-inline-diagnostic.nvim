@@ -121,7 +121,12 @@ end
 function M.get_diagnostic_under_cursor()
   local buf = vim.api.nvim_get_current_buf()
   local diagnostics = vim.diagnostic.get(buf)
-  return M.filter_diags_under_cursor({ options = {} }, buf, diagnostics)
+  local minimal_opts = {
+    options = {
+      show_related = { enabled = true, max_count = 3 },
+    },
+  }
+  return M.filter_diags_under_cursor(minimal_opts, buf, diagnostics)
 end
 
 return M
