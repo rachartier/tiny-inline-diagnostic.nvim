@@ -64,12 +64,17 @@ end
 ---@return string
 local function get_mixing_color(color)
   if color == "None" then
-    return vim.g.background == "light" and "#ffffff" or "#000000"
+    return vim.o.background == "light" and "#ffffff" or "#000000"
   end
   if color:sub(1, 1) == "#" then
     return color
   end
-  return get_highlight(color).bg
+
+  local resolved = get_highlight(color).bg
+  if resolved == "None" then
+    return vim.o.background == "light" and "#ffffff" or "#000000"
+  end
+  return resolved
 end
 
 ---Check if the cursorline is visible
