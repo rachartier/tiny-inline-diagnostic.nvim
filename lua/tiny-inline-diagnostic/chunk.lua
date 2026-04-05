@@ -415,7 +415,7 @@ function M.get_chunks(opts, diags_on_line, diag_index, diag_line, cursor_line, b
     end
     diag_message = diag_message .. location_info
   else
-    if show_code and diag.code then
+    if show_code and diag.code and diag.code ~= vim.NIL then
       diag_message = diag_message .. " [" .. diag.code .. "]"
     end
     if show_source and diag.source then
