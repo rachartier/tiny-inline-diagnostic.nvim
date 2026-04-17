@@ -6,6 +6,8 @@ local AUGROUP_NAME = "TinyInlineDiagnosticAutocmds"
 
 local attached_buffers = {}
 local last_cursor_positions = {}
+---@type number|nil
+local augroup_id = nil
 
 ---@param bufnr number
 ---@return boolean
@@ -21,6 +23,9 @@ function M.detach(bufnr, cleanup_callback)
   attached_buffers[bufnr] = nil
   last_cursor_positions[bufnr] = nil
   cache.clear(bufnr)
+  if augroup_id and vim.api.nvim_buf_is_valid(bufnr) then
+    pcall(vim.api.nvim_clear_autocmds, { group = augroup_id, buffer = bufnr })
+  end
   if cleanup_callback then
     cleanup_callback(bufnr)
   end
@@ -146,14 +151,22 @@ function M.setup_buffer_autocmds(
       M.detach(event.buf)
     end,
   })
+end
 
+---@param autocmd_ns number
+---@param opts table
+---@param direct_apply function
+---@param on_window_change function
+function M.setup_global_autocmds(autocmd_ns, opts, direct_apply, on_window_change)
   vim.api.nvim_create_autocmd({ "VimResized", "WinResized" }, {
     group = autocmd_ns,
     callback = function()
-      if vim.api.nvim_buf_is_valid(bufnr) then
-        direct_apply(bufnr)
-      else
-        M.detach(bufnr)
+      for bufnr, _ in pairs(attached_buffers) do
+        if vim.api.nvim_buf_is_valid(bufnr) then
+          direct_apply(bufnr)
+        else
+          M.detach(bufnr)
+        end
       end
     end,
     desc = "Update diagnostics on window resize",
@@ -170,7 +183,11 @@ end
 
 ---@return number
 function M.create_augroup()
-  return vim.api.nvim_create_augroup(AUGROUP_NAME, { clear = true })
+  local id = vim.api.nvim_create_augroup(AUGROUP_NAME, { clear = true })
+  augroup_id = id
+  attached_buffers = {}
+  last_cursor_positions = {}
+  return id
 end
 
 return M

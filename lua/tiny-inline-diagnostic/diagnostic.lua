@@ -29,6 +29,13 @@ function M.set_diagnostic_autocmds(opts)
   state.init(opts)
 
   local events = handlers.compute_events(opts)
+  local global_direct_renderer = handlers.build_direct_renderer(opts, renderer)
+  autocmds.setup_global_autocmds(
+    autocmd_ns,
+    opts,
+    global_direct_renderer,
+    extmarks.update_namespace_window
+  )
 
   vim.api.nvim_create_autocmd(events, {
     group = autocmd_ns,
