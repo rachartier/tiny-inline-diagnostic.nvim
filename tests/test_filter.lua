@@ -86,6 +86,38 @@ T["at_position"]["matches whole line when diagnostic has no column info under de
   MiniTest.expect.equality(result[1].lnum, 5)
 end
 
+T["at_position"]["default mode keeps line fallback when mixed whole-line and column-specific diagnostics"] = function()
+  local diagnostics = {
+    H.make_diagnostic({ lnum = 5, col = 0, end_col = 0 }),
+    H.make_diagnostic({ lnum = 5, col = 10, end_col = 20 }),
+  }
+
+  local result = filter.at_position({ options = {} }, diagnostics, 5, 5)
+  MiniTest.expect.equality(#result, 2)
+end
+
+T["at_position"]["default mode returns only column-specific diagnostic when cursor is on it"] = function()
+  local diagnostics = {
+    H.make_diagnostic({ lnum = 5, col = 0, end_col = 0 }),
+    H.make_diagnostic({ lnum = 5, col = 10, end_col = 20 }),
+  }
+
+  local result = filter.at_position({ options = {} }, diagnostics, 5, 15)
+  MiniTest.expect.equality(#result, 1)
+  MiniTest.expect.equality(result[1].col, 10)
+end
+
+T["at_position"]["show_diags_only_under_cursor merges whole-line and under-cursor diagnostics"] = function()
+  local diagnostics = {
+    H.make_diagnostic({ lnum = 5, col = 0, end_col = 0 }),
+    H.make_diagnostic({ lnum = 5, col = 10, end_col = 20 }),
+  }
+
+  local result =
+    filter.at_position({ options = { show_diags_only_under_cursor = true } }, diagnostics, 5, 15)
+  MiniTest.expect.equality(#result, 2)
+end
+
 T["under_cursor"] = MiniTest.new_set()
 
 T["under_cursor"]["returns empty for invalid buffer"] = function()

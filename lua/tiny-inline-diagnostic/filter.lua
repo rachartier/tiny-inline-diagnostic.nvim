@@ -34,17 +34,21 @@ function M.at_position(opts, diagnostics, line, col)
   end
 
   local current_pos_diags = vim.tbl_filter(function(diag)
-    if diag.lnum ~= line then
-      return false
-    end
-    if diag.col == 0 and diag.end_col == 0 then
-      return true
-    end
-    return col >= diag.col and col <= diag.end_col
+    return diag.lnum == line and col >= diag.col and col <= diag.end_col
   end, diagnostics)
 
   if opts.options.show_diags_only_under_cursor then
-    return current_pos_diags
+    local seen = {}
+    for _, d in ipairs(current_pos_diags) do
+      seen[d] = true
+    end
+    local result = vim.list_extend({}, current_pos_diags)
+    for _, d in ipairs(diags_on_line) do
+      if not seen[d] and d.col == 0 and d.end_col == 0 then
+        result[#result + 1] = d
+      end
+    end
+    return result
   else
     return #current_pos_diags > 0 and current_pos_diags or diags_on_line
   end
