@@ -66,6 +66,26 @@ T["at_position"]["returns empty when show_diags_only_under_cursor enabled and cu
   MiniTest.expect.equality(#result, 0)
 end
 
+T["at_position"]["matches whole line when diagnostic has no column info and show_diags_only_under_cursor enabled"] = function()
+  local diagnostics = {
+    H.make_diagnostic({ lnum = 5, col = 0, end_col = 0 }),
+  }
+
+  local result = filter.at_position({ options = { show_diags_only_under_cursor = true } }, diagnostics, 5, 12)
+  MiniTest.expect.equality(#result, 1)
+  MiniTest.expect.equality(result[1].lnum, 5)
+end
+
+T["at_position"]["matches whole line when diagnostic has no column info under default options"] = function()
+  local diagnostics = {
+    H.make_diagnostic({ lnum = 5, col = 0, end_col = 0 }),
+  }
+
+  local result = filter.at_position({ options = {} }, diagnostics, 5, 12)
+  MiniTest.expect.equality(#result, 1)
+  MiniTest.expect.equality(result[1].lnum, 5)
+end
+
 T["under_cursor"] = MiniTest.new_set()
 
 T["under_cursor"]["returns empty for invalid buffer"] = function()
