@@ -118,6 +118,18 @@ T["at_position"]["show_diags_only_under_cursor merges whole-line and under-curso
   MiniTest.expect.equality(#result, 2)
 end
 
+T["at_position"]["zero-width diagnostic matches cursor at col and col-1"] = function()
+  local diagnostics = {
+    H.make_diagnostic({ lnum = 5, col = 33, end_col = 33 }),
+  }
+  local opts = { options = { show_diags_only_under_cursor = true } }
+
+  MiniTest.expect.equality(#filter.at_position(opts, diagnostics, 5, 32), 1)
+  MiniTest.expect.equality(#filter.at_position(opts, diagnostics, 5, 33), 1)
+  MiniTest.expect.equality(#filter.at_position(opts, diagnostics, 5, 31), 0)
+  MiniTest.expect.equality(#filter.at_position(opts, diagnostics, 5, 34), 0)
+end
+
 T["under_cursor"] = MiniTest.new_set()
 
 T["under_cursor"]["returns empty for invalid buffer"] = function()
