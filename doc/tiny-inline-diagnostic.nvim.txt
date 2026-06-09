@@ -1,5 +1,5 @@
 *tiny-inline-diagnostic.nvim.txt*
-                              For Neovim >= 0.10.0    Last change: 2026 May 29
+                             For Neovim >= 0.10.0    Last change: 2026 June 09
 
 ==============================================================================
 Table of Contents              *tiny-inline-diagnostic.nvim-table-of-contents*
@@ -105,6 +105,29 @@ Configuration ~
         },
     })
 <
+
+
+SEVERITY-DEPENDENT DISPLAY ~
+
+Always show errors on every line; show warnings, info and hints only on the
+cursor line.
+
+Configuration ~
+
+>lua
+    require("tiny-inline-diagnostic").setup({
+        options = {
+            multilines = {
+                enabled = true,
+                always_show = true,
+                severity = { vim.diagnostic.severity.ERROR },
+            },
+        },
+    })
+<
+
+Severities listed in `multilines.severity` stay visible on all lines; all other
+severities only appear on the cursor line.
 
 
 OVERFLOW HANDLING (BY DEFAULT) ~
@@ -222,7 +245,10 @@ CONFIGURATION*tiny-inline-diagnostic.nvim-tiny-inline-diagnostic.nvim-configurat
                 always_show = false,       -- Always show messages on all lines of multiline diagnostics
                 trim_whitespaces = false,  -- Remove leading/trailing whitespace from each line
                 tabstop = 4,               -- Number of spaces per tab when expanding tabs
-                severity = nil,            -- Filter multiline diagnostics by severity (e.g., { vim.diagnostic.severity.ERROR })
+                -- Restrict which severities are shown on non-cursor lines
+                -- With always_show = true: listed severities stay visible on every line,
+                -- all other severities only appear on the cursor line
+                severity = nil,            -- e.g. { vim.diagnostic.severity.ERROR }
               },
     
             -- Show all diagnostics on the current cursor line, not just those under the cursor
