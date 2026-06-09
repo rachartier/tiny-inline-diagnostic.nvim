@@ -80,6 +80,29 @@ require("tiny-inline-diagnostic").setup({
 
 </details>
 
+### Severity-dependent Display
+
+Always show errors on every line; show warnings, info and hints only on the cursor line.
+
+<details>
+<summary>Configuration</summary>
+
+```lua
+require("tiny-inline-diagnostic").setup({
+    options = {
+        multilines = {
+            enabled = true,
+            always_show = true,
+            severity = { vim.diagnostic.severity.ERROR },
+        },
+    },
+})
+```
+
+Severities listed in `multilines.severity` stay visible on all lines; all other severities only appear on the cursor line.
+
+</details>
+
 ### Overflow Handling (by default)
 ![tiny_inline_2-ezgif com-speed](https://github.com/user-attachments/assets/19da9737-7335-4a53-b364-ac5c12c663b2)
 
@@ -195,7 +218,10 @@ require("tiny-inline-diagnostic").setup({
             always_show = false,       -- Always show messages on all lines of multiline diagnostics
             trim_whitespaces = false,  -- Remove leading/trailing whitespace from each line
             tabstop = 4,               -- Number of spaces per tab when expanding tabs
-            severity = nil,            -- Filter multiline diagnostics by severity (e.g., { vim.diagnostic.severity.ERROR })
+            -- Restrict which severities are shown on non-cursor lines
+            -- With always_show = true: listed severities stay visible on every line,
+            -- all other severities only appear on the cursor line
+            severity = nil,            -- e.g. { vim.diagnostic.severity.ERROR }
           },
 
         -- Show all diagnostics on the current cursor line, not just those under the cursor
