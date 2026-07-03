@@ -106,6 +106,64 @@ function M.create_overflow_extmarks(buf, namespace, params, uid_fn)
   end
 end
 
+---Render continuation chunks as real virt_lines so soft-wrapped buffer text
+---cannot bleed through overlay extmarks when the window has 'wrap' enabled.
+---@param buf number
+---@param namespace number
+---@param curline number
+---@param virt_lines table
+---@param win_col number
+---@param offset number
+---@param signs_offset number
+---@param need_to_be_under boolean
+---@param priority number
+---@param uid_fn function
+function M.create_wrapped_extmarks(
+  buf,
+  namespace,
+  curline,
+  virt_lines,
+  win_col,
+  offset,
+  signs_offset,
+  need_to_be_under,
+  priority,
+  uid_fn
+)
+  if not buf or not vim.api.nvim_buf_is_valid(buf) then
+    return
+  end
+
+  local start_index = need_to_be_under and 3 or 1
+  if need_to_be_under then
+    signs_offset = signs_offset == 0 and 0 or 1
+  end
+
+  local below_lines = {}
+  for i = 2, #virt_lines do
+    local line = vim.deepcopy(virt_lines[i])
+    local pad
+    if need_to_be_under and i == 2 then
+      pad = win_col
+    else
+      pad = win_col + offset + (i > start_index and signs_offset or 0)
+    end
+    if pad > 0 then
+      table.insert(line, 1, { string.rep(" ", pad), "None" })
+    end
+    table.insert(below_lines, line)
+  end
+
+  vim.api.nvim_buf_set_extmark(buf, namespace, curline, 0, {
+    id = uid_fn(),
+    virt_text = virt_lines[1],
+    virt_text_pos = "eol",
+    virt_lines = below_lines,
+    priority = priority,
+    strict = false,
+  })
+end
+
 ---@param buf number
 ---@param namespace number
 ---@param curline number

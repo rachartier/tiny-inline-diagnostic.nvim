@@ -191,6 +191,22 @@ function M.create_extmarks(
     return
   end
 
+  if vim.wo.wrap and #virt_lines > 1 then
+    extmark_writer.create_wrapped_extmarks(
+      bufnr,
+      DIAGNOSTIC_NAMESPACE,
+      diag_line,
+      virt_lines,
+      win_col,
+      offset,
+      signs_offset,
+      need_to_be_under,
+      virt_priority,
+      generate_uid
+    )
+    return
+  end
+
   if need_to_be_under or diag_line - 1 + #virt_lines > buf_lines_count - 1 then
     extmark_writer.create_overflow_extmarks(bufnr, DIAGNOSTIC_NAMESPACE, {
       curline = diag_line,

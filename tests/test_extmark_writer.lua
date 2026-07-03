@@ -151,6 +151,55 @@ T["create_overflow_extmarks"]["creates virt_lines for lines beyond buffer"] = fu
   end)
 end
 
+T["create_wrapped_extmarks"] = MiniTest.new_set()
+
+T["create_wrapped_extmarks"]["uses virt_lines instead of overlays on following lines"] = function()
+  H.with_buf({ "line 1", "line 2", "line 3" }, function(buf)
+    local ns = vim.api.nvim_create_namespace("test_wrapped")
+    local uid_fn = H.uid_gen()
+    local virt_lines = {
+      { { "first", "Comment" } },
+      { { "second", "Comment" } },
+      { { "third", "Comment" } },
+    }
+
+    extmark_writer.create_wrapped_extmarks(buf, ns, 0, virt_lines, 5, 10, 2, false, 100, uid_fn)
+
+    local marks = vim.api.nvim_buf_get_extmarks(buf, ns, 0, -1, { details = true })
+    MiniTest.expect.equality(#marks, 1)
+
+    local details = marks[1][4]
+    MiniTest.expect.equality(marks[1][2], 0)
+    MiniTest.expect.equality(details.virt_text_pos, "eol")
+    MiniTest.expect.equality(details.virt_text[1][1], "first")
+    MiniTest.expect.equality(#details.virt_lines, 2)
+    -- padding = win_col + offset + signs_offset = 17
+    MiniTest.expect.equality(details.virt_lines[1][1][1], string.rep(" ", 17))
+    MiniTest.expect.equality(details.virt_lines[1][2][1], "second")
+  end)
+end
+
+T["create_wrapped_extmarks"]["handles need_to_be_under"] = function()
+  H.with_buf({ "line 1", "line 2" }, function(buf)
+    local ns = vim.api.nvim_create_namespace("test_wrapped2")
+    local uid_fn = H.uid_gen()
+    local virt_lines = {
+      { { " ", "None" } },
+      { { "arrow", "Comment" } },
+      { { "msg", "Comment" } },
+    }
+
+    extmark_writer.create_wrapped_extmarks(buf, ns, 0, virt_lines, 0, 0, 2, true, 100, uid_fn)
+
+    local marks = vim.api.nvim_buf_get_extmarks(buf, ns, 0, -1, { details = true })
+    MiniTest.expect.equality(#marks, 1)
+
+    local details = marks[1][4]
+    MiniTest.expect.equality(#details.virt_lines, 2)
+    MiniTest.expect.equality(details.virt_lines[1][1][1], "arrow")
+  end)
+end
+
 T["create_simple_extmarks"] = MiniTest.new_set()
 
 T["create_simple_extmarks"]["creates extmarks for each virt_line"] = function()
