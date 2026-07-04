@@ -127,6 +127,84 @@ T["create_extmarks"]["handles need_to_be_under flag"] = function()
   end)
 end
 
+local function get_diag_extmarks(buf)
+  local ns = vim.api.nvim_get_namespaces()["TinyInlineDiagnostic"]
+  return vim.api.nvim_buf_get_extmarks(buf, ns, 0, -1, { details = true })
+end
+
+T["create_extmarks"]["keeps overlay mode when wrap is on but no line soft-wraps"] = function()
+  H.with_win_buf({ "short", "line 2", "line 3" }, { 1, 0 }, nil, function(buf)
+    vim.wo.wrap = true
+    local opts = {
+      options = { multilines = false },
+    }
+    local virt_lines = {
+      { { "diag", "DiagnosticError" } },
+      { { "more", "DiagnosticError" } },
+    }
+
+    extmarks.create_extmarks(opts, buf, 0, {}, virt_lines, 0, 2, false, 100)
+
+    local marks = get_diag_extmarks(buf)
+    MiniTest.expect.equality(#marks, 2)
+    for _, mark in ipairs(marks) do
+      MiniTest.expect.equality(mark[4].virt_lines, nil)
+    end
+  end)
+end
+
+T["create_extmarks"]["splits at the first soft-wrapped line below the diagnostic"] = function()
+  H.with_win_buf({ "short", "second", string.rep("x", 400), "line 4" }, { 1, 0 }, nil, function(buf)
+    vim.wo.wrap = true
+    local opts = {
+      options = { multilines = false },
+    }
+    local virt_lines = {
+      { { "diag", "DiagnosticError" } },
+      { { "more", "DiagnosticError" } },
+      { { "rest", "DiagnosticError" } },
+    }
+
+    extmarks.create_extmarks(opts, buf, 0, {}, virt_lines, 0, 2, false, 100)
+
+    -- chunks 1-2 overlay lines 0-1, chunk 3 becomes virt_lines above the wrapped line 2
+    local marks = get_diag_extmarks(buf)
+    MiniTest.expect.equality(#marks, 3)
+
+    local pushed = {}
+    for _, mark in ipairs(marks) do
+      if mark[4].virt_lines then
+        table.insert(pushed, mark)
+      else
+        MiniTest.expect.equality(mark[2] <= 1, true)
+      end
+    end
+    MiniTest.expect.equality(#pushed, 1)
+    MiniTest.expect.equality(pushed[1][2], 1)
+    MiniTest.expect.equality(#pushed[1][4].virt_lines, 1)
+  end)
+end
+
+T["create_extmarks"]["uses virt_lines when the diagnostic line soft-wraps"] = function()
+  local long_line = string.rep("x", 400)
+  H.with_win_buf({ long_line, "line 2", "line 3" }, { 1, 0 }, nil, function(buf)
+    vim.wo.wrap = true
+    local opts = {
+      options = { multilines = false },
+    }
+    local virt_lines = {
+      { { "diag", "DiagnosticError" } },
+      { { "more", "DiagnosticError" } },
+    }
+
+    extmarks.create_extmarks(opts, buf, 0, {}, virt_lines, 0, 2, false, 100)
+
+    local marks = get_diag_extmarks(buf)
+    MiniTest.expect.equality(#marks, 1)
+    MiniTest.expect.equality(#marks[1][4].virt_lines, 1)
+  end)
+end
+
 T["create_extmarks"]["handles buffer at end of file"] = function()
   H.with_win_buf({ "line 1" }, { 1, 0 }, nil, function(buf)
     local opts = {

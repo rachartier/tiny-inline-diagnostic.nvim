@@ -34,6 +34,20 @@ local function get_window_position()
   }
 end
 
+---Index of the first buffer line in [first, last] (0-indexed) that soft-wraps
+---in the current window, or nil if none does.
+local function first_softwrapped_line(bufnr, first, last)
+  local win = vim.api.nvim_get_current_win()
+  local text_width = vim.api.nvim_win_get_width(win) - vim.fn.getwininfo(win)[1].textoff
+  local lines = vim.api.nvim_buf_get_lines(bufnr, first, last + 1, false)
+  for i, line in ipairs(lines) do
+    if vim.fn.strdisplaywidth(line) > text_width then
+      return first + i - 1
+    end
+  end
+  return nil
+end
+
 local function should_skip_line(cursor_line, diag_line, diags_dims, virt_lines_count)
   for _, dims in ipairs(diags_dims) do
     if diag_line ~= dims[1] then
@@ -192,19 +206,37 @@ function M.create_extmarks(
   end
 
   if vim.wo.wrap and #virt_lines > 1 then
-    extmark_writer.create_wrapped_extmarks(
-      bufnr,
-      DIAGNOSTIC_NAMESPACE,
-      diag_line,
-      virt_lines,
-      win_col,
-      offset,
-      signs_offset,
-      need_to_be_under,
-      virt_priority,
-      generate_uid
-    )
-    return
+    local wrapped_line = first_softwrapped_line(bufnr, diag_line, diag_line + #virt_lines - 1)
+
+    if wrapped_line == diag_line or (wrapped_line and need_to_be_under) then
+      extmark_writer.create_wrapped_extmarks(
+        bufnr,
+        DIAGNOSTIC_NAMESPACE,
+        diag_line,
+        virt_lines,
+        win_col,
+        offset,
+        signs_offset,
+        need_to_be_under,
+        virt_priority,
+        generate_uid
+      )
+      return
+    elseif wrapped_line then
+      extmark_writer.create_split_extmarks(
+        bufnr,
+        DIAGNOSTIC_NAMESPACE,
+        diag_line,
+        virt_lines,
+        wrapped_line - diag_line,
+        win_col,
+        offset,
+        signs_offset,
+        virt_priority,
+        generate_uid
+      )
+      return
+    end
   end
 
   if need_to_be_under or diag_line - 1 + #virt_lines > buf_lines_count - 1 then

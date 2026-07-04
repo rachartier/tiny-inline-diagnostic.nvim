@@ -164,6 +164,61 @@ function M.create_wrapped_extmarks(
   })
 end
 
+---Render the first overlay_count chunks in classic overlay mode, then attach the
+---remaining chunks as virt_lines above the first soft-wrapped buffer line so the
+---diagnostic never overlaps wrapped text while only pushing lines below that point.
+---@param buf number
+---@param namespace number
+---@param curline number
+---@param virt_lines table
+---@param overlay_count number
+---@param win_col number
+---@param offset number
+---@param signs_offset number
+---@param priority number
+---@param uid_fn function
+function M.create_split_extmarks(
+  buf,
+  namespace,
+  curline,
+  virt_lines,
+  overlay_count,
+  win_col,
+  offset,
+  signs_offset,
+  priority,
+  uid_fn
+)
+  M.create_simple_extmarks(
+    buf,
+    namespace,
+    curline,
+    { unpack(virt_lines, 1, overlay_count) },
+    win_col,
+    offset,
+    signs_offset,
+    priority,
+    uid_fn
+  )
+
+  local below_lines = {}
+  for i = overlay_count + 1, #virt_lines do
+    local line = vim.deepcopy(virt_lines[i])
+    local pad = win_col + offset + signs_offset
+    if pad > 0 then
+      table.insert(line, 1, { string.rep(" ", pad), "None" })
+    end
+    table.insert(below_lines, line)
+  end
+
+  vim.api.nvim_buf_set_extmark(buf, namespace, curline + overlay_count - 1, 0, {
+    id = uid_fn(),
+    virt_lines = below_lines,
+    priority = priority,
+    strict = false,
+  })
+end
+
 ---@param buf number
 ---@param namespace number
 ---@param curline number
