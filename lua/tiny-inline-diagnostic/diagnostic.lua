@@ -10,14 +10,6 @@ local timers = require("tiny-inline-diagnostic.timer")
 local utils = require("tiny-inline-diagnostic.utils")
 
 ---@param opts table
----@param buf number
----@param diagnostics table
----@return table
-function M.filter_diags_under_cursor(opts, buf, diagnostics)
-  return filter.under_cursor(opts, buf, diagnostics)
-end
-
----@param opts table
 ---@return boolean
 function M.set_diagnostic_autocmds(opts)
   local autocmd_ns = autocmds.create_augroup()
@@ -132,7 +124,7 @@ function M.get_diagnostic_under_cursor()
       show_related = { enabled = true, max_count = 3 },
     },
   }
-  return M.filter_diags_under_cursor(minimal_opts, buf, diagnostics)
+  return filter.under_cursor(minimal_opts, buf, diagnostics)
 end
 
 return M

@@ -1,6 +1,7 @@
 local H = require("tests.helpers")
 local MiniTest = require("mini.test")
 local diagnostic = require("tiny-inline-diagnostic.diagnostic")
+local filter = require("tiny-inline-diagnostic.filter")
 local state = require("tiny-inline-diagnostic.state")
 
 local T = MiniTest.new_set()
@@ -25,9 +26,9 @@ local function create_test_opts()
   })
 end
 
-T["filter_diags_under_cursor"] = MiniTest.new_set()
+T["under_cursor"] = MiniTest.new_set()
 
-T["filter_diags_under_cursor"]["returns diagnostics under cursor"] = function()
+T["under_cursor"]["returns diagnostics under cursor"] = function()
   H.with_win_buf({ "test line" }, { 1, 0 }, nil, function(buf, win)
     local opts = create_test_opts()
     local diags = {
@@ -40,12 +41,12 @@ T["filter_diags_under_cursor"]["returns diagnostics under cursor"] = function()
       },
     }
 
-    local result = diagnostic.filter_diags_under_cursor(opts, buf, diags)
+    local result = filter.under_cursor(opts, buf, diags)
     MiniTest.expect.equality(type(result), "table")
   end)
 end
 
-T["filter_diags_under_cursor"]["filters out diagnostics not under cursor"] = function()
+T["under_cursor"]["filters out diagnostics not under cursor"] = function()
   H.with_win_buf({ "test line", "line 2" }, { 1, 0 }, nil, function(buf, win)
     local opts = create_test_opts()
     local diags = {
@@ -65,7 +66,7 @@ T["filter_diags_under_cursor"]["filters out diagnostics not under cursor"] = fun
       },
     }
 
-    local result = diagnostic.filter_diags_under_cursor(opts, buf, diags)
+    local result = filter.under_cursor(opts, buf, diags)
     MiniTest.expect.equality(type(result), "table")
   end)
 end
