@@ -20,14 +20,6 @@ local M = {}
 local highlighter_builder = require("tiny-inline-diagnostic.highlighter_builder")
 local utils = require("tiny-inline-diagnostic.utils")
 
--- Constants
-local DIAGNOSTIC_SEVERITIES = {
-  ERROR = 1,
-  WARN = 2,
-  INFO = 3,
-  HINT = 4,
-}
-
 local SEVERITY_NAMES = { "Error", "Warn", "Info", "Hint" }
 local HIGHLIGHT_PREFIX = "TinyInlineDiagnosticVirtualText"
 local INV_HIGHLIGHT_PREFIX = "TinyInlineInvDiagnosticVirtualText"
@@ -178,10 +170,7 @@ end
 ---@return string diag_inv_hi
 ---@return string body_hi
 function M.get_diagnostic_highlights_from_severity(severity)
-  local hi = SEVERITY_NAMES[severity]
-  if not hi then
-    hi = SEVERITY_NAMES[DIAGNOSTIC_SEVERITIES.ERROR]
-  end
+  local hi = SEVERITY_NAMES[severity] or "Error"
 
   return HIGHLIGHT_PREFIX .. hi, INV_HIGHLIGHT_PREFIX .. hi, INV_HIGHLIGHT_PREFIX .. hi .. "NoBg"
 end
@@ -192,8 +181,8 @@ end
 ---@return string diag_hi
 ---@return string diag_inv_hi
 function M.get_diagnostic_mixed_highlights_from_severity(severity_a, severity_b)
-  local hi_a = SEVERITY_NAMES[severity_a] or SEVERITY_NAMES[DIAGNOSTIC_SEVERITIES.ERROR]
-  local hi_b = SEVERITY_NAMES[severity_b] or SEVERITY_NAMES[DIAGNOSTIC_SEVERITIES.ERROR]
+  local hi_a = SEVERITY_NAMES[severity_a] or "Error"
+  local hi_b = SEVERITY_NAMES[severity_b] or "Error"
 
   return HIGHLIGHT_PREFIX .. hi_b .. "Mix" .. hi_a, INV_HIGHLIGHT_PREFIX .. hi_a .. "Mix" .. hi_b
 end
