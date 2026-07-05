@@ -12,6 +12,7 @@ function M.get_max_width_from_chunks(chunks)
 
   for _, chunk in ipairs(chunks) do
     if type(chunk) == "string" then
+      -- pcall: strdisplaywidth errors on NUL bytes, which LSP messages can contain
       local ok, line_length = pcall(vim.fn.strdisplaywidth, chunk)
       if ok and line_length > max_chunk_line_length then
         max_chunk_line_length = line_length
@@ -126,7 +127,7 @@ function M.add_severity_icons(virt_texts, opts, severities, diag_hi)
   local show_multiple_glyphs = add_messages_opts.show_multiple_glyphs
   local use_max_severity = add_messages_opts.use_max_severity
 
-  local sorted_severities = vim.deepcopy(severities)
+  local sorted_severities = { unpack(severities) }
   table.sort(sorted_severities)
 
   local main_severity = sorted_severities[1]
@@ -202,7 +203,7 @@ function M.get_diagnostic_icon(opts, severities, index_diag, total_chunks)
 
   if opts.options.use_icons_from_diagnostic then
     if total_chunks == 1 then
-      local sorted = vim.deepcopy(severities)
+      local sorted = { unpack(severities) }
       table.sort(sorted)
       icon = highlights.get_diagnostic_icon(sorted[1])
     else
