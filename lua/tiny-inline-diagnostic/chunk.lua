@@ -2,7 +2,7 @@ local M = {}
 
 local extmarks = require("tiny-inline-diagnostic.extmarks")
 local highlights = require("tiny-inline-diagnostic.highlights")
-local overflow_strategies = require("tiny-inline-diagnostic.overflow_strategies")
+local utils = require("tiny-inline-diagnostic.utils")
 
 --- Calculate the maximum width from a list of chunks.
 ---@param chunks table: A table representing the chunks of a diagnostic message.
@@ -465,6 +465,38 @@ function M.get_chunks(opts, diags_on_line, diag_index, diag_line, cursor_line, b
   }
 end
 
+---Wrap the message to the width remaining after the line content and signs
+---@param message string
+---@param need_to_be_under boolean
+---@param win_width number
+---@param opts table
+---@param is_related boolean
+---@return table
+local function apply_wrap(message, need_to_be_under, win_width, opts, is_related)
+  local offset = 0
+  if not need_to_be_under then
+    local ok, win_col = pcall(vim.fn.virtcol, "$")
+    offset = ok and win_col or 0
+  end
+  offset = (opts.options.overflow.padding or 0) + offset
+
+  local signs_total_text_len = #opts.signs.arrow
+    + #opts.signs.right
+    + #opts.signs.left
+    + #opts.signs.diag
+    + 4
+  if is_related then
+    signs_total_text_len = signs_total_text_len + 3
+  end
+
+  return utils.wrap_text(
+    message,
+    win_width - offset - signs_total_text_len,
+    opts.options.multilines.trim_whitespaces,
+    opts.options.multilines.tabstop
+  )
+end
+
 --- Handle different overflow modes for diagnostic messages.
 ---@param opts table: The options table.
 ---@param diag_message string: The diagnostic message.
@@ -476,14 +508,23 @@ function M.handle_overflow_modes(opts, diag_message, need_to_be_under, win_width
   local chunks = {}
 
   if opts.options.break_line.enabled then
-    chunks = overflow_strategies.apply_break_line(diag_message, opts)
+    chunks = utils.wrap_text(
+      diag_message,
+      opts.options.break_line.after,
+      opts.options.multilines.trim_whitespaces,
+      opts.options.multilines.tabstop
+    )
   elseif opts.options.overflow.mode == "wrap" then
-    chunks =
-      overflow_strategies.apply_wrap(diag_message, need_to_be_under, win_width, opts, is_related)
+    chunks = apply_wrap(diag_message, need_to_be_under, win_width, opts, is_related)
   elseif opts.options.overflow.mode == "none" then
-    chunks = overflow_strategies.apply_none(diag_message, opts)
+    chunks = utils.wrap_text(
+      diag_message,
+      0,
+      opts.options.multilines.trim_whitespaces,
+      opts.options.multilines.tabstop
+    )
   elseif opts.options.overflow.mode == "oneline" then
-    chunks = overflow_strategies.apply_oneline(diag_message)
+    chunks = utils.remove_newline(diag_message)
   end
 
   return chunks
