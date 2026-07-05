@@ -35,7 +35,15 @@ end
 ---@param total_chunks number
 ---@param is_related boolean
 ---@return table
-local function build_first_chunk(opts, chunk_info, message, hl, index_diag, total_chunks, is_related)
+local function build_first_chunk(
+  opts,
+  chunk_info,
+  message,
+  hl,
+  index_diag,
+  total_chunks,
+  is_related
+)
   local chunk_header = chunk_utils.get_header_from_chunk(
     message,
     index_diag,

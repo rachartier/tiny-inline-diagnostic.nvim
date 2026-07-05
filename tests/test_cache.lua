@@ -43,6 +43,28 @@ end
 
 T["update"] = MiniTest.new_set()
 
+T["update"]["orders equal severities by _extmark_id descending (#164)"] = function()
+  H.with_buf({ "test" }, function(buf)
+    local diags = {}
+    for i = 1, 5 do
+      diags[i] = {
+        lnum = 0,
+        col = 0,
+        message = "diag" .. i,
+        severity = vim.diagnostic.severity.WARN,
+        _extmark_id = i,
+      }
+    end
+
+    cache.update(buf, diags)
+    local cached = cache.get(buf)
+
+    for i = 1, 5 do
+      MiniTest.expect.equality(cached[i]._extmark_id, 6 - i)
+    end
+  end)
+end
+
 T["update"]["stores diagnostics in cache"] = function()
   H.with_buf({ "test" }, function(buf)
     local opts = create_test_opts()

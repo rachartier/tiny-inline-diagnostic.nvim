@@ -21,7 +21,12 @@ function M.set_diagnostic_autocmds(opts)
   local direct_renderer = function(bufnr)
     renderer.safe_render(opts, bufnr)
   end
-  autocmds.setup_global_autocmds(autocmd_ns, opts, direct_renderer, extmarks.update_namespace_window)
+  autocmds.setup_global_autocmds(
+    autocmd_ns,
+    opts,
+    direct_renderer,
+    extmarks.update_namespace_window
+  )
 
   vim.api.nvim_create_autocmd(events, {
     group = autocmd_ns,

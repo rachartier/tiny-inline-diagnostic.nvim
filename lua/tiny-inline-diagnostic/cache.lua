@@ -7,7 +7,16 @@ local diagnostics_cache = {}
 local function sort_by_severity(diagnostics)
   local sorted = vim.deepcopy(diagnostics)
   table.sort(sorted, function(a, b)
+    -- _extmark_id is attached by nvim core in vim.diagnostic.get(); tie-break on
+    -- it because table.sort is unstable and equal severities would render in
+    -- random order otherwise (#164)
     return a.severity < b.severity
+      or (
+        a.severity == b.severity
+        and a._extmark_id ~= nil
+        and b._extmark_id ~= nil
+        and a._extmark_id > b._extmark_id
+      )
   end)
   return sorted
 end
