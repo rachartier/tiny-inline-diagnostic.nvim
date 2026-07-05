@@ -165,14 +165,6 @@ function H.make_opts(overrides)
   return base
 end
 
-function H.uid_gen()
-  local counter = 0
-  return function()
-    counter = counter + 1
-    return counter
-  end
-end
-
 function H.all_severities()
   return {
     vim.diagnostic.severity.ERROR,

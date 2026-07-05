@@ -7,14 +7,12 @@ local M = {}
 ---@param win_col number
 ---@param priority number
 ---@param pos string|nil
----@param uid_fn function
-function M.create_single_extmark(buf, namespace, line, virt_text, win_col, priority, pos, uid_fn)
+function M.create_single_extmark(buf, namespace, line, virt_text, win_col, priority, pos)
   if not buf or not vim.api.nvim_buf_is_valid(buf) then
     return
   end
 
   local extmark_opts = {
-    id = uid_fn(),
     virt_text = virt_text,
     virt_text_pos = pos or "eol",
     virt_text_win_col = win_col,
@@ -30,8 +28,7 @@ end
 ---@param curline number
 ---@param virt_lines table
 ---@param priority number
----@param uid_fn function
-function M.create_multiline_extmark(buf, namespace, curline, virt_lines, priority, uid_fn)
+function M.create_multiline_extmark(buf, namespace, curline, virt_lines, priority)
   local remaining_lines = { unpack(virt_lines, 2) }
 
   local virt_lines_trimmed = {}
@@ -41,7 +38,6 @@ function M.create_multiline_extmark(buf, namespace, curline, virt_lines, priorit
   end
 
   vim.api.nvim_buf_set_extmark(buf, namespace, curline, 0, {
-    id = uid_fn(),
     virt_text_pos = "eol",
     virt_text = virt_lines_trimmed,
     virt_lines = remaining_lines,
@@ -53,8 +49,7 @@ end
 ---@param buf number
 ---@param namespace number
 ---@param params table
----@param uid_fn function
-function M.create_overflow_extmarks(buf, namespace, params, uid_fn)
+function M.create_overflow_extmarks(buf, namespace, params)
   local existing_lines = params.buf_lines_count - params.curline
   local start_index = params.need_to_be_under and 3 or 1
   local signs_offset = params.need_to_be_under and (params.signs_offset == 0 and 0 or 1)
@@ -68,8 +63,7 @@ function M.create_overflow_extmarks(buf, namespace, params, uid_fn)
       params.virt_lines[2],
       params.win_col,
       params.priority,
-      nil,
-      uid_fn
+      nil
     )
   end
 
@@ -82,8 +76,7 @@ function M.create_overflow_extmarks(buf, namespace, params, uid_fn)
       params.virt_lines[i],
       col_offset,
       params.priority,
-      "overlay",
-      uid_fn
+      "overlay"
     )
   end
 
@@ -97,7 +90,6 @@ function M.create_overflow_extmarks(buf, namespace, params, uid_fn)
 
   if #overflow_lines > 0 then
     vim.api.nvim_buf_set_extmark(buf, namespace, params.buf_lines_count - 1, 0, {
-      id = uid_fn(),
       virt_lines_above = false,
       virt_lines = overflow_lines,
       priority = params.priority,
@@ -117,7 +109,6 @@ end
 ---@param signs_offset number
 ---@param need_to_be_under boolean
 ---@param priority number
----@param uid_fn function
 function M.create_wrapped_extmarks(
   buf,
   namespace,
@@ -127,8 +118,7 @@ function M.create_wrapped_extmarks(
   offset,
   signs_offset,
   need_to_be_under,
-  priority,
-  uid_fn
+  priority
 )
   if not buf or not vim.api.nvim_buf_is_valid(buf) then
     return
@@ -155,7 +145,6 @@ function M.create_wrapped_extmarks(
   end
 
   vim.api.nvim_buf_set_extmark(buf, namespace, curline, 0, {
-    id = uid_fn(),
     virt_text = virt_lines[1],
     virt_text_pos = "eol",
     virt_lines = below_lines,
@@ -176,7 +165,6 @@ end
 ---@param offset number
 ---@param signs_offset number
 ---@param priority number
----@param uid_fn function
 function M.create_split_extmarks(
   buf,
   namespace,
@@ -186,8 +174,7 @@ function M.create_split_extmarks(
   win_col,
   offset,
   signs_offset,
-  priority,
-  uid_fn
+  priority
 )
   M.create_simple_extmarks(
     buf,
@@ -197,8 +184,7 @@ function M.create_split_extmarks(
     win_col,
     offset,
     signs_offset,
-    priority,
-    uid_fn
+    priority
   )
 
   local below_lines = {}
@@ -212,7 +198,6 @@ function M.create_split_extmarks(
   end
 
   vim.api.nvim_buf_set_extmark(buf, namespace, curline + overlay_count - 1, 0, {
-    id = uid_fn(),
     virt_lines = below_lines,
     priority = priority,
     strict = false,
@@ -227,7 +212,6 @@ end
 ---@param offset number
 ---@param signs_offset number
 ---@param priority number
----@param uid_fn function
 function M.create_simple_extmarks(
   buf,
   namespace,
@@ -236,8 +220,7 @@ function M.create_simple_extmarks(
   win_col,
   offset,
   signs_offset,
-  priority,
-  uid_fn
+  priority
 )
   for i = 1, #virt_lines do
     local col_offset = i == 1 and win_col or (win_col + offset + signs_offset)
@@ -248,8 +231,7 @@ function M.create_simple_extmarks(
       virt_lines[i],
       col_offset,
       priority,
-      i > 1 and "overlay" or nil,
-      uid_fn
+      i > 1 and "overlay" or nil
     )
   end
 end

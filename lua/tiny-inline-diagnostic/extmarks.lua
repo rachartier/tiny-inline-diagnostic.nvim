@@ -2,21 +2,10 @@ local M = {}
 
 local extmark_writer = require("tiny-inline-diagnostic.extmark_writer")
 
-local INITIAL_UID = 1
-local MAX_UID = 2 ^ 32 - 1
 local DIAGNOSTIC_NAMESPACE = vim.api.nvim_create_namespace("TinyInlineDiagnostic")
-
-local state = {
-  uid_counter = INITIAL_UID,
-}
 
 local function is_valid_buffer(buf)
   return buf and vim.api.nvim_buf_is_valid(buf)
-end
-
-local function generate_uid()
-  state.uid_counter = (state.uid_counter % MAX_UID) + 1
-  return state.uid_counter
 end
 
 local function get_window_position()
@@ -198,8 +187,7 @@ function M.create_extmarks(
       DIAGNOSTIC_NAMESPACE,
       diag_line,
       virt_lines,
-      virt_priority,
-      generate_uid
+      virt_priority
     )
 
     return
@@ -218,8 +206,7 @@ function M.create_extmarks(
         offset,
         signs_offset,
         need_to_be_under,
-        virt_priority,
-        generate_uid
+        virt_priority
       )
       return
     elseif wrapped_line then
@@ -232,8 +219,7 @@ function M.create_extmarks(
         win_col,
         offset,
         signs_offset,
-        virt_priority,
-        generate_uid
+        virt_priority
       )
       return
     end
@@ -249,7 +235,7 @@ function M.create_extmarks(
       priority = virt_priority,
       need_to_be_under = need_to_be_under,
       buf_lines_count = buf_lines_count,
-    }, generate_uid)
+    })
   else
     extmark_writer.create_simple_extmarks(
       bufnr,
@@ -259,8 +245,7 @@ function M.create_extmarks(
       win_col,
       offset,
       signs_offset,
-      virt_priority,
-      generate_uid
+      virt_priority
     )
   end
 end
