@@ -28,7 +28,7 @@ T["detach"] = MiniTest.new_set()
 T["detach"]["clears buffer-scoped autocmds"] = function()
   H.with_buf({ "line" }, function(buf)
     local augroup = autocmds.create_augroup()
-    autocmds.setup_buffer_autocmds(augroup, make_buf_opts(), buf, noop, noop, noop, noop)
+    autocmds.setup_buffer_autocmds(augroup, make_buf_opts(), buf, noop, noop, noop)
     autocmds.setup_cursor_autocmds(augroup, make_buf_opts(), buf, noop, noop)
     autocmds.setup_mode_change_autocmds(augroup, buf, noop)
 
@@ -62,7 +62,7 @@ T["setup_buffer_autocmds"]["re-attach after detach does not duplicate autocmds"]
     local augroup = autocmds.create_augroup()
     local opts = make_buf_opts()
 
-    autocmds.setup_buffer_autocmds(augroup, opts, buf, noop, noop, noop, noop)
+    autocmds.setup_buffer_autocmds(augroup, opts, buf, noop, noop, noop)
     autocmds.setup_cursor_autocmds(augroup, opts, buf, noop, noop)
     autocmds.setup_mode_change_autocmds(augroup, buf, noop)
     local first_count = count_buffer_autocmds(augroup, buf)
@@ -70,7 +70,7 @@ T["setup_buffer_autocmds"]["re-attach after detach does not duplicate autocmds"]
     autocmds.detach(buf)
     MiniTest.expect.equality(count_buffer_autocmds(augroup, buf), 0)
 
-    autocmds.setup_buffer_autocmds(augroup, opts, buf, noop, noop, noop, noop)
+    autocmds.setup_buffer_autocmds(augroup, opts, buf, noop, noop, noop)
     autocmds.setup_cursor_autocmds(augroup, opts, buf, noop, noop)
     autocmds.setup_mode_change_autocmds(augroup, buf, noop)
     local second_count = count_buffer_autocmds(augroup, buf)
@@ -84,10 +84,10 @@ T["setup_buffer_autocmds"]["guards against double setup without detach"] = funct
     local augroup = autocmds.create_augroup()
     local opts = make_buf_opts()
 
-    autocmds.setup_buffer_autocmds(augroup, opts, buf, noop, noop, noop, noop)
+    autocmds.setup_buffer_autocmds(augroup, opts, buf, noop, noop, noop)
     local first_count = count_buffer_autocmds(augroup, buf)
 
-    autocmds.setup_buffer_autocmds(augroup, opts, buf, noop, noop, noop, noop)
+    autocmds.setup_buffer_autocmds(augroup, opts, buf, noop, noop, noop)
     local second_count = count_buffer_autocmds(augroup, buf)
 
     MiniTest.expect.equality(second_count, first_count)
@@ -99,14 +99,14 @@ T["setup_buffer_autocmds"]["multiple attach/detach cycles do not leak autocmds"]
     local augroup = autocmds.create_augroup()
     local opts = make_buf_opts()
 
-    autocmds.setup_buffer_autocmds(augroup, opts, buf, noop, noop, noop, noop)
+    autocmds.setup_buffer_autocmds(augroup, opts, buf, noop, noop, noop)
     autocmds.setup_cursor_autocmds(augroup, opts, buf, noop, noop)
     autocmds.setup_mode_change_autocmds(augroup, buf, noop)
     local baseline = count_buffer_autocmds(augroup, buf)
 
     for _ = 1, 5 do
       autocmds.detach(buf)
-      autocmds.setup_buffer_autocmds(augroup, opts, buf, noop, noop, noop, noop)
+      autocmds.setup_buffer_autocmds(augroup, opts, buf, noop, noop, noop)
       autocmds.setup_cursor_autocmds(augroup, opts, buf, noop, noop)
       autocmds.setup_mode_change_autocmds(augroup, buf, noop)
     end
@@ -127,9 +127,9 @@ T["setup_global_autocmds"]["creates one resize autocmd regardless of attached bu
     + count_event_autocmds(augroup, "WinResized")
 
   H.with_buf({ "a" }, function(buf_a)
-    autocmds.setup_buffer_autocmds(augroup, opts, buf_a, noop, noop, noop, noop)
+    autocmds.setup_buffer_autocmds(augroup, opts, buf_a, noop, noop, noop)
     H.with_buf({ "b" }, function(buf_b)
-      autocmds.setup_buffer_autocmds(augroup, opts, buf_b, noop, noop, noop, noop)
+      autocmds.setup_buffer_autocmds(augroup, opts, buf_b, noop, noop, noop)
 
       local after = count_event_autocmds(augroup, "VimResized")
         + count_event_autocmds(augroup, "WinResized")
@@ -156,7 +156,7 @@ T["create_augroup"] = MiniTest.new_set()
 T["create_augroup"]["resets attached buffer tracking"] = function()
   H.with_buf({ "line" }, function(buf)
     local augroup = autocmds.create_augroup()
-    autocmds.setup_buffer_autocmds(augroup, make_buf_opts(), buf, noop, noop, noop, noop)
+    autocmds.setup_buffer_autocmds(augroup, make_buf_opts(), buf, noop, noop, noop)
     MiniTest.expect.equality(autocmds.is_attached(buf), true)
 
     autocmds.create_augroup()

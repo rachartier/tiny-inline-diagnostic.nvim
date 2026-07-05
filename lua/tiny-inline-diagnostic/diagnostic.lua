@@ -60,16 +60,13 @@ function M.set_diagnostic_autocmds(opts)
         end
         renderer.render(opts, bufnr)
       end
-      local on_window_change = extmarks.update_namespace_window
-
       autocmds.setup_buffer_autocmds(
         autocmd_ns,
         opts,
         event.buf,
         throttled_fn,
         direct_renderer,
-        on_diagnostic_change,
-        on_window_change
+        on_diagnostic_change
       )
       autocmds.setup_cursor_autocmds(autocmd_ns, opts, event.buf, throttled_fn, direct_renderer)
       autocmds.setup_mode_change_autocmds(autocmd_ns, event.buf, on_mode_change)
