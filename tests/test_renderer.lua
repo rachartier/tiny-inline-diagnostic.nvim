@@ -256,7 +256,10 @@ T["window_resolution"]["uses buffer window geometry not current window"] = funct
     })
 
     MiniTest.expect.equality(vim.api.nvim_get_current_buf() ~= buf, true)
-    MiniTest.expect.equality(vim.api.nvim_win_get_width(float_win) < vim.api.nvim_win_get_width(win), true)
+    MiniTest.expect.equality(
+      vim.api.nvim_win_get_width(float_win) < vim.api.nvim_win_get_width(win),
+      true
+    )
 
     renderer.render(opts, buf)
     local from_other_window = capture_layout()
@@ -411,6 +414,88 @@ T["single_diagnostic_clearing"]["does not persist stale diagnostics after namesp
 
     local cached_final = cache.get(buf)
     MiniTest.expect.equality(cached_final, {})
+  end)
+end
+
+local function plugin_marks_on_row(buf, row)
+  local ns = vim.api.nvim_get_namespaces()["TinyInlineDiagnostic"]
+  return #vim.api.nvim_buf_get_extmarks(buf, ns, { row, 0 }, { row, -1 }, {})
+end
+
+T["render"]["multilines.severity restricts non-cursor lines"] = function()
+  H.with_win_buf({ "line 1", "line 2", "line 3" }, { 1, 0 }, nil, function(buf, win)
+    local opts = create_test_opts()
+    opts.options.multilines.enabled = true
+    opts.options.multilines.always_show = true
+    opts.options.multilines.severity = { vim.diagnostic.severity.ERROR }
+    state.init(opts)
+
+    local cache = require("tiny-inline-diagnostic.cache")
+    cache.update(buf, {
+      { lnum = 1, col = 0, end_col = 5, message = "err", severity = vim.diagnostic.severity.ERROR },
+      { lnum = 2, col = 0, end_col = 5, message = "warn", severity = vim.diagnostic.severity.WARN },
+    })
+    renderer.render(opts, buf)
+
+    MiniTest.expect.equality(plugin_marks_on_row(buf, 1) > 0, true)
+    MiniTest.expect.equality(plugin_marks_on_row(buf, 2), 0)
+  end)
+end
+
+T["render"]["show_diags_only_under_cursor takes precedence over multilines"] = function()
+  H.with_win_buf({ "line 1", "line 2", "line 3" }, { 2, 0 }, nil, function(buf, win)
+    local opts = create_test_opts()
+    opts.options.multilines.enabled = true
+    opts.options.multilines.always_show = true
+    opts.options.show_diags_only_under_cursor = true
+    state.init(opts)
+
+    local cache = require("tiny-inline-diagnostic.cache")
+    cache.update(buf, {
+      { lnum = 0, col = 0, end_col = 5, message = "a", severity = vim.diagnostic.severity.ERROR },
+      { lnum = 1, col = 0, end_col = 5, message = "b", severity = vim.diagnostic.severity.ERROR },
+      { lnum = 2, col = 0, end_col = 5, message = "c", severity = vim.diagnostic.severity.ERROR },
+    })
+    renderer.render(opts, buf)
+
+    MiniTest.expect.equality(plugin_marks_on_row(buf, 1) > 0, true)
+    MiniTest.expect.equality(plugin_marks_on_row(buf, 0), 0)
+    MiniTest.expect.equality(plugin_marks_on_row(buf, 2), 0)
+  end)
+end
+
+T["render"]["does not render diagnostics outside the visible range"] = function()
+  local lines = {}
+  for i = 1, 100 do
+    table.insert(lines, "line " .. i)
+  end
+  H.with_win_buf(lines, { 1, 0 }, nil, function(buf, win)
+    local opts = create_test_opts()
+    opts.options.multilines.enabled = true
+    opts.options.multilines.always_show = true
+    state.init(opts)
+
+    local cache = require("tiny-inline-diagnostic.cache")
+    cache.update(buf, {
+      {
+        lnum = 0,
+        col = 0,
+        end_col = 5,
+        message = "near",
+        severity = vim.diagnostic.severity.ERROR,
+      },
+      {
+        lnum = 90,
+        col = 0,
+        end_col = 5,
+        message = "far",
+        severity = vim.diagnostic.severity.ERROR,
+      },
+    })
+    renderer.render(opts, buf)
+
+    MiniTest.expect.equality(plugin_marks_on_row(buf, 0) > 0, true)
+    MiniTest.expect.equality(plugin_marks_on_row(buf, 90), 0)
   end)
 end
 

@@ -491,4 +491,33 @@ T["get_chunks"]["wraps when line exceeds window width minus softwrap"] = functio
   end)
 end
 
+T["get_chunks"]["format callback cannot mutate the diagnostic"] = function()
+  H.with_win_buf({ "local x = 1" }, { 1, 0 }, nil, function(buf, win)
+    local opts = H.make_opts({
+      options = {
+        format = function(diag)
+          -- A misbehaving user callback: diag may be a live reference into
+          -- nvim's diagnostic cache, so this mutation must stay invisible
+          diag.message = "MUTATED"
+          return diag.message
+        end,
+      },
+    })
+    local diags = {
+      {
+        lnum = 0,
+        col = 0,
+        end_col = 5,
+        message = "original",
+        severity = vim.diagnostic.severity.ERROR,
+      },
+    }
+
+    local result = chunk.get_chunks(opts, diags, 1, 0, 0, buf)
+
+    MiniTest.expect.equality(diags[1].message, "original")
+    MiniTest.expect.equality(result.chunks[1]:find("MUTATED") ~= nil, true)
+  end)
+end
+
 return T

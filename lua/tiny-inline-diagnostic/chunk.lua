@@ -457,7 +457,7 @@ function M.get_chunks(opts, diags_on_line, diag_index, diag_line, cursor_line, b
   end
 
   if opts.options.format and diag_message and not diag.is_related then
-    diag_message = opts.options.format(diag)
+    diag_message = opts.options.format(vim.deepcopy(diag))
   end
 
   local chunks

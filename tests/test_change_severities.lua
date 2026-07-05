@@ -66,16 +66,13 @@ T["cache.update"]["stores all diagnostics without severity filtering"] = functio
   vim.api.nvim_buf_delete(buf, { force = true })
 end
 
-T["filter.for_display"] = MiniTest.new_set()
+T["filter.by_multiline_severity"] = MiniTest.new_set()
 
-T["filter.for_display"]["applies severity filter"] = function()
+T["filter.by_multiline_severity"]["applies multiline severity filter"] = function()
   local opts = H.make_opts()
-  opts.options.severity = { vim.diagnostic.severity.WARN }
   opts.options.multilines.enabled = true
   opts.options.multilines.always_show = true
   opts.options.multilines.severity = { vim.diagnostic.severity.ERROR }
-
-  local buf = H.make_buf({ "line1" })
 
   local diags = {
     H.make_diagnostic({ lnum = 0, severity = vim.diagnostic.severity.ERROR }),
@@ -83,12 +80,10 @@ T["filter.for_display"]["applies severity filter"] = function()
     H.make_diagnostic({ lnum = 0, severity = vim.diagnostic.severity.HINT }),
   }
 
-  local filtered = filter.for_display(opts, buf, diags)
+  local filtered = filter.by_multiline_severity(opts, diags)
 
   MiniTest.expect.equality(#filtered, 1)
   MiniTest.expect.equality(filtered[1].severity, vim.diagnostic.severity.ERROR)
-
-  vim.api.nvim_buf_delete(buf, { force = true })
 end
 
 return T

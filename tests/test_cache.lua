@@ -41,6 +41,38 @@ T["get"]["returns cached diagnostics for buffer"] = function()
   end)
 end
 
+T["get_by_line"] = MiniTest.new_set()
+
+T["get_by_line"]["buckets by line preserving sorted order"] = function()
+  H.with_buf({ "test" }, function(buf)
+    cache.update(buf, {
+      {
+        lnum = 1,
+        col = 0,
+        message = "w1",
+        severity = vim.diagnostic.severity.WARN,
+        _extmark_id = 1,
+      },
+      {
+        lnum = 1,
+        col = 0,
+        message = "w2",
+        severity = vim.diagnostic.severity.WARN,
+        _extmark_id = 2,
+      },
+      { lnum = 0, col = 0, message = "e", severity = vim.diagnostic.severity.ERROR },
+    })
+
+    local by_line = cache.get_by_line(buf)
+    MiniTest.expect.equality(#by_line[0], 1)
+    MiniTest.expect.equality(by_line[0][1].severity, vim.diagnostic.severity.ERROR)
+    MiniTest.expect.equality(#by_line[1], 2)
+    -- Equal severities keep the #164 order: _extmark_id descending
+    MiniTest.expect.equality(by_line[1][1]._extmark_id, 2)
+    MiniTest.expect.equality(by_line[1][2]._extmark_id, 1)
+  end)
+end
+
 T["update_from_event"] = MiniTest.new_set()
 
 T["update_from_event"]["merges diagnostics across namespaces"] = function()
