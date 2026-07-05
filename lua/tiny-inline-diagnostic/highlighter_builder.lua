@@ -91,15 +91,4 @@ function M.build_mixed_groups(base_groups)
   return hi
 end
 
----@param base table
----@param mixed table
----@return table
-function M.merge_groups(base, mixed)
-  local result = vim.deepcopy(base)
-  for name, opts in pairs(mixed) do
-    result[name] = opts
-  end
-  return result
-end
-
 return M

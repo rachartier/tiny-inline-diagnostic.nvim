@@ -11,7 +11,6 @@
 ---@field warn string
 ---@field info string
 ---@field hint string
----@field ok string
 ---@field arrow string
 ---@field background string
 ---@field mixing_color string
@@ -111,7 +110,6 @@ function M.setup_highlights(blend, default_hi, transparent_bg)
     warn = get_highlight(default_hi.warn),
     info = get_highlight(default_hi.info),
     hint = get_highlight(default_hi.hint),
-    ok = get_highlight(default_hi.ok),
     arrow = get_highlight(default_hi.arrow),
     cursor_line = cursor_line_color,
   }
@@ -131,7 +129,7 @@ function M.setup_highlights(blend, default_hi, transparent_bg)
 
   local base_groups = highlighter_builder.build_base_groups(colors, blends, transparent_bg)
   local mixed_groups = highlighter_builder.build_mixed_groups(base_groups)
-  local hi = highlighter_builder.merge_groups(base_groups, mixed_groups)
+  local hi = vim.tbl_extend("force", base_groups, mixed_groups)
 
   for name, opts in pairs(hi) do
     vim.api.nvim_set_hl(0, name, opts)
