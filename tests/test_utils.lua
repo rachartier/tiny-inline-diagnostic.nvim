@@ -168,23 +168,4 @@ T["throttle"]["creates throttled function"] = function()
   end
 end
 
-T["fast_uuid"] = MiniTest.new_set()
-
-T["fast_uuid"]["returns a number"] = function()
-  local result = utils.fast_uuid()
-  MiniTest.expect.equality(type(result), "number")
-end
-
-T["fast_uuid"]["returns different values"] = function()
-  local result1 = utils.fast_uuid()
-  local result2 = utils.fast_uuid()
-  MiniTest.expect.no_equality(result1, result2)
-end
-
-T["fast_uuid"]["returns value in range"] = function()
-  local result = utils.fast_uuid()
-  MiniTest.expect.equality(result >= 1, true)
-  MiniTest.expect.equality(result <= 2 ^ 31 - 1, true)
-end
-
 return T

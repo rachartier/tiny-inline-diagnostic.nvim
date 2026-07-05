@@ -4,7 +4,6 @@ local M = {}
 local DEFAULT_RGB = { 0, 0, 0 }
 local MAX_COLOR_VALUE = 255
 local HEX_BASE = 16
-local UUID_MAX = 2 ^ 31 - 1
 
 -- Color utilities
 ---Converts a hex color string to RGB values
@@ -220,13 +219,6 @@ function M.throttle(fn, ms)
   end
 
   return throttled, timer
-end
-
-math.randomseed(os.time())
-
----@return number uuid A random number between 1 and 2^31-1
-function M.fast_uuid()
-  return math.random(1, UUID_MAX)
 end
 
 return M
