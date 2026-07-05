@@ -17,7 +17,6 @@
 
 local M = {}
 
-local highlighter_builder = require("tiny-inline-diagnostic.highlighter_builder")
 local utils = require("tiny-inline-diagnostic.utils")
 
 local SEVERITY_NAMES = { "Error", "Warn", "Info", "Hint" }
@@ -79,6 +78,88 @@ local function is_cursorline_visible()
   return false
 end
 
+---@param colors table
+---@param blends table
+---@param transparent boolean
+---@return table
+local function build_base_groups(colors, blends, transparent)
+  local hi = {
+    [HIGHLIGHT_PREFIX .. "Bg"] = { bg = colors.background },
+  }
+
+  for _, name in ipairs(SEVERITY_NAMES) do
+    local name_lower = string.lower(name)
+    local color = colors[name_lower]
+
+    hi[HIGHLIGHT_PREFIX .. name .. "CursorLine"] = {
+      bg = colors.cursor_line.bg,
+      fg = color.fg,
+      italic = color.italic,
+    }
+
+    hi[HIGHLIGHT_PREFIX .. name] = {
+      bg = transparent and "None" or blends[name_lower],
+      fg = color.fg,
+      italic = color.italic,
+    }
+
+    hi[HIGHLIGHT_PREFIX .. name .. "NoBg"] = {
+      fg = color.fg,
+      bg = "None",
+      italic = color.italic,
+    }
+
+    hi[INV_HIGHLIGHT_PREFIX .. name] = {
+      fg = blends[name_lower],
+      bg = transparent and "None" or colors.background,
+      italic = color.italic,
+    }
+
+    hi[INV_HIGHLIGHT_PREFIX .. name .. "CursorLine"] = {
+      fg = blends[name_lower],
+      bg = colors.cursor_line.bg,
+      italic = color.italic,
+    }
+
+    hi[INV_HIGHLIGHT_PREFIX .. name .. "NoBg"] = {
+      fg = blends[name_lower],
+      bg = "None",
+      italic = color.italic,
+    }
+  end
+
+  hi[HIGHLIGHT_PREFIX .. "Arrow"] = {
+    bg = transparent and colors.cursor_line.bg or colors.background,
+    fg = colors.arrow.fg,
+  }
+  hi[HIGHLIGHT_PREFIX .. "ArrowNoBg"] = {
+    bg = "None",
+    fg = colors.arrow.fg,
+  }
+
+  return hi
+end
+
+---@param base_groups table
+---@return table
+local function build_mixed_groups(base_groups)
+  local hi = {}
+
+  for _, primary_name in ipairs(SEVERITY_NAMES) do
+    for _, secondary_name in ipairs(SEVERITY_NAMES) do
+      local primary = HIGHLIGHT_PREFIX .. primary_name
+      local secondary = HIGHLIGHT_PREFIX .. secondary_name
+      hi[primary .. "Mix" .. secondary_name] = {
+        fg = base_groups[primary].fg,
+        bg = base_groups[secondary].bg,
+        italic = base_groups[primary].italic,
+      }
+    end
+  end
+
+  return hi
+end
+
 ---@param blend BlendOptions
 ---@param default_hi DefaultHighlights
 function M.setup_highlights(blend, default_hi, transparent_bg)
@@ -119,8 +200,8 @@ function M.setup_highlights(blend, default_hi, transparent_bg)
     background = colors.background,
   }
 
-  local base_groups = highlighter_builder.build_base_groups(colors, blends, transparent_bg)
-  local mixed_groups = highlighter_builder.build_mixed_groups(base_groups)
+  local base_groups = build_base_groups(colors, blends, transparent_bg)
+  local mixed_groups = build_mixed_groups(base_groups)
   local hi = vim.tbl_extend("force", base_groups, mixed_groups)
 
   for name, opts in pairs(hi) do
