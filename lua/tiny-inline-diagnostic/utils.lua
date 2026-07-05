@@ -181,7 +181,7 @@ end
 ---@return function throttled The throttled function
 ---@return userdata timer The timer object
 function M.throttle(fn, ms)
-  local timer = vim.loop.new_timer()
+  local timer = vim.uv.new_timer()
   local running = false
   local pending_arg = nil
   local has_pending = false

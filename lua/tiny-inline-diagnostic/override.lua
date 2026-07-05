@@ -1,5 +1,6 @@
 local M = {}
 
+local state = require("tiny-inline-diagnostic.state")
 local tiny_diag = require("tiny-inline-diagnostic.diagnostic")
 
 local diagnostic_float_active = false
@@ -9,7 +10,9 @@ local original_open_float = vim.diagnostic.open_float
 M.open_float = function(...)
   if not diagnostic_float_active then
     diagnostic_float_active = true
-    original_tiny_state = true
+    -- Only restore the plugin after the float closes if it was enabled before;
+    -- a user-disabled plugin must stay disabled
+    original_tiny_state = state.user_toggle_state
     tiny_diag.disable()
   end
 
