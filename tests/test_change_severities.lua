@@ -58,7 +58,7 @@ T["cache.update"]["stores all diagnostics without severity filtering"] = functio
     H.make_diagnostic({ lnum = 0, severity = vim.diagnostic.severity.HINT }),
   }
 
-  cache.update(opts, buf, diags)
+  cache.update(buf, diags)
 
   local cached = cache.get(buf)
   MiniTest.expect.equality(#cached, 3)

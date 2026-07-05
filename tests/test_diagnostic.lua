@@ -237,23 +237,6 @@ T["set_diagnostic_autocmds"]["respects disabled filetypes"] = function()
   end)
 end
 
-T["enabled"] = MiniTest.new_set()
-
-T["enabled"]["reflects state.enabled"] = function()
-  local opts = create_test_opts()
-  state.init(opts)
-  MiniTest.expect.equality(diagnostic.enabled, state.enabled)
-end
-
-T["user_toggle_state"] = MiniTest.new_set()
-
-T["user_toggle_state"]["reflects state.user_toggle_state"] = function()
-  local opts = create_test_opts()
-  state.init(opts)
-  state.user_enable()
-  MiniTest.expect.equality(diagnostic.user_toggle_state, state.user_toggle_state)
-end
-
 T["single_diagnostic_lifecycle"] = MiniTest.new_set()
 
 T["single_diagnostic_lifecycle"]["clears when single diagnostic is fixed"] = function()

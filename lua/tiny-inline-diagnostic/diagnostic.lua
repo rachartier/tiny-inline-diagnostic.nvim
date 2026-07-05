@@ -9,9 +9,6 @@ local state = require("tiny-inline-diagnostic.state")
 local timers = require("tiny-inline-diagnostic.timer")
 local utils = require("tiny-inline-diagnostic.utils")
 
-M.enabled = state.enabled
-M.user_toggle_state = state.user_toggle_state
-
 ---@param opts table
 ---@param buf number
 ---@param diagnostics table
@@ -53,7 +50,7 @@ function M.set_diagnostic_autocmds(opts)
       timers.add(event.buf, throttle_timer)
 
       local on_diagnostic_change = function(buf, diagnostics)
-        cache.update(opts, buf, diagnostics)
+        cache.update(buf, diagnostics)
       end
       local on_mode_change = function(mode, bufnr)
         if state.is_mode_disabled(mode) then
@@ -79,7 +76,7 @@ function M.set_diagnostic_autocmds(opts)
 
       local existing_diagnostics = vim.diagnostic.get(event.buf)
       if existing_diagnostics and #existing_diagnostics > 0 then
-        cache.update(opts, event.buf, existing_diagnostics)
+        cache.update(event.buf, existing_diagnostics)
         vim.schedule(function()
           if vim.api.nvim_buf_is_valid(event.buf) then
             direct_renderer(event.buf)

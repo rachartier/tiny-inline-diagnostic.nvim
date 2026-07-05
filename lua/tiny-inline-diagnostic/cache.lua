@@ -18,10 +18,9 @@ function M.get(bufnr)
   return diagnostics_cache[bufnr] or {}
 end
 
----@param opts table
 ---@param bufnr number
 ---@param diagnostics table|nil
-function M.update(opts, bufnr, diagnostics)
+function M.update(bufnr, diagnostics)
   if diagnostics == nil or vim.tbl_isempty(diagnostics) then
     diagnostics_cache[bufnr] = {}
   else

@@ -33,7 +33,7 @@ T["get"]["returns cached diagnostics for buffer"] = function()
       { lnum = 0, col = 0, message = "error", severity = vim.diagnostic.severity.ERROR },
     })
 
-    cache.update(opts, buf, diags)
+    cache.update(buf, diags)
     local result = cache.get(buf)
 
     MiniTest.expect.equality(#result, 1)
@@ -50,7 +50,7 @@ T["update"]["stores diagnostics in cache"] = function()
       { lnum = 0, col = 0, message = "test error", severity = vim.diagnostic.severity.ERROR },
     })
 
-    cache.update(opts, buf, diags)
+    cache.update(buf, diags)
     local cached = cache.get(buf)
 
     MiniTest.expect.equality(#cached, 1)
@@ -67,7 +67,7 @@ T["update"]["sorts diagnostics by severity"] = function()
       { lnum = 0, col = 10, message = "info", severity = vim.diagnostic.severity.INFO },
     })
 
-    cache.update(opts, buf, diags)
+    cache.update(buf, diags)
     local cached = cache.get(buf)
 
     MiniTest.expect.equality(#cached, 3)
@@ -84,12 +84,12 @@ T["update"]["clears cache when diagnostics are empty"] = function()
     local diags = H.make_diags({
       { lnum = 0, col = 0, message = "error", severity = vim.diagnostic.severity.ERROR },
     })
-    cache.update(opts, buf, diags)
+    cache.update(buf, diags)
 
     local cached_before = cache.get(buf)
     MiniTest.expect.equality(#cached_before, 1)
 
-    cache.update(opts, buf, {})
+    cache.update(buf, {})
 
     local cached_after = cache.get(buf)
     MiniTest.expect.equality(cached_after, {})
@@ -103,12 +103,12 @@ T["update"]["clears cache when nil diagnostics and buffer has none"] = function(
     local diags = H.make_diags({
       { lnum = 0, col = 0, message = "error", severity = vim.diagnostic.severity.ERROR },
     })
-    cache.update(opts, buf, diags)
+    cache.update(buf, diags)
 
     local cached_before = cache.get(buf)
     MiniTest.expect.equality(#cached_before, 1)
 
-    cache.update(opts, buf, nil)
+    cache.update(buf, nil)
 
     local cached_after = cache.get(buf)
     MiniTest.expect.equality(cached_after, {})
@@ -126,14 +126,14 @@ T["update"]["handles namespace filtering"] = function()
     })
 
     local diags_ns1 = vim.diagnostic.get(buf, { namespace = ns1 })
-    cache.update(opts, buf, diags_ns1)
+    cache.update(buf, diags_ns1)
 
     vim.diagnostic.set(ns2, buf, {
       { lnum = 0, col = 0, message = "error2", severity = vim.diagnostic.severity.WARN },
     })
 
     local all_diags = vim.diagnostic.get(buf)
-    cache.update(opts, buf, all_diags)
+    cache.update(buf, all_diags)
 
     local cached = cache.get(buf)
     MiniTest.expect.equality(#cached, 2)
@@ -150,7 +150,7 @@ T["update"]["replaces diagnostics from same namespace"] = function()
     })
 
     local diags_old = vim.diagnostic.get(buf, { namespace = ns })
-    cache.update(opts, buf, diags_old)
+    cache.update(buf, diags_old)
 
     local cached_old = cache.get(buf)
     MiniTest.expect.equality(#cached_old, 1)
@@ -161,7 +161,7 @@ T["update"]["replaces diagnostics from same namespace"] = function()
     })
 
     local diags_new = vim.diagnostic.get(buf, { namespace = ns })
-    cache.update(opts, buf, diags_new)
+    cache.update(buf, diags_new)
 
     local cached_new = cache.get(buf)
     MiniTest.expect.equality(#cached_new, 1)
@@ -178,7 +178,7 @@ T["clear"]["removes diagnostics from cache"] = function()
       { lnum = 0, col = 0, message = "error", severity = vim.diagnostic.severity.ERROR },
     })
 
-    cache.update(opts, buf, diags)
+    cache.update(buf, diags)
     local cached_before = cache.get(buf)
     MiniTest.expect.equality(#cached_before, 1)
 
@@ -210,7 +210,7 @@ T["single_diagnostic_persistence_bug"]["does not persist single diagnostic after
     })
 
     local diags = vim.diagnostic.get(buf, { namespace = ns })
-    cache.update(opts, buf, diags)
+    cache.update(buf, diags)
 
     local cached_with_diag = cache.get(buf)
     MiniTest.expect.equality(#cached_with_diag, 1)
@@ -218,7 +218,7 @@ T["single_diagnostic_persistence_bug"]["does not persist single diagnostic after
     vim.diagnostic.set(ns, buf, {})
 
     local diags_after_fix = vim.diagnostic.get(buf, { namespace = ns })
-    cache.update(opts, buf, diags_after_fix)
+    cache.update(buf, diags_after_fix)
 
     local cached_after_fix = cache.get(buf)
     MiniTest.expect.equality(cached_after_fix, {})
@@ -237,7 +237,7 @@ T["single_diagnostic_persistence_bug"]["handles partial diagnostic removal"] = f
     })
 
     local diags = vim.diagnostic.get(buf, { namespace = ns })
-    cache.update(opts, buf, diags)
+    cache.update(buf, diags)
     MiniTest.expect.equality(#cache.get(buf), 3)
 
     vim.diagnostic.set(ns, buf, {
@@ -245,7 +245,7 @@ T["single_diagnostic_persistence_bug"]["handles partial diagnostic removal"] = f
     })
 
     local diags_after = vim.diagnostic.get(buf, { namespace = ns })
-    cache.update(opts, buf, diags_after)
+    cache.update(buf, diags_after)
 
     local cached = cache.get(buf)
     MiniTest.expect.equality(#cached, 1)
@@ -259,7 +259,7 @@ T["single_diagnostic_persistence_bug"]["handles empty to non-empty transition"] 
     local opts = create_test_opts()
     local ns = vim.api.nvim_create_namespace("test_transition")
 
-    cache.update(opts, buf, {})
+    cache.update(buf, {})
     MiniTest.expect.equality(cache.get(buf), {})
 
     vim.diagnostic.set(ns, buf, {
@@ -267,7 +267,7 @@ T["single_diagnostic_persistence_bug"]["handles empty to non-empty transition"] 
     })
 
     local diags = vim.diagnostic.get(buf, { namespace = ns })
-    cache.update(opts, buf, diags)
+    cache.update(buf, diags)
 
     local cached = cache.get(buf)
     MiniTest.expect.equality(#cached, 1)
@@ -275,7 +275,7 @@ T["single_diagnostic_persistence_bug"]["handles empty to non-empty transition"] 
 
     vim.diagnostic.set(ns, buf, {})
     local diags_cleared = vim.diagnostic.get(buf, { namespace = ns })
-    cache.update(opts, buf, diags_cleared)
+    cache.update(buf, diags_cleared)
 
     MiniTest.expect.equality(cache.get(buf), {})
   end)

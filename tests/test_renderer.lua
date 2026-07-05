@@ -87,7 +87,7 @@ T["render"]["renders diagnostics when present"] = function()
     })
 
     local cache = require("tiny-inline-diagnostic.cache")
-    cache.update(opts, buf, vim.diagnostic.get(buf))
+    cache.update(buf, vim.diagnostic.get(buf))
 
     renderer.render(opts, buf)
   end)
@@ -115,7 +115,7 @@ T["render"]["handles multiline diagnostics"] = function()
     })
 
     local cache = require("tiny-inline-diagnostic.cache")
-    cache.update(opts, buf, vim.diagnostic.get(buf))
+    cache.update(buf, vim.diagnostic.get(buf))
 
     renderer.render(opts, buf)
   end)
@@ -146,7 +146,7 @@ T["render"]["respects visible filter"] = function()
     })
 
     local cache = require("tiny-inline-diagnostic.cache")
-    cache.update(opts, buf, vim.diagnostic.get(buf))
+    cache.update(buf, vim.diagnostic.get(buf))
 
     renderer.render(opts, buf)
   end)
@@ -167,7 +167,7 @@ T["render"]["handles cursor line differently"] = function()
     })
 
     local cache = require("tiny-inline-diagnostic.cache")
-    cache.update(opts, buf, vim.diagnostic.get(buf))
+    cache.update(buf, vim.diagnostic.get(buf))
 
     renderer.render(opts, buf)
   end)
@@ -213,7 +213,7 @@ T["window_resolution"]["uses buffer window geometry not current window"] = funct
     })
 
     local cache = require("tiny-inline-diagnostic.cache")
-    cache.update(opts, buf, vim.diagnostic.get(buf))
+    cache.update(buf, vim.diagnostic.get(buf))
 
     local diag_ns = vim.api.nvim_create_namespace("TinyInlineDiagnostic")
     -- Layout signature per extmark: row / virt_lines count / virt_text chunk
@@ -280,7 +280,7 @@ T["window_resolution"]["clears extmarks when buffer is in no window"] = function
     { lnum = 0, col = 0, message = "error", severity = vim.diagnostic.severity.ERROR },
   })
   local cache = require("tiny-inline-diagnostic.cache")
-  cache.update(opts, buf, vim.diagnostic.get(buf))
+  cache.update(buf, vim.diagnostic.get(buf))
 
   renderer.render(opts, buf)
 
@@ -309,12 +309,12 @@ T["single_diagnostic_clearing"]["clears when single diagnostic is removed"] = fu
         severity = vim.diagnostic.severity.ERROR,
       },
     })
-    cache.update(opts, buf, vim.diagnostic.get(buf))
+    cache.update(buf, vim.diagnostic.get(buf))
 
     renderer.render(opts, buf)
 
     vim.diagnostic.set(ns, buf, {})
-    cache.update(opts, buf, vim.diagnostic.get(buf))
+    cache.update(buf, vim.diagnostic.get(buf))
 
     renderer.render(opts, buf)
 
@@ -333,13 +333,13 @@ T["single_diagnostic_clearing"]["clears when last diagnostic is removed from mul
       { lnum = 0, col = 0, message = "error1", severity = vim.diagnostic.severity.ERROR },
       { lnum = 1, col = 0, message = "error2", severity = vim.diagnostic.severity.ERROR },
     })
-    cache.update(opts, buf, vim.diagnostic.get(buf))
+    cache.update(buf, vim.diagnostic.get(buf))
     renderer.render(opts, buf)
 
     vim.diagnostic.set(ns, buf, {
       { lnum = 1, col = 0, message = "error2", severity = vim.diagnostic.severity.ERROR },
     })
-    cache.update(opts, buf, vim.diagnostic.get(buf))
+    cache.update(buf, vim.diagnostic.get(buf))
     renderer.render(opts, buf)
 
     local cached = cache.get(buf)
@@ -347,7 +347,7 @@ T["single_diagnostic_clearing"]["clears when last diagnostic is removed from mul
     MiniTest.expect.equality(cached[1].message, "error2")
 
     vim.diagnostic.set(ns, buf, {})
-    cache.update(opts, buf, vim.diagnostic.get(buf))
+    cache.update(buf, vim.diagnostic.get(buf))
     renderer.render(opts, buf)
 
     MiniTest.expect.equality(cache.get(buf), {})
@@ -364,18 +364,18 @@ T["single_diagnostic_clearing"]["handles rapid diagnostic changes"] = function()
     vim.diagnostic.set(ns, buf, {
       { lnum = 0, col = 0, message = "error1", severity = vim.diagnostic.severity.ERROR },
     })
-    cache.update(opts, buf, vim.diagnostic.get(buf))
+    cache.update(buf, vim.diagnostic.get(buf))
     renderer.render(opts, buf)
 
     vim.diagnostic.set(ns, buf, {})
-    cache.update(opts, buf, vim.diagnostic.get(buf))
+    cache.update(buf, vim.diagnostic.get(buf))
     renderer.render(opts, buf)
     MiniTest.expect.equality(cache.get(buf), {})
 
     vim.diagnostic.set(ns, buf, {
       { lnum = 0, col = 0, message = "error2", severity = vim.diagnostic.severity.WARN },
     })
-    cache.update(opts, buf, vim.diagnostic.get(buf))
+    cache.update(buf, vim.diagnostic.get(buf))
     renderer.render(opts, buf)
 
     local cached = cache.get(buf)
@@ -383,7 +383,7 @@ T["single_diagnostic_clearing"]["handles rapid diagnostic changes"] = function()
     MiniTest.expect.equality(cached[1].message, "error2")
 
     vim.diagnostic.set(ns, buf, {})
-    cache.update(opts, buf, vim.diagnostic.get(buf))
+    cache.update(buf, vim.diagnostic.get(buf))
     renderer.render(opts, buf)
     MiniTest.expect.equality(cache.get(buf), {})
   end)
@@ -399,14 +399,14 @@ T["single_diagnostic_clearing"]["does not persist stale diagnostics after namesp
     vim.diagnostic.set(ns, buf, {
       { lnum = 0, col = 0, message = "initial", severity = vim.diagnostic.severity.ERROR },
     })
-    cache.update(opts, buf, vim.diagnostic.get(buf, { namespace = ns }))
+    cache.update(buf, vim.diagnostic.get(buf, { namespace = ns }))
     renderer.render(opts, buf)
 
     local cached_initial = cache.get(buf)
     MiniTest.expect.equality(#cached_initial, 1)
 
     vim.diagnostic.set(ns, buf, {})
-    cache.update(opts, buf, vim.diagnostic.get(buf, { namespace = ns }))
+    cache.update(buf, vim.diagnostic.get(buf, { namespace = ns }))
     renderer.render(opts, buf)
 
     local cached_final = cache.get(buf)
