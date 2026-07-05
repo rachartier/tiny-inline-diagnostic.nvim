@@ -42,16 +42,18 @@ T["detach"]["clears buffer-scoped autocmds"] = function()
   end)
 end
 
-T["detach"]["invokes cleanup_callback with bufnr"] = function()
+T["detach"]["clears plugin extmarks"] = function()
   H.with_buf({ "line" }, function(buf)
     autocmds.create_augroup()
 
-    local received
-    autocmds.detach(buf, function(b)
-      received = b
-    end)
+    local ns = vim.api.nvim_get_namespaces()["TinyInlineDiagnostic"]
+      or vim.api.nvim_create_namespace("TinyInlineDiagnostic")
+    vim.api.nvim_buf_set_extmark(buf, ns, 0, 0, { virt_text = { { "x", "Comment" } } })
+    MiniTest.expect.equality(#vim.api.nvim_buf_get_extmarks(buf, ns, 0, -1, {}), 1)
 
-    MiniTest.expect.equality(received, buf)
+    autocmds.detach(buf)
+
+    MiniTest.expect.equality(#vim.api.nvim_buf_get_extmarks(buf, ns, 0, -1, {}), 0)
   end)
 end
 

@@ -16,18 +16,18 @@ function M.is_attached(bufnr)
 end
 
 ---@param bufnr number
----@param cleanup_callback function|nil
-function M.detach(bufnr, cleanup_callback)
+function M.detach(bufnr)
   local cache = require("tiny-inline-diagnostic.cache")
+  local extmarks = require("tiny-inline-diagnostic.extmarks")
   timers.close(bufnr)
   attached_buffers[bufnr] = nil
   last_cursor_positions[bufnr] = nil
   cache.clear(bufnr)
+  -- On LspDetach this removes the DiagnosticChanged autocmd before nvim resets
+  -- the client's diagnostics, so no later render would clear the extmarks
+  extmarks.clear(bufnr)
   if augroup_id and vim.api.nvim_buf_is_valid(bufnr) then
     pcall(vim.api.nvim_clear_autocmds, { group = augroup_id, buffer = bufnr })
-  end
-  if cleanup_callback then
-    cleanup_callback(bufnr)
   end
 end
 
