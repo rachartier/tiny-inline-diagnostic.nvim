@@ -275,32 +275,29 @@ function M.reset()
   re_render_all_buffers()
 end
 
----@param action string
-local function handle_command(action)
-  if action == "enable" then
-    M.enable()
-  elseif action == "disable" then
-    M.disable()
-  elseif action == "toggle" then
-    M.toggle()
-  elseif action == "toggle_cursor_only" then
-    M.toggle_cursor_only()
-  elseif action == "toggle_all_diags_on_cursorline" then
-    M.toggle_all_diags_on_cursorline()
-  elseif action == "reset" then
-    M.reset()
-  else
-    vim.notify("Invalid action: " .. action, vim.log.levels.ERROR)
-  end
-end
+local command_actions = {
+  enable = M.enable,
+  disable = M.disable,
+  toggle = M.toggle,
+  toggle_cursor_only = M.toggle_cursor_only,
+  toggle_all_diags_on_cursorline = M.toggle_all_diags_on_cursorline,
+  reset = M.reset,
+}
 
 local function setup_commands()
   vim.api.nvim_create_user_command("TinyInlineDiag", function(opts)
-    handle_command(opts.args)
+    local action = command_actions[opts.args]
+    if action then
+      action()
+    else
+      vim.notify("Invalid action: " .. opts.args, vim.log.levels.ERROR)
+    end
   end, {
     nargs = 1,
     complete = function()
-      return { "enable", "disable", "toggle", "toggle_cursor_only", "toggle_all_diags_on_cursorline", "reset" }
+      local names = vim.tbl_keys(command_actions)
+      table.sort(names)
+      return names
     end,
     desc = "Control tiny-inline-diagnostic display",
   })
