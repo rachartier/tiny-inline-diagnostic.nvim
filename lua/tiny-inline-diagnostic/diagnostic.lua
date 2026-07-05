@@ -4,10 +4,10 @@ local autocmds = require("tiny-inline-diagnostic.autocmds")
 local cache = require("tiny-inline-diagnostic.cache")
 local extmarks = require("tiny-inline-diagnostic.extmarks")
 local filter = require("tiny-inline-diagnostic.filter")
-local handlers = require("tiny-inline-diagnostic.handlers")
 local renderer = require("tiny-inline-diagnostic.renderer")
 local state = require("tiny-inline-diagnostic.state")
 local timers = require("tiny-inline-diagnostic.timer")
+local utils = require("tiny-inline-diagnostic.utils")
 
 M.enabled = state.enabled
 M.user_toggle_state = state.user_toggle_state
@@ -28,14 +28,11 @@ function M.set_diagnostic_autocmds(opts)
 
   state.init(opts)
 
-  local events = handlers.compute_events(opts)
-  local global_direct_renderer = handlers.build_direct_renderer(opts, renderer)
-  autocmds.setup_global_autocmds(
-    autocmd_ns,
-    opts,
-    global_direct_renderer,
-    extmarks.update_namespace_window
-  )
+  local events = opts.options.overwrite_events or { "LspAttach" }
+  local direct_renderer = function(bufnr)
+    renderer.safe_render(opts, bufnr)
+  end
+  autocmds.setup_global_autocmds(autocmd_ns, opts, direct_renderer, extmarks.update_namespace_window)
 
   vim.api.nvim_create_autocmd(events, {
     group = autocmd_ns,
@@ -52,24 +49,32 @@ function M.set_diagnostic_autocmds(opts)
         return
       end
 
-      local throttler = handlers.build_throttled_renderer(opts, renderer)
-      local direct_renderer = handlers.build_direct_renderer(opts, renderer)
-      timers.add(event.buf, throttler.timer)
+      local throttled_fn, throttle_timer = utils.throttle(direct_renderer, opts.options.throttle)
+      timers.add(event.buf, throttle_timer)
 
-      local on_diagnostic_change = handlers.build_diagnostic_change_handler(cache, opts)
-      local on_mode_change = handlers.build_mode_change_handler(state, renderer, opts)
+      local on_diagnostic_change = function(buf, diagnostics)
+        cache.update(opts, buf, diagnostics)
+      end
+      local on_mode_change = function(mode, bufnr)
+        if state.is_mode_disabled(mode) then
+          state.disable()
+        else
+          state.enable()
+        end
+        renderer.render(opts, bufnr)
+      end
       local on_window_change = extmarks.update_namespace_window
 
       autocmds.setup_buffer_autocmds(
         autocmd_ns,
         opts,
         event.buf,
-        throttler.fn,
+        throttled_fn,
         direct_renderer,
         on_diagnostic_change,
         on_window_change
       )
-      autocmds.setup_cursor_autocmds(autocmd_ns, opts, event.buf, throttler.fn, direct_renderer)
+      autocmds.setup_cursor_autocmds(autocmd_ns, opts, event.buf, throttled_fn, direct_renderer)
       autocmds.setup_mode_change_autocmds(autocmd_ns, event.buf, on_mode_change)
 
       local existing_diagnostics = vim.diagnostic.get(event.buf)
