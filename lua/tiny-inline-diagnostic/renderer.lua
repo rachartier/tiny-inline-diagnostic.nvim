@@ -78,24 +78,16 @@ local function build_render_plan(opts, bufnr, diagnostics, cursor_line)
 end
 
 ---@param opts table
----@param need_to_be_under boolean
----@return number
-local function compute_signs_offset(opts, need_to_be_under)
-  local base_offset = vim.fn.strdisplaywidth(opts.signs.left)
-  if need_to_be_under then
-    return base_offset
-  end
-  return base_offset + vim.fn.strdisplaywidth(opts.signs.arrow)
-end
-
----@param opts table
 ---@param bufnr number
 ---@param plan table
 ---@param diags_dims table
 ---@param virt_priority number
 local function apply_render_plan(opts, bufnr, plan, diags_dims, virt_priority)
+  local left_width = vim.fn.strdisplaywidth(opts.signs.left)
+  local arrow_width = vim.fn.strdisplaywidth(opts.signs.arrow)
+
   for _, item in ipairs(plan) do
-    local signs_offset = compute_signs_offset(opts, item.need_to_be_under)
+    local signs_offset = item.need_to_be_under and left_width or left_width + arrow_width
     extmarks.create_extmarks(
       opts,
       bufnr,

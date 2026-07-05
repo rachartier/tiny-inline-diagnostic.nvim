@@ -149,6 +149,17 @@ function M.under_cursor(opts, buf, diagnostics)
   return add_related_diagnostics(opts, filtered_diags)
 end
 
+---Apply the multilines-specific severity filter, if configured
+---@param opts table
+---@param diagnostics table
+---@return table
+local function by_multiline_severity(opts, diagnostics)
+  if not opts.options.multilines.severity then
+    return diagnostics
+  end
+  return M.by_severity({ options = { severity = opts.options.multilines.severity } }, diagnostics)
+end
+
 ---@param opts table
 ---@param bufnr number
 ---@param diagnostics table
@@ -164,12 +175,7 @@ function M.for_display(opts, bufnr, diagnostics)
 
   if opts.options.multilines.always_show then
     local under_cursor = M.under_cursor(opts, bufnr, diagnostics)
-    local multiline_diags = diagnostics
-
-    if opts.options.multilines.severity then
-      multiline_diags =
-        M.by_severity({ options = { severity = opts.options.multilines.severity } }, diagnostics)
-    end
+    local multiline_diags = by_multiline_severity(opts, diagnostics)
 
     local seen = {}
     for _, diag in ipairs(under_cursor) do
@@ -190,10 +196,7 @@ function M.for_display(opts, bufnr, diagnostics)
     return under_cursor
   end
 
-  if opts.options.multilines.severity then
-    return M.by_severity({ options = { severity = opts.options.multilines.severity } }, diagnostics)
-  end
-  return diagnostics
+  return by_multiline_severity(opts, diagnostics)
 end
 
 ---@param diagnostics table
