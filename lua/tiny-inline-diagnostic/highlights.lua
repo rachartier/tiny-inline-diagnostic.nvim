@@ -207,21 +207,17 @@ function M.get_diagnostic_icon(severity)
   local name = vim.diagnostic.severity[severity]:lower():gsub("^%l", string.upper)
   local sign = vim.fn.sign_getdefined("DiagnosticSign" .. name)[1]
 
-  if vim.fn.has("nvim-0.10.0") == 1 then
-    local config = vim.diagnostic.config() or {}
-    if config.signs == nil or type(config.signs) == "boolean" then
-      return sign and sign.text or name:sub(1, 1)
-    end
-    local signs = config.signs or {}
-    if type(signs) == "function" then
-      signs = signs(0, 0)
-    end
-    return type(signs) == "table" and signs.text and signs.text[severity]
-      or sign and sign.text
-      or name:sub(1, 1)
+  local config = vim.diagnostic.config() or {}
+  if config.signs == nil or type(config.signs) == "boolean" then
+    return sign and sign.text or name:sub(1, 1)
   end
-
-  return sign and sign.text or name or SEVERITY_NAMES[severity]:sub(1, 1)
+  local signs = config.signs or {}
+  if type(signs) == "function" then
+    signs = signs(0, 0)
+  end
+  return type(signs) == "table" and signs.text and signs.text[severity]
+    or sign and sign.text
+    or name:sub(1, 1)
 end
 
 return M

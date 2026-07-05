@@ -113,7 +113,7 @@ function M.get_extmarks_on_line(bufnr, linenr, col)
 
   return vim.api.nvim_buf_get_extmarks(bufnr, -1, { linenr, col }, { linenr, -1 }, {
     details = true,
-    overlap = vim.fn.has("nvim-0.10.0") == 1,
+    overlap = true,
   })
 end
 
