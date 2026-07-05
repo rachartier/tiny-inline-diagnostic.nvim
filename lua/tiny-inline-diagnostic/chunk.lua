@@ -353,21 +353,17 @@ function M.get_arrow_from_chunk(opts, diagnostic_line, ret, hl_diag_hi)
   return chunk
 end
 
---- Get the chunks for a diagnostic message.
+--- Compute the values shared by every diagnostic on a line, so callers
+--- iterating over the line's diagnostics can compute them once.
 ---@param opts table: The options table.
 ---@param diags_on_line table: The diagnostics on the line.
----@param diag_index number: The index of the diagnostic message.
 ---@param diag_line number: The line number of the diagnostic message.
 ---@param cursor_line number: The line number of the cursor.
 ---@param buf number: The buffer number.
----@return table: A table containing the chunks and other diagnostic information.
-function M.get_chunks(opts, diags_on_line, diag_index, diag_line, cursor_line, buf)
+---@return table: win_width, show_source, severities, other_extmarks_offset, need_to_be_under.
+function M.get_line_context(opts, diags_on_line, diag_line, cursor_line, buf)
   local win_width = vim.api.nvim_win_get_width(0)
-  local lines = vim.api.nvim_buf_get_lines(buf, diag_line, diag_line + 1, false)
-  local line_length = lines[1] and #lines[1] or 0
-  local need_to_be_under = false
-
-  local diag = diags_on_line[diag_index]
+  local line = vim.api.nvim_buf_get_lines(buf, diag_line, diag_line + 1, false)[1]
 
   local show_source = false
   if opts.options.show_source.enabled then
@@ -384,6 +380,54 @@ function M.get_chunks(opts, diags_on_line, diag_index, diag_line, cursor_line, b
     end
   end
 
+  local severities = vim.tbl_map(function(d)
+    return d.severity
+  end, diags_on_line)
+
+  local other_extmarks_offset = extmarks.handle_other_extmarks(buf, diag_line, line and #line or 0)
+
+  local need_to_be_under = false
+  if
+    (opts.options.overflow.mode ~= "none" and not opts.options.multilines.enabled)
+    or cursor_line == diag_line
+  then
+    local line_display_width = line and vim.fn.strdisplaywidth(line) or 0
+    local visual_line_width = line_display_width + other_extmarks_offset
+
+    if cursor_line == diag_line then
+      local ok, virtcol_end = pcall(vim.fn.virtcol, "$")
+      if ok then
+        visual_line_width = virtcol_end - 1
+      end
+    end
+
+    if visual_line_width > win_width - opts.options.softwrap then
+      need_to_be_under = true
+    end
+  end
+
+  return {
+    win_width = win_width,
+    show_source = show_source,
+    severities = severities,
+    other_extmarks_offset = other_extmarks_offset,
+    need_to_be_under = need_to_be_under,
+  }
+end
+
+--- Get the chunks for a diagnostic message.
+---@param opts table: The options table.
+---@param diags_on_line table: The diagnostics on the line.
+---@param diag_index number: The index of the diagnostic message.
+---@param diag_line number: The line number of the diagnostic message.
+---@param cursor_line number: The line number of the cursor.
+---@param buf number: The buffer number.
+---@param line_ctx table|nil: Precomputed result of get_line_context for this line.
+---@return table: A table containing the chunks and other diagnostic information.
+function M.get_chunks(opts, diags_on_line, diag_index, diag_line, cursor_line, buf, line_ctx)
+  line_ctx = line_ctx or M.get_line_context(opts, diags_on_line, diag_line, cursor_line, buf)
+
+  local diag = diags_on_line[diag_index]
   local show_code = opts.options.show_code
 
   local diag_message = diag.message
@@ -405,35 +449,8 @@ function M.get_chunks(opts, diags_on_line, diag_index, diag_line, cursor_line, b
     if show_code and diag.code and diag.code ~= vim.NIL then
       diag_message = diag_message .. " [" .. diag.code .. "]"
     end
-    if show_source and diag.source then
+    if line_ctx.show_source and diag.source then
       diag_message = diag_message .. " (" .. diag.source .. ")"
-    end
-  end
-
-  local chunks
-  local severities = vim.tbl_map(function(d)
-    return d.severity
-  end, diags_on_line)
-
-  local other_extmarks_offset = extmarks.handle_other_extmarks(buf, diag_line, line_length)
-
-  local multilines_enabled = opts.options.multilines.enabled
-
-  if
-    (opts.options.overflow.mode ~= "none" and not multilines_enabled) or cursor_line == diag_line
-  then
-    local line_display_width = lines[1] and vim.fn.strdisplaywidth(lines[1]) or 0
-    local visual_line_width = line_display_width + other_extmarks_offset
-
-    if cursor_line == diag_line then
-      local ok, virtcol_end = pcall(vim.fn.virtcol, "$")
-      if ok then
-        visual_line_width = virtcol_end - 1
-      end
-    end
-
-    if visual_line_width > win_width - opts.options.softwrap then
-      need_to_be_under = true
     end
   end
 
@@ -441,12 +458,13 @@ function M.get_chunks(opts, diags_on_line, diag_index, diag_line, cursor_line, b
     diag_message = opts.options.format(diag)
   end
 
-  if not multilines_enabled or cursor_line == diag_line then
+  local chunks
+  if not opts.options.multilines.enabled or cursor_line == diag_line then
     chunks = M.handle_overflow_modes(
       opts,
       diag_message,
-      need_to_be_under,
-      win_width,
+      line_ctx.need_to_be_under,
+      line_ctx.win_width,
       diag.is_related or false
     )
   else
@@ -456,10 +474,10 @@ function M.get_chunks(opts, diags_on_line, diag_index, diag_line, cursor_line, b
   return {
     chunks = chunks,
     severity = diag.severity,
-    severities = severities,
+    severities = line_ctx.severities,
     source = diag.source,
-    offset_win_col = other_extmarks_offset,
-    need_to_be_under = need_to_be_under,
+    offset_win_col = line_ctx.other_extmarks_offset,
+    need_to_be_under = line_ctx.need_to_be_under,
     line = diag.lnum,
     is_related = diag.is_related or false,
   }

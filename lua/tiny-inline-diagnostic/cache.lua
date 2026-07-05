@@ -5,7 +5,9 @@ local diagnostics_cache = {}
 ---@param diagnostics table
 ---@return table
 local function sort_by_severity(diagnostics)
-  local sorted = vim.deepcopy(diagnostics)
+  -- Shallow copy: the sort only reorders references and no consumer mutates
+  -- the diagnostic tables
+  local sorted = { unpack(diagnostics) }
   table.sort(sorted, function(a, b)
     -- _extmark_id is attached by nvim core in vim.diagnostic.get(); tie-break on
     -- it because table.sort is unstable and equal severities would render in

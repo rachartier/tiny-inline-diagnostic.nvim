@@ -139,8 +139,12 @@ function M.from_diagnostics(opts, diags_on_line, cursor_pos, buf)
   local max_chunk_line_length = 0
   local has_related = false
 
+  local line_ctx =
+    chunk_utils.get_line_context(opts, diags_on_line, cursor_pos[1], current_line, buf)
+
   for index = 1, #diags_on_line do
-    local ret = chunk_utils.get_chunks(opts, diags_on_line, index, cursor_pos[1], current_line, buf)
+    local ret =
+      chunk_utils.get_chunks(opts, diags_on_line, index, cursor_pos[1], current_line, buf, line_ctx)
     max_chunk_line_length =
       math.max(max_chunk_line_length, chunk_utils.get_max_width_from_chunks(ret.chunks))
     chunks[index] = ret
