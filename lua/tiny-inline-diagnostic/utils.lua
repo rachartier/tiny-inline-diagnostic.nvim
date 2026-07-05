@@ -124,50 +124,70 @@ function M.wrap_text(text, max_length, trim_whitespaces, tabstop)
   text = text:gsub("\t", string.rep(" ", tabstop))
 
   local lines = {}
-  local split_lines = M.split_lines(text)
 
-  for _, split_line in ipairs(split_lines) do
+  for _, split_line in ipairs(M.split_lines(text)) do
     -- Handle empty lines
     if split_line:match("^%s*$") then
       table.insert(lines, split_line)
-    else
-      local current_line = ""
-      local pattern = "%S+"
-      local beginning_whitespace = trim_whitespaces and "" or split_line:match("^%s*") or ""
-
-      local words = {}
-      local start_pos = 1
-
-      for word in split_line:gmatch(pattern) do
-        local word_start, word_end = split_line:find(word, start_pos, true)
-        table.insert(words, {
-          text = word,
-          leading_space = split_line:sub(start_pos, word_start - 1),
-        })
-        start_pos = word_end + 1
-      end
-
-      local first_word = true
-      for _, word_info in ipairs(words) do
-        local space_to_add = first_word and beginning_whitespace
-          or (trim_whitespaces and " " or word_info.leading_space)
-        local potential_line = current_line .. space_to_add .. word_info.text
-
-        if #potential_line <= max_length then
-          current_line = potential_line
-          first_word = false
+    elseif trim_whitespaces then
+      local parts = {}
+      local len = 0
+      local pos = 1
+      while true do
+        local s, e = split_line:find("%S+", pos)
+        if not s then
+          break
+        end
+        local word_len = e - s + 1
+        if #parts == 0 then
+          parts[1] = split_line:sub(s, e)
+          len = word_len
+        elseif len + 1 + word_len <= max_length then
+          parts[#parts + 1] = split_line:sub(s, e)
+          len = len + 1 + word_len
         else
-          if current_line ~= "" then
-            table.insert(lines, current_line)
-          end
-          current_line = (trim_whitespaces and "" or beginning_whitespace) .. word_info.text
-          first_word = false
+          table.insert(lines, table.concat(parts, " "))
+          parts = { split_line:sub(s, e) }
+          len = word_len
+        end
+        pos = e + 1
+      end
+      if #parts > 0 then
+        table.insert(lines, table.concat(parts, " "))
+      end
+    else
+      -- Inter-word whitespace is kept verbatim, so every output line is a
+      -- slice of the input; continuation lines are re-prefixed with the
+      -- line's leading whitespace
+      local prefix = split_line:match("^%s*")
+      local start_idx = 1
+      local _, last_e = split_line:find("%S+")
+      local pos = last_e + 1
+
+      local function emit()
+        if start_idx == 1 then
+          table.insert(lines, split_line:sub(1, last_e))
+        else
+          table.insert(lines, prefix .. split_line:sub(start_idx, last_e))
         end
       end
 
-      if current_line ~= "" then
-        table.insert(lines, current_line)
+      while true do
+        local s, e = split_line:find("%S+", pos)
+        if not s then
+          break
+        end
+        local potential_len = start_idx == 1 and e or (#prefix + e - start_idx + 1)
+        if potential_len <= max_length then
+          last_e = e
+        else
+          emit()
+          start_idx = s
+          last_e = e
+        end
+        pos = e + 1
       end
+      emit()
     end
   end
 

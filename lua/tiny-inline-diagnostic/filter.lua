@@ -1,5 +1,7 @@
 local M = {}
 
+local cache = require("tiny-inline-diagnostic.cache")
+
 ---@param opts table
 ---@param diagnostics table
 ---@return table
@@ -19,32 +21,41 @@ end
 ---@param diagnostics table
 ---@param line number
 ---@param col number
+---@param diags_on_line table|nil Precomputed diagnostics of that line (cache-owned, not mutated)
 ---@return table
-function M.at_position(opts, diagnostics, line, col)
-  if not diagnostics or #diagnostics == 0 then
-    return {}
-  end
-
-  local diags_on_line = vim.tbl_filter(function(diag)
-    return diag.lnum == line
-  end, diagnostics)
-
-  if opts.options.show_all_diags_on_cursorline then
-    return #diags_on_line > 0 and diags_on_line or {}
-  end
-
-  local current_pos_diags = vim.tbl_filter(function(diag)
-    if diag.lnum ~= line then
-      return false
+function M.at_position(opts, diagnostics, line, col, diags_on_line)
+  if not diags_on_line then
+    if not diagnostics or #diagnostics == 0 then
+      return {}
     end
+    diags_on_line = {}
+    for _, diag in ipairs(diagnostics) do
+      if diag.lnum == line then
+        diags_on_line[#diags_on_line + 1] = diag
+      end
+    end
+  end
 
+  -- Wholesale returns copy the list: diags_on_line may be a cache-owned
+  -- bucket and callers mutate the result
+  if opts.options.show_all_diags_on_cursorline then
+    return { unpack(diags_on_line) }
+  end
+
+  local current_pos_diags = {}
+  for _, diag in ipairs(diags_on_line) do
     -- Zero-width LSP range (Range.end exclusive, start == end): anchor to the
     -- character on either side of the point so end-of-token diagnostics match
+    local under_cursor
     if diag.col == diag.end_col and diag.col > 0 then
-      return col == diag.col or col == diag.col - 1
+      under_cursor = col == diag.col or col == diag.col - 1
+    else
+      under_cursor = col >= diag.col and col <= diag.end_col
     end
-    return col >= diag.col and col <= diag.end_col
-  end, diagnostics)
+    if under_cursor then
+      current_pos_diags[#current_pos_diags + 1] = diag
+    end
+  end
 
   if opts.options.show_diags_only_under_cursor then
     local seen = {}
@@ -58,9 +69,12 @@ function M.at_position(opts, diagnostics, line, col)
       end
     end
     return result
-  else
-    return #current_pos_diags > 0 and current_pos_diags or diags_on_line
   end
+
+  if #current_pos_diags > 0 then
+    return current_pos_diags
+  end
+  return { unpack(diags_on_line) }
 end
 
 ---@param related_info table
@@ -142,23 +156,35 @@ function M.under_cursor(opts, buf, diagnostics)
   end
 
   local cursor_pos = vim.api.nvim_win_get_cursor(0)
-  local filtered_diags = M.at_position(opts, diagnostics, cursor_pos[1] - 1, cursor_pos[2])
+  local cursor_lnum = cursor_pos[1] - 1
+
+  -- When operating on the cached list, use its per-line index instead of
+  -- scanning all diagnostics
+  local diags_on_line
+  if diagnostics == cache.get(buf) then
+    diags_on_line = cache.get_by_line(buf)[cursor_lnum] or {}
+  end
+
+  local filtered_diags = M.at_position(opts, diagnostics, cursor_lnum, cursor_pos[2], diags_on_line)
 
   filtered_diags = M.by_severity(opts, filtered_diags)
 
   return add_related_diagnostics(opts, filtered_diags)
 end
 
----Apply the multilines-specific severity filter, if configured
+---Apply the multilines-specific severity filter, if configured. Passthrough
+---when unconfigured: the result may alias the input, treat it as read-only.
 ---@param opts table
 ---@param diagnostics table
 ---@return table
-local function by_multiline_severity(opts, diagnostics)
+function M.by_multiline_severity(opts, diagnostics)
   if not opts.options.multilines.severity then
     return diagnostics
   end
   return M.by_severity({ options = { severity = opts.options.multilines.severity } }, diagnostics)
 end
+
+local by_multiline_severity = M.by_multiline_severity
 
 ---@param opts table
 ---@param bufnr number

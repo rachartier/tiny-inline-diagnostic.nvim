@@ -33,6 +33,7 @@ end
 ---@param total_chunks number: The total number of chunks.
 ---@param severities table: The severities of the diagnostic messages.
 ---@param is_related boolean: Whether this is a related diagnostic.
+---@param cursor_line number|nil: 0-indexed cursor line, fetched if absent.
 ---@return table: A table representing the virtual text array for the diagnostic message header.
 function M.get_header_from_chunk(
   message,
@@ -43,7 +44,8 @@ function M.get_header_from_chunk(
   diag_inv_hi,
   total_chunks,
   severities,
-  is_related
+  is_related,
+  cursor_line
 )
   local virt_texts = {}
   local num_chunks = #chunk_info.chunks
@@ -68,7 +70,7 @@ function M.get_header_from_chunk(
   end
   vim.list_extend(virt_texts, { { icon, diag_hi } })
 
-  local cursor_line = vim.api.nvim_win_get_cursor(0)[1] - 1
+  cursor_line = cursor_line or (vim.api.nvim_win_get_cursor(0)[1] - 1)
   local add_messages_opts = opts.options.add_messages
 
   local add_messages = add_messages_opts.messages

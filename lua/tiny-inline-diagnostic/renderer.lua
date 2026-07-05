@@ -27,7 +27,9 @@ local function validate_and_prepare_state(bufnr)
   if vim.tbl_isempty(diagnostics) then
     local live_diagnostics = vim.diagnostic.get(bufnr)
     if live_diagnostics and #live_diagnostics > 0 then
-      diagnostics = live_diagnostics
+      -- Store the live fetch so the per-line index exists for this render
+      cache.update(bufnr, live_diagnostics)
+      diagnostics = cache.get(bufnr)
     else
       extmarks.clear(bufnr)
       return nil
@@ -43,25 +45,56 @@ end
 ---@param cursor_line number
 ---@return table, table
 local function build_render_plan(opts, bufnr, diagnostics, cursor_line)
-  local filtered_diags = filter.for_display(opts, bufnr, diagnostics)
-  local visible_diags = filter.visible(filtered_diags)
-
   local diags_dims = {}
   local plan = {}
 
-  for lnum, diags in pairs(visible_diags) do
-    if diags then
+  local first_line = vim.fn.line("w0") - 1
+  local last_line = vim.fn.line("w$")
+  local by_lnum = cache.get_by_line(bufnr)
+  local under_cursor = filter.under_cursor(opts, bufnr, diagnostics)
+
+  -- Mirrors filter.for_display, but per visible line via the cache index
+  -- instead of filtering the whole diagnostic list
+  local always_show = false
+  local show_other_lines = false
+  if not opts.options.show_diags_only_under_cursor and opts.options.multilines.enabled then
+    always_show = opts.options.multilines.always_show
+    show_other_lines = always_show or #under_cursor == 0
+  end
+
+  for lnum = first_line, last_line do
+    local diags
+    if lnum == cursor_line then
+      diags = under_cursor
+      if always_show then
+        local seen = {}
+        for _, d in ipairs(diags) do
+          seen[d] = true
+        end
+        for _, d in ipairs(filter.by_multiline_severity(opts, by_lnum[lnum] or {})) do
+          if not seen[d] then
+            diags[#diags + 1] = d
+          end
+        end
+      elseif show_other_lines and #diags == 0 then
+        diags = filter.by_multiline_severity(opts, by_lnum[lnum] or {})
+      end
+    elseif show_other_lines then
+      diags = filter.by_multiline_severity(opts, by_lnum[lnum] or {})
+    end
+
+    if diags and #diags > 0 then
       local diagnostic_pos = { lnum, 0 }
       local virt_lines, offset, need_to_be_under
 
       if lnum == cursor_line then
         virt_lines, offset, need_to_be_under =
-          virtual_text_forge.from_diagnostics(opts, diags, diagnostic_pos, bufnr)
+          virtual_text_forge.from_diagnostics(opts, diags, diagnostic_pos, bufnr, cursor_line)
       else
         local chunks = chunk_utils.get_chunks(opts, diags, 1, diagnostic_pos[1], cursor_line, bufnr)
         local max_width = chunk_utils.get_max_width_from_chunks(chunks.chunks)
         virt_lines, offset, need_to_be_under =
-          virtual_text_forge.from_diagnostic(opts, chunks, 1, max_width, 1)
+          virtual_text_forge.from_diagnostic(opts, chunks, 1, max_width, 1, cursor_line)
       end
 
       table.insert(diags_dims, { lnum, #virt_lines })
@@ -82,7 +115,8 @@ end
 ---@param plan table
 ---@param diags_dims table
 ---@param virt_priority number
-local function apply_render_plan(opts, bufnr, plan, diags_dims, virt_priority)
+---@param render_ctx table
+local function apply_render_plan(opts, bufnr, plan, diags_dims, virt_priority, render_ctx)
   local left_width = vim.fn.strdisplaywidth(opts.signs.left)
   local arrow_width = vim.fn.strdisplaywidth(opts.signs.arrow)
 
@@ -97,7 +131,8 @@ local function apply_render_plan(opts, bufnr, plan, diags_dims, virt_priority)
       item.offset,
       signs_offset,
       item.need_to_be_under,
-      virt_priority
+      virt_priority,
+      render_ctx
     )
   end
 end
@@ -137,11 +172,15 @@ function M.render(opts, bufnr)
   end
 
   vim.api.nvim_win_call(winid, function()
-    local cursor_line = vim.api.nvim_win_get_cursor(0)[1] - 1
+    local render_ctx = {
+      cursor_line = vim.api.nvim_win_get_cursor(0)[1] - 1,
+      win_col = extmarks.get_window_col(),
+      buf_lines_count = vim.api.nvim_buf_line_count(bufnr),
+    }
     extmarks.clear(bufnr)
 
-    local plan, diags_dims = build_render_plan(opts, bufnr, diagnostics, cursor_line)
-    apply_render_plan(opts, bufnr, plan, diags_dims, opts.options.virt_texts.priority)
+    local plan, diags_dims = build_render_plan(opts, bufnr, diagnostics, render_ctx.cursor_line)
+    apply_render_plan(opts, bufnr, plan, diags_dims, opts.options.virt_texts.priority, render_ctx)
   end)
 end
 

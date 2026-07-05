@@ -34,6 +34,7 @@ end
 ---@param index_diag number
 ---@param total_chunks number
 ---@param is_related boolean
+---@param cursor_line number
 ---@return table
 local function build_first_chunk(
   opts,
@@ -42,7 +43,8 @@ local function build_first_chunk(
   hl,
   index_diag,
   total_chunks,
-  is_related
+  is_related,
+  cursor_line
 )
   local chunk_header = chunk_utils.get_header_from_chunk(
     message,
@@ -53,11 +55,11 @@ local function build_first_chunk(
     hl.diag_inv_hi,
     total_chunks,
     chunk_info.severities,
-    is_related
+    is_related,
+    cursor_line
   )
 
   if index_diag == 1 and not is_related then
-    local cursor_line = vim.api.nvim_win_get_cursor(0)[1] - 1
     local chunk_arrow =
       chunk_utils.get_arrow_from_chunk(opts, cursor_line, chunk_info, hl.diag_inv_hi)
 
@@ -78,9 +80,10 @@ end
 --- @param index_diag number Index of the current diagnostic.
 --- @param padding number Padding to align the text.
 --- @param total_chunks number Total number of chunks.
+--- @param cursor_line number|nil 0-indexed cursor line, fetched if absent.
 --- @return table, number, boolean Virtual texts, offset window column, and whether it needs to be under.
-function M.from_diagnostic(opts, ret, index_diag, padding, total_chunks)
-  local cursor_line = vim.api.nvim_win_get_cursor(0)[1] - 1
+function M.from_diagnostic(opts, ret, index_diag, padding, total_chunks, cursor_line)
+  cursor_line = cursor_line or (vim.api.nvim_win_get_cursor(0)[1] - 1)
 
   local diag_hi, diag_inv_hi, body_hi =
     highlights.get_diagnostic_highlights(opts.blend.factor, ret, cursor_line, index_diag)
@@ -98,7 +101,8 @@ function M.from_diagnostic(opts, ret, index_diag, padding, total_chunks)
         { diag_hi = diag_hi, diag_inv_hi = diag_inv_hi },
         index_diag,
         total_chunks,
-        ret.is_related or false
+        ret.is_related or false,
+        cursor_line
       )
       vim.list_extend(all_virtual_texts, first_chunks)
     else
@@ -129,11 +133,12 @@ end
 ---@param diags_on_line table[]
 ---@param cursor_pos number[]
 ---@param buf number
+---@param cursor_line number|nil 0-indexed cursor line, fetched if absent.
 ---@return table, number, boolean
-function M.from_diagnostics(opts, diags_on_line, cursor_pos, buf)
+function M.from_diagnostics(opts, diags_on_line, cursor_pos, buf, cursor_line)
   local all_virtual_texts = {}
   local need_to_be_under = false
-  local current_line = vim.api.nvim_win_get_cursor(0)[1] - 1
+  local current_line = cursor_line or (vim.api.nvim_win_get_cursor(0)[1] - 1)
 
   local chunks = {}
   local max_chunk_line_length = 0

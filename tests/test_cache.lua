@@ -41,6 +41,68 @@ T["get"]["returns cached diagnostics for buffer"] = function()
   end)
 end
 
+T["update_from_event"] = MiniTest.new_set()
+
+T["update_from_event"]["merges diagnostics across namespaces"] = function()
+  H.with_buf({ "test" }, function(buf)
+    local ns1 = vim.api.nvim_create_namespace("cache_evt_ns1")
+    local ns2 = vim.api.nvim_create_namespace("cache_evt_ns2")
+
+    cache.update_from_event(buf, {
+      { lnum = 0, col = 0, message = "a", severity = 1, namespace = ns1 },
+    })
+    cache.update_from_event(buf, {
+      { lnum = 1, col = 0, message = "b", severity = 2, namespace = ns2 },
+    })
+
+    MiniTest.expect.equality(#cache.get(buf), 2)
+  end)
+end
+
+T["update_from_event"]["replaces only the emitting namespace"] = function()
+  H.with_buf({ "test" }, function(buf)
+    local ns1 = vim.api.nvim_create_namespace("cache_evt_replace1")
+    local ns2 = vim.api.nvim_create_namespace("cache_evt_replace2")
+
+    cache.update_from_event(buf, {
+      { lnum = 0, col = 0, message = "old1", severity = 1, namespace = ns1 },
+      { lnum = 0, col = 5, message = "old2", severity = 1, namespace = ns1 },
+    })
+    cache.update_from_event(buf, {
+      { lnum = 1, col = 0, message = "other", severity = 2, namespace = ns2 },
+    })
+    cache.update_from_event(buf, {
+      { lnum = 0, col = 0, message = "new1", severity = 1, namespace = ns1 },
+    })
+
+    local cached = cache.get(buf)
+    MiniTest.expect.equality(#cached, 2)
+    local messages = {}
+    for _, d in ipairs(cached) do
+      messages[d.message] = true
+    end
+    MiniTest.expect.equality(messages["new1"], true)
+    MiniTest.expect.equality(messages["other"], true)
+    MiniTest.expect.equality(messages["old1"], nil)
+  end)
+end
+
+T["update_from_event"]["empty payload resyncs from vim.diagnostic"] = function()
+  H.with_buf({ "test" }, function(buf)
+    local ns = vim.api.nvim_create_namespace("cache_evt_resync")
+    vim.diagnostic.set(ns, buf, {
+      { lnum = 0, col = 0, message = "live", severity = vim.diagnostic.severity.ERROR },
+    })
+
+    cache.update_from_event(buf, {})
+
+    local cached = cache.get(buf)
+    MiniTest.expect.equality(#cached, 1)
+    MiniTest.expect.equality(cached[1].message, "live")
+    vim.diagnostic.reset(ns, buf)
+  end)
+end
+
 T["update"] = MiniTest.new_set()
 
 T["update"]["orders equal severities by _extmark_id descending (#164)"] = function()

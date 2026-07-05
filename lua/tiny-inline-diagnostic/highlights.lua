@@ -70,12 +70,7 @@ end
 ---Check if the cursorline is visible
 ---@return boolean
 local function is_cursorline_visible()
-  if vim.opt.cursorline:get() then
-    local cursorline_opt = vim.opt.cursorlineopt:get()
-    return not (#cursorline_opt == 1 and cursorline_opt[1] == "number")
-  end
-
-  return false
+  return vim.wo.cursorline and vim.wo.cursorlineopt ~= "number"
 end
 
 ---@param colors table

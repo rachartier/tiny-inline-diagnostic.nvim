@@ -46,8 +46,8 @@ function M.set_diagnostic_autocmds(opts)
       local throttled_fn, throttle_timer = utils.throttle(direct_renderer, opts.options.throttle)
       timers.add(event.buf, throttle_timer)
 
-      local on_diagnostic_change = function(buf, diagnostics)
-        cache.update(buf, diagnostics)
+      local on_diagnostic_change = function(buf, event_diagnostics)
+        cache.update_from_event(buf, event_diagnostics)
       end
       local on_mode_change = function(mode, bufnr)
         if state.is_mode_disabled(mode) then

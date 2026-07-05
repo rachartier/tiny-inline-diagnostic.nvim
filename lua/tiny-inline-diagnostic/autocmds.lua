@@ -115,8 +115,7 @@ function M.setup_buffer_autocmds(
     buffer = bufnr,
     callback = function(args)
       if vim.api.nvim_buf_is_valid(args.buf) then
-        local all_diagnostics = vim.diagnostic.get(args.buf)
-        on_diagnostic_change(args.buf, all_diagnostics)
+        on_diagnostic_change(args.buf, args.data and args.data.diagnostics)
         direct_apply(args.buf)
       end
     end,

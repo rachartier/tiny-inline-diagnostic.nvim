@@ -8,19 +8,17 @@ local function is_valid_buffer(buf)
   return buf and vim.api.nvim_buf_is_valid(buf)
 end
 
-local function get_window_position()
-  local ok_winline, result_winline = pcall(vim.fn.winline)
+---Window column where virtual text starts for the cursor line
+---@return number
+function M.get_window_col()
   local ok_virtcol, result_virtcol = pcall(vim.fn.virtcol, "$")
   local ok_winsaveview, result_winsaveview = pcall(vim.fn.winsaveview)
 
-  if not (ok_winline and ok_virtcol and ok_winsaveview) then
-    return { row = 0, col = 0 }
+  if not (ok_virtcol and ok_winsaveview) then
+    return 0
   end
 
-  return {
-    row = result_winline - 1,
-    col = result_virtcol - result_winsaveview.leftcol,
-  }
+  return result_virtcol - result_winsaveview.leftcol
 end
 
 ---Index of the first buffer line in [first, last] (0-indexed) that soft-wraps
@@ -154,6 +152,7 @@ end
 ---@param signs_offset number
 ---@param need_to_be_under boolean
 ---@param virt_priority number
+---@param render_ctx table|nil: per-render values { cursor_line, win_col, buf_lines_count }
 function M.create_extmarks(
   opts,
   bufnr,
@@ -163,19 +162,25 @@ function M.create_extmarks(
   offset,
   signs_offset,
   need_to_be_under,
-  virt_priority
+  virt_priority,
+  render_ctx
 )
   if not is_valid_buffer(bufnr) or not virt_lines or vim.tbl_isempty(virt_lines) then
     return
   end
 
-  local buf_lines_count = vim.api.nvim_buf_line_count(bufnr)
+  local buf_lines_count = render_ctx and render_ctx.buf_lines_count
+    or vim.api.nvim_buf_line_count(bufnr)
   if buf_lines_count == 0 then
     return
   end
 
-  local win_col = need_to_be_under and 0 or get_window_position().col
-  local cursor_line = vim.api.nvim_win_get_cursor(0)[1] - 1
+  local win_col = 0
+  if not need_to_be_under then
+    win_col = render_ctx and render_ctx.win_col or M.get_window_col()
+  end
+  local cursor_line = render_ctx and render_ctx.cursor_line
+    or (vim.api.nvim_win_get_cursor(0)[1] - 1)
 
   if opts.options.multilines and diag_line ~= cursor_line then
     if should_skip_line(cursor_line, diag_line, diags_dims, #virt_lines) then
