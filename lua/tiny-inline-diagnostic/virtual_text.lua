@@ -15,7 +15,6 @@ local M = {}
 -- Dependencies
 local chunk_utils = require("tiny-inline-diagnostic.chunk")
 local highlights = require("tiny-inline-diagnostic.highlights")
-local utils = require("tiny-inline-diagnostic.utils")
 
 ---Format message with appropriate padding
 ---@param message string
@@ -34,19 +33,9 @@ end
 ---@param hl table
 ---@param index_diag number
 ---@param total_chunks number
----@param diag_count number
 ---@param is_related boolean
 ---@return table
-local function build_first_chunk(
-  opts,
-  chunk_info,
-  message,
-  hl,
-  index_diag,
-  total_chunks,
-  diag_count,
-  is_related
-)
+local function build_first_chunk(opts, chunk_info, message, hl, index_diag, total_chunks, is_related)
   local chunk_header = chunk_utils.get_header_from_chunk(
     message,
     index_diag,
@@ -56,7 +45,6 @@ local function build_first_chunk(
     hl.diag_inv_hi,
     total_chunks,
     chunk_info.severities,
-    diag_count,
     is_related
   )
 
@@ -82,9 +70,8 @@ end
 --- @param index_diag number Index of the current diagnostic.
 --- @param padding number Padding to align the text.
 --- @param total_chunks number Total number of chunks.
---- @param diag_count number Number of diagnostics on the line.
 --- @return table, number, boolean Virtual texts, offset window column, and whether it needs to be under.
-function M.from_diagnostic(opts, ret, index_diag, padding, total_chunks, diag_count)
+function M.from_diagnostic(opts, ret, index_diag, padding, total_chunks)
   local cursor_line = vim.api.nvim_win_get_cursor(0)[1] - 1
 
   local diag_hi, diag_inv_hi, body_hi =
@@ -103,7 +90,6 @@ function M.from_diagnostic(opts, ret, index_diag, padding, total_chunks, diag_co
         { diag_hi = diag_hi, diag_inv_hi = diag_inv_hi },
         index_diag,
         total_chunks,
-        diag_count,
         ret.is_related or false
       )
       vim.list_extend(all_virtual_texts, first_chunks)
@@ -157,7 +143,7 @@ function M.from_diagnostics(opts, diags_on_line, cursor_pos, buf)
     local padding = has_related and not ret.is_related and max_chunk_line_length + 1
       or max_chunk_line_length
     local virt_texts, _, diag_need_to_be_under =
-      M.from_diagnostic(opts, ret, index_diag, padding, #chunks, #diags_on_line)
+      M.from_diagnostic(opts, ret, index_diag, padding, #chunks)
 
     need_to_be_under = need_to_be_under or diag_need_to_be_under
 

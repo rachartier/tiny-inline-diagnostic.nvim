@@ -34,7 +34,7 @@ T["from_diagnostic"]["returns virtual text table"] = function()
     }
 
     local virt_texts, offset, need_to_be_under =
-      virtual_text.from_diagnostic(opts, chunk_info, 1, 20, 1, 1)
+      virtual_text.from_diagnostic(opts, chunk_info, 1, 20, 1)
 
     MiniTest.expect.equality(type(virt_texts), "table")
     MiniTest.expect.equality(#virt_texts > 0, true)
@@ -55,7 +55,7 @@ T["from_diagnostic"]["handles multiline chunks"] = function()
       offset_win_col = 0,
     }
 
-    local virt_texts, _, _ = virtual_text.from_diagnostic(opts, chunk_info, 1, 20, 1, 1)
+    local virt_texts, _, _ = virtual_text.from_diagnostic(opts, chunk_info, 1, 20, 1)
 
     MiniTest.expect.equality(#virt_texts >= 3, true)
   end)
@@ -73,7 +73,7 @@ T["from_diagnostic"]["adds space when need_to_be_under"] = function()
       offset_win_col = 0,
     }
 
-    local virt_texts, _, _ = virtual_text.from_diagnostic(opts, chunk_info, 1, 20, 1, 1)
+    local virt_texts, _, _ = virtual_text.from_diagnostic(opts, chunk_info, 1, 20, 1)
 
     MiniTest.expect.equality(type(virt_texts[1][1][1]), "string")
   end)
@@ -91,7 +91,7 @@ T["from_diagnostic"]["handles multiple diagnostics"] = function()
       offset_win_col = 0,
     }
 
-    local virt_texts, _, _ = virtual_text.from_diagnostic(opts, chunk_info, 2, 20, 2, 2)
+    local virt_texts, _, _ = virtual_text.from_diagnostic(opts, chunk_info, 2, 20, 2)
 
     MiniTest.expect.equality(type(virt_texts), "table")
   end)

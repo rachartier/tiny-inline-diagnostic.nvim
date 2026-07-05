@@ -31,7 +31,6 @@ end
 ---@param diag_inv_hi string: The highlight group for the diagnostic signs.
 ---@param total_chunks number: The total number of chunks.
 ---@param severities table: The severities of the diagnostic messages.
----@param diag_count number: The number of diagnostics on the line.
 ---@param is_related boolean: Whether this is a related diagnostic.
 ---@return table: A table representing the virtual text array for the diagnostic message header.
 function M.get_header_from_chunk(
@@ -43,7 +42,6 @@ function M.get_header_from_chunk(
   diag_inv_hi,
   total_chunks,
   severities,
-  diag_count,
   is_related
 )
   local virt_texts = {}
@@ -74,7 +72,6 @@ function M.get_header_from_chunk(
 
   local add_messages = add_messages_opts.messages
   local display_count = add_messages_opts.display_count
-  local show_multiple_glyphs = add_messages_opts.show_multiple_glyphs
   local use_max_severity = add_messages_opts.use_max_severity
 
   if display_count and cursor_line ~= chunk_info.line and not is_related then
@@ -355,16 +352,6 @@ function M.get_arrow_from_chunk(opts, diagnostic_line, ret, hl_diag_hi)
   return chunk
 end
 
---- Split a diagnostic message into chunks for overflow handling.
----@param message string: The diagnostic message.
----@param offset number: The offset from the start of the line to the diagnostic position.
----@param win_width number: The width of the window where the diagnostic message is displayed.
----@param opts table: The options table, which includes signs for the diagnostic message and the softwrap option.
----@return table: A table representing the chunks of the diagnostic message.
-function M.get_message_chunks_for_overflow(message, offset, win_width, opts)
-  return overflow_strategies.apply_wrap(message, false, win_width, opts)
-end
-
 --- Get the chunks for a diagnostic message.
 ---@param opts table: The options table.
 ---@param diags_on_line table: The diagnostics on the line.
@@ -377,7 +364,6 @@ function M.get_chunks(opts, diags_on_line, diag_index, diag_line, cursor_line, b
   local win_width = vim.api.nvim_win_get_width(0)
   local lines = vim.api.nvim_buf_get_lines(buf, diag_line, diag_line + 1, false)
   local line_length = lines[1] and #lines[1] or 0
-  local offset = 0
   local need_to_be_under = false
 
   local diag = diags_on_line[diag_index]
@@ -423,7 +409,7 @@ function M.get_chunks(opts, diags_on_line, diag_index, diag_line, cursor_line, b
     end
   end
 
-  local chunks = { diag_message }
+  local chunks
   local severities = vim.tbl_map(function(d)
     return d.severity
   end, diags_on_line)
@@ -460,7 +446,6 @@ function M.get_chunks(opts, diags_on_line, diag_index, diag_line, cursor_line, b
       diag_message,
       need_to_be_under,
       win_width,
-      offset,
       diag.is_related or false
     )
   else
@@ -472,7 +457,6 @@ function M.get_chunks(opts, diags_on_line, diag_index, diag_line, cursor_line, b
     severity = diag.severity,
     severities = severities,
     source = diag.source,
-    offset = offset,
     offset_win_col = other_extmarks_offset,
     need_to_be_under = need_to_be_under,
     line = diag.lnum,
@@ -485,17 +469,9 @@ end
 ---@param diag_message string: The diagnostic message.
 ---@param need_to_be_under boolean: A flag indicating whether the arrow needs to point upwards.
 ---@param win_width number: The width of the window where the diagnostic message is displayed.
----@param offset number: The offset from the start of the line to the diagnostic position.
 ---@param is_related boolean: Whether this is a related diagnostic.
 ---@return table: A table representing the chunks of the diagnostic message.
-function M.handle_overflow_modes(
-  opts,
-  diag_message,
-  need_to_be_under,
-  win_width,
-  offset,
-  is_related
-)
+function M.handle_overflow_modes(opts, diag_message, need_to_be_under, win_width, is_related)
   local chunks = {}
 
   if opts.options.break_line.enabled then

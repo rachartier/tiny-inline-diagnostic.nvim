@@ -147,8 +147,7 @@ T["get_header_from_chunk"]["creates header with left sign for first diagnostic"]
     "DiagnosticError",
     "DiagnosticErrorInv",
     1,
-    { vim.diagnostic.severity.ERROR },
-    1
+    { vim.diagnostic.severity.ERROR }
   )
 
   MiniTest.expect.equality(type(result), "table")
@@ -240,7 +239,7 @@ T["handle_overflow_modes"]["applies wrap mode"] = function()
       softwrap = 10,
     },
   })
-  local result = chunk.handle_overflow_modes(opts, "very long diagnostic message", false, 80, 0)
+  local result = chunk.handle_overflow_modes(opts, "very long diagnostic message", false, 80)
   MiniTest.expect.equality(type(result), "table")
 end
 
@@ -251,7 +250,7 @@ T["handle_overflow_modes"]["applies none mode"] = function()
       break_line = { enabled = false },
     },
   })
-  local result = chunk.handle_overflow_modes(opts, "diagnostic message", false, 80, 0)
+  local result = chunk.handle_overflow_modes(opts, "diagnostic message", false, 80)
   MiniTest.expect.equality(type(result), "table")
 end
 
@@ -262,7 +261,7 @@ T["handle_overflow_modes"]["applies oneline mode"] = function()
       break_line = { enabled = false },
     },
   })
-  local result = chunk.handle_overflow_modes(opts, "diagnostic message\nwith newline", false, 80, 0)
+  local result = chunk.handle_overflow_modes(opts, "diagnostic message\nwith newline", false, 80)
   MiniTest.expect.equality(type(result), "table")
 end
 
@@ -273,7 +272,7 @@ T["handle_overflow_modes"]["applies break_line when enabled"] = function()
       break_line = { enabled = true, after = 30 },
     },
   })
-  local result = chunk.handle_overflow_modes(opts, "diagnostic message", false, 80, 0)
+  local result = chunk.handle_overflow_modes(opts, "diagnostic message", false, 80)
   MiniTest.expect.equality(type(result), "table")
 end
 

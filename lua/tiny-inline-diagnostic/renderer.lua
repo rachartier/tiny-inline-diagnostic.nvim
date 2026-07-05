@@ -61,7 +61,7 @@ local function build_render_plan(opts, bufnr, diagnostics, cursor_line)
         local chunks = chunk_utils.get_chunks(opts, diags, 1, diagnostic_pos[1], cursor_line, bufnr)
         local max_width = chunk_utils.get_max_width_from_chunks(chunks.chunks)
         virt_lines, offset, need_to_be_under =
-          virtual_text_forge.from_diagnostic(opts, chunks, 1, max_width, 1, #diags)
+          virtual_text_forge.from_diagnostic(opts, chunks, 1, max_width, 1)
       end
 
       table.insert(diags_dims, { lnum, #virt_lines })
