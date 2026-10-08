@@ -159,6 +159,19 @@ T["update"]["orders equal severities by _extmark_id descending (#164)"] = functi
   end)
 end
 
+T["update"]["handles more diagnostics than unpack allows"] = function()
+  H.with_buf({ "test" }, function(buf)
+    local diags = {}
+    for i = 1, 20000 do
+      diags[i] = { lnum = 0, col = 0, message = "e" .. i, severity = vim.diagnostic.severity.ERROR }
+    end
+
+    cache.update(buf, diags)
+
+    MiniTest.expect.equality(#cache.get(buf), 20000)
+  end)
+end
+
 T["update"]["stores diagnostics in cache"] = function()
   H.with_buf({ "test" }, function(buf)
     local opts = create_test_opts()

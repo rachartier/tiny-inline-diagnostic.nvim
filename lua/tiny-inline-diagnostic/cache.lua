@@ -69,7 +69,9 @@ function M.update(bufnr, diagnostics)
     diagnostics_cache[bufnr] = {}
     by_lnum_cache[bufnr] = {}
   else
-    for _, diag in ipairs(diagnostics) do
+    local flat = {}
+    for i, diag in ipairs(diagnostics) do
+      flat[i] = diag
       local ns = diag.namespace or 0
       local bucket = store[ns]
       if bucket then
@@ -78,7 +80,8 @@ function M.update(bufnr, diagnostics)
         store[ns] = { diag }
       end
     end
-    set_sorted(bufnr, { unpack(diagnostics) })
+    -- No { unpack(diagnostics) }: LuaJIT caps unpack at ~8000 values.
+    set_sorted(bufnr, flat)
   end
   ns_store[bufnr] = store
 end
