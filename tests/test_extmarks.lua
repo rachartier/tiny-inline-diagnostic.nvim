@@ -68,6 +68,16 @@ T["count_inlay_hints_characters"]["handles nil line"] = function()
   end)
 end
 
+T["count_inlay_hints_characters"]["handles line containing NUL bytes"] = function()
+  local buf = H.make_buf({ "" })
+  vim.api.nvim_buf_set_text(buf, 0, 0, 0, 0, { "abc\0def" })
+
+  MiniTest.expect.equality(pcall(vim.fn.strchars, "abc\0def"), false)
+  MiniTest.expect.equality(extmarks.count_inlay_hints_characters(buf, 0), 0)
+
+  vim.api.nvim_buf_delete(buf, { force = true })
+end
+
 T["create_extmarks"] = MiniTest.new_set()
 
 T["create_extmarks"]["handles invalid buffer"] = function()
