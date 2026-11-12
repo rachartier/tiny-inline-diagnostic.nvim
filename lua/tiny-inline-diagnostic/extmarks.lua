@@ -55,11 +55,15 @@ end
 ---@return number
 function M.count_inlay_hints_characters(buf, linenr)
   local line = vim.api.nvim_buf_get_lines(buf, linenr, linenr + 1, false)[1]
-  if not line then
+  if type(line) ~= "string" or line == "" then
     return 0
   end
 
-  local line_char_count = vim.fn.strchars(line)
+  local ok, line_char_count = pcall(vim.fn.strchars, line)
+  if not ok or line_char_count <= 0 then
+    return 0
+  end
+
   local inlay_hints = vim.lsp.inlay_hint.get({
     bufnr = buf,
     range = {
