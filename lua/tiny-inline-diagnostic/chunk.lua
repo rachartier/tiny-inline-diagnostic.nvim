@@ -432,7 +432,10 @@ function M.get_chunks(opts, diags_on_line, diag_index, diag_line, cursor_line, b
   local diag = diags_on_line[diag_index]
   local show_code = opts.options.show_code
 
-  local diag_message = diag.message
+  -- A diagnostic is not guaranteed to carry a message: Neovim's LSP converter
+  -- yields `message = nil` when a server sends MarkupContent without a `value`
+  -- (or a null message), and user-created diagnostics may omit it entirely.
+  local diag_message = type(diag.message) == "string" and diag.message or ""
   if diag.is_related then
     local location_info = ""
     if diag.related_location and diag.related_location.uri then
@@ -456,8 +459,11 @@ function M.get_chunks(opts, diags_on_line, diag_index, diag_line, cursor_line, b
     end
   end
 
-  if opts.options.format and diag_message and not diag.is_related then
-    diag_message = opts.options.format(vim.deepcopy(diag))
+  if opts.options.format and not diag.is_related then
+    local formatted = opts.options.format(vim.deepcopy(diag))
+    if type(formatted) == "string" then
+      diag_message = formatted
+    end
   end
 
   local chunks
