@@ -520,4 +520,63 @@ T["get_chunks"]["format callback cannot mutate the diagnostic"] = function()
   end)
 end
 
+T["get_chunks"]["tolerates a nil message on a non-cursor line"] = function()
+  H.with_buf({ "line one", "line two" }, function(buf)
+    local opts = H.make_opts({
+      options = {
+        overflow = { mode = "none" },
+        multilines = { enabled = true, always_show = true },
+        show_code = false,
+      },
+    })
+    -- Neovim stores `message = nil` when a server sends MarkupContent without a
+    -- `value` (or a null message). With multilines enabled, non-cursor lines
+    -- concatenate the message unguarded.
+    local diags = { { message = nil, severity = vim.diagnostic.severity.ERROR, lnum = 1 } }
+
+    local result = chunk.get_chunks(opts, diags, 1, 1, 0, buf)
+
+    MiniTest.expect.equality(result.chunks, { " " })
+  end)
+end
+
+T["get_chunks"]["tolerates a non-string message"] = function()
+  H.with_buf({ "line one", "line two" }, function(buf)
+    local opts = H.make_opts({
+      options = {
+        overflow = { mode = "none" },
+        multilines = { enabled = true, always_show = true },
+        show_code = false,
+      },
+    })
+    local diags = {
+      { message = { kind = "markdown" }, severity = vim.diagnostic.severity.ERROR, lnum = 1 },
+    }
+
+    local result = chunk.get_chunks(opts, diags, 1, 1, 0, buf)
+
+    MiniTest.expect.equality(result.chunks, { " " })
+  end)
+end
+
+T["get_chunks"]["keeps the raw message when format returns nil"] = function()
+  H.with_buf({ "test line" }, function(buf)
+    local opts = H.make_opts({
+      options = {
+        overflow = { mode = "none" },
+        multilines = { enabled = false },
+        show_code = false,
+        format = function()
+          return nil
+        end,
+      },
+    })
+    local diags = { { message = "raw", severity = vim.diagnostic.severity.ERROR, lnum = 0 } }
+
+    local result = chunk.get_chunks(opts, diags, 1, 0, 0, buf)
+
+    MiniTest.expect.equality(result.chunks, { "raw" })
+  end)
+end
+
 return T
