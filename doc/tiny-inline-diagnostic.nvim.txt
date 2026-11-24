@@ -1,5 +1,5 @@
 *tiny-inline-diagnostic.nvim.txt*
-                          For Neovim >= 0.10.0    Last change: 2026 October 08
+                         For Neovim >= 0.10.0    Last change: 2026 November 24
 
 ==============================================================================
 Table of Contents              *tiny-inline-diagnostic.nvim-table-of-contents*
