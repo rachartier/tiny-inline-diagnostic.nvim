@@ -15,6 +15,7 @@ local M = {}
 -- Dependencies
 local chunk_utils = require("tiny-inline-diagnostic.chunk")
 local highlights = require("tiny-inline-diagnostic.highlights")
+local utils = require("tiny-inline-diagnostic.utils")
 
 ---Format message with appropriate padding
 ---@param message string
@@ -22,7 +23,7 @@ local highlights = require("tiny-inline-diagnostic.highlights")
 ---@return string
 local function format_chunk_message(message, padding)
   local trimmed = message
-  local padding_needed = padding - vim.fn.strdisplaywidth(trimmed)
+  local padding_needed = padding - utils.display_width(trimmed)
   return trimmed .. string.rep(" ", math.max(0, padding_needed))
 end
 

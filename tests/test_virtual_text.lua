@@ -43,6 +43,24 @@ T["from_diagnostic"]["returns virtual text table"] = function()
   end)
 end
 
+T["from_diagnostic"]["handles message containing NUL bytes"] = function()
+  H.with_win_buf({ "test line" }, { 1, 0 }, nil, function()
+    local opts = create_test_opts()
+    local chunk_info = {
+      chunks = { " bad\0byte" },
+      severity = vim.diagnostic.severity.ERROR,
+      severities = { vim.diagnostic.severity.ERROR },
+      line = 0,
+      need_to_be_under = false,
+      offset_win_col = 0,
+    }
+
+    local virt_texts = virtual_text.from_diagnostic(opts, chunk_info, 1, 20, 1)
+
+    MiniTest.expect.equality(#virt_texts > 0, true)
+  end)
+end
+
 T["from_diagnostic"]["handles multiline chunks"] = function()
   H.with_win_buf({ "test line" }, { 1, 0 }, nil, function(buf, win)
     local opts = create_test_opts()
