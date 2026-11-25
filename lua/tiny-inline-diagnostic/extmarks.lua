@@ -56,7 +56,7 @@ end
 ---@return number
 function M.count_inlay_hints_characters(buf, linenr)
   local line = vim.api.nvim_buf_get_lines(buf, linenr, linenr + 1, false)[1]
-  if type(line) ~= "string" or line == "" then
+  if not line then
     return 0
   end
 
