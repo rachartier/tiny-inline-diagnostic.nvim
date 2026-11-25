@@ -12,9 +12,8 @@ function M.get_max_width_from_chunks(chunks)
 
   for _, chunk in ipairs(chunks) do
     if type(chunk) == "string" then
-      -- pcall: strdisplaywidth errors on NUL bytes, which LSP messages can contain
-      local ok, line_length = pcall(vim.fn.strdisplaywidth, chunk)
-      if ok and line_length > max_chunk_line_length then
+      local line_length = utils.display_width(chunk)
+      if line_length > max_chunk_line_length then
         max_chunk_line_length = line_length
       end
     end
