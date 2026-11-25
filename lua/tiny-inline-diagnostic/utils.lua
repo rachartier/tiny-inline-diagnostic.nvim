@@ -69,6 +69,18 @@ function M.int_to_hex(int)
 end
 
 -- String utilities
+---Display width of a string, falling back to its byte length when Neovim's
+---strdisplaywidth errors (it raises E976 on NUL bytes, which LSP data can contain)
+---@param s string The string to measure
+---@return number width The display width, or #s if it cannot be measured
+function M.display_width(s)
+  local ok, width = pcall(vim.fn.strdisplaywidth, s)
+  if ok then
+    return width
+  end
+  return #s
+end
+
 ---Trims whitespace from both ends of a string
 ---@param s string The string to trim
 ---@return string trimmed The trimmed string

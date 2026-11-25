@@ -393,7 +393,7 @@ function M.get_line_context(opts, diags_on_line, diag_line, cursor_line, buf)
     (opts.options.overflow.mode ~= "none" and not opts.options.multilines.enabled)
     or cursor_line == diag_line
   then
-    local line_display_width = line and vim.fn.strdisplaywidth(line) or 0
+    local line_display_width = line and utils.display_width(line) or 0
     local visual_line_width = line_display_width + other_extmarks_offset
 
     if cursor_line == diag_line then

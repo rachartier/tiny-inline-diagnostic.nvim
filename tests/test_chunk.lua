@@ -276,6 +276,30 @@ T["handle_overflow_modes"]["applies break_line when enabled"] = function()
   MiniTest.expect.equality(type(result), "table")
 end
 
+T["get_line_context"] = MiniTest.new_set()
+
+T["get_line_context"]["handles line containing NUL bytes"] = function()
+  H.with_win_buf({ "" }, nil, 80, function(buf)
+    local nul_line = string.rep("x", 100) .. "\0tail"
+    vim.api.nvim_buf_set_text(buf, 0, 0, 0, 0, { nul_line })
+
+    local opts = H.make_opts({
+      options = {
+        overflow = { mode = "wrap" },
+        multilines = { enabled = false },
+        softwrap = 10,
+        show_source = { enabled = false },
+      },
+    })
+    local diags = {
+      { message = "test", severity = vim.diagnostic.severity.ERROR, lnum = 0 },
+    }
+
+    local result = chunk.get_line_context(opts, diags, 0, 1, buf)
+    MiniTest.expect.equality(result.need_to_be_under, true)
+  end)
+end
+
 T["get_chunks"] = MiniTest.new_set()
 
 T["get_chunks"]["returns chunk info for diagnostic"] = function()
