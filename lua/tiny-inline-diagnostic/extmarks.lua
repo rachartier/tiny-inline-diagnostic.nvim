@@ -1,6 +1,7 @@
 local M = {}
 
 local extmark_writer = require("tiny-inline-diagnostic.extmark_writer")
+local utils = require("tiny-inline-diagnostic.utils")
 
 local DIAGNOSTIC_NAMESPACE = vim.api.nvim_create_namespace("TinyInlineDiagnostic")
 
@@ -28,7 +29,7 @@ local function first_softwrapped_line(bufnr, first, last)
   local text_width = vim.api.nvim_win_get_width(win) - vim.fn.getwininfo(win)[1].textoff
   local lines = vim.api.nvim_buf_get_lines(bufnr, first, last + 1, false)
   for i, line in ipairs(lines) do
-    if vim.fn.strdisplaywidth(line) > text_width then
+    if utils.display_width(line) > text_width then
       return first + i - 1
     end
   end
@@ -59,16 +60,11 @@ function M.count_inlay_hints_characters(buf, linenr)
     return 0
   end
 
-  local ok, line_char_count = pcall(vim.fn.strchars, line)
-  if not ok or line_char_count <= 0 then
-    return 0
-  end
-
   local inlay_hints = vim.lsp.inlay_hint.get({
     bufnr = buf,
     range = {
       start = { line = linenr, character = 0 },
-      ["end"] = { line = linenr, character = line_char_count },
+      ["end"] = { line = linenr, character = #line },
     },
   })
 
